@@ -1,0 +1,15 @@
+{
+    "Servers": {
+        "1": {
+            "Name": "EOPDS Development Server",
+            "Group": "Development Servers",
+            "Host": "db",
+            "Port": 5432,
+            "SSLMode": "prefer",
+            "MaintenanceDB": "postgres",
+            "Username": "postgres",
+            "Password": "",
+            "Comment": "This is a local copy of the EOPDS database running on docker"
+        }
+    }
+}
