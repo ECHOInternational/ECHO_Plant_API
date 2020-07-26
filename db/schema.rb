@@ -10,11 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_07_02_191256) do
+ActiveRecord::Schema.define(version: 2020_07_25_194221) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
+
+  create_table "categories", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.jsonb "translations", default: {}, null: false
+    t.string "created_by", null: false
+    t.string "owned_by", null: false
+    t.integer "visibility", default: 0, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+  end
 
   create_table "versions", force: :cascade do |t|
     t.string "item_type", null: false
