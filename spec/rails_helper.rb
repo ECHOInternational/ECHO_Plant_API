@@ -8,6 +8,7 @@ abort("The Rails environment is running in production mode!") if Rails.env.produ
 require 'rspec/rails'
 require 'paper_trail/frameworks/rspec'
 require "pundit/rspec"
+require "support/shared_contexts/policy.rb"
 
 # Add additional requires below this line. Rails is not loaded until this point!
 

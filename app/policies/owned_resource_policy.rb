@@ -6,10 +6,12 @@ class OwnedResourcePolicy < ApplicationPolicy
 			@scope = scope
 		end
 		def resolve
-			if user.admin?
+			if user && user.admin?
 				scope.all
+			elsif user
+				scope.where(visibility: :public).or(scope.where(owned_by: user.email))
 			else
-				scope.where(created_by: [user.id, "public"])
+				scope.where(visibility: :public)
 			end
 		end
 
