@@ -15,26 +15,28 @@ class OwnedResourcePolicy < ApplicationPolicy
 
 	end
 	def index?
-		user.can_read?
+		true
 	end
 	
 	def show?
-		user.can_read?
+		if user
+			return true if user.admin?
+			return true if record.owned_by == user.email
+		end
+		record.visibility_public?
 	end
 
 	def create?
-		user.can_write?
+		user && user.can_write?
 	end
 
 	def update?
-		user.admin? || record.created_by == user.id
+		return false unless user && user.can_write?
+		user.admin? || record.owned_by == user.email
 	end
 
 	def destroy?
-		if record.created_by == "public"
-			return user.super_admin?
-		else
-			user.admin? || record.created_by == user.id
-		end
+		return false unless user && user.can_write?
+		user.super_admin? || record.owned_by == user.email
 	end
 end

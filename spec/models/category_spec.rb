@@ -52,6 +52,8 @@ RSpec.describe Category, type: :model do
       expect(category).to have_a_version_with owned_by: 'b'
       expect(category).to have_a_version_with owned_by: 'c'
     end
-
   end
+
+  
+  
 end

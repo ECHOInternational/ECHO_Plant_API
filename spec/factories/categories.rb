@@ -7,5 +7,14 @@ FactoryBot.define do
     trait :public do
       visibility { :public }
     end
+    trait :draft do
+      visibility { :draft }
+	end
+	trait :deleted do
+	  visibility { :deleted }
+	end
+	trait :private do
+		visibility { :private }
+	end
   end
 end
