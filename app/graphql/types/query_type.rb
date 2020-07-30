@@ -3,13 +3,25 @@ module Types
     # Add root-level fields here.
     # They will be entry points for queries on your schema.
 
-    # TODO: remove me
-    field :test_field, String, null: false,
-      description: "An example field added by the generator"
-    def test_field
-      "Hello World!"
+	# Used by Relay to lookup objects by UUID:
+    add_field(GraphQL::Types::Relay::NodeField)
+    # Fetches a list of objects given a list of IDs
+    add_field(GraphQL::Types::Relay::NodesField)
+
+    field :categories, resolver: Resolvers::CategoriesResolver, connection: true
+
+
+
+    field :category, Types::CategoryType, null: true do
+      description "Find a category by ID"
+      argument :id, ID, required: true
+      argument :language, String, required: false, description: "Request returned fields in a specific languge. Overrides ACCEPT-LANGUAGE header."
+    end
+    def category(id:, language: nil)
+      type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
+      Mobility.locale = language || I18n.locale
+      Pundit.policy_scope(context[:current_user], Category).find(item_id)
     end
 
-    field :node, field: GraphQL::Relay::Node.field
   end
 end
