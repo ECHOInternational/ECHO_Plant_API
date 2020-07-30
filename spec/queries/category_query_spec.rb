@@ -157,6 +157,47 @@ RSpec.describe "Category Query", type: :graphql_query do
 
 	end
 
+	describe "translations attribute" do
+		it "returns a list of languages when requested" do
+		  query_string = <<-GRAPHQL
+			query($id: ID!){
+				category(id: $id){
+					id
+					name
+					translations{
+						locale
+						description
+						name
+					}
+				}
+			}
+		  GRAPHQL
+
+		  category = create(:category, :public, name: "nameen")
+		  category.name_es = "namees"
+		  category.description_en = "descriptionen"
+  		  category.description_es = "descriptiones"
+		  category.save
+
+		  category_id = PlantApiSchema.id_from_object(category, Category, {})
+		  result = PlantApiSchema.execute(query_string, variables: { id: category_id })
+
+		  category_result = result["data"]["category"]
+
+		  expect(category_result["id"]).to eq category_id
+		  expect(category_result["translations"]).to be_kind_of Array
+		  expect(category_result["translations"].length).to eq 2
+
+		  result_en = category_result["translations"].detect {|l| l["locale"] == "en"}
+		  result_es = category_result["translations"].detect {|l| l["locale"] == "es"}
+
+		  expect(result_en["name"]).to eq "nameen"
+		  expect(result_es["name"]).to eq "namees"
+		  expect(result_en["description"]).to eq "descriptionen" 
+
+		end
+	end
+
 
 
 

@@ -10,7 +10,7 @@ module Types
   	field :created_by, String, "The user ID of a category's creator", null: true
   	field :owned_by, String, "The user ID of a category's owner", null: true
     # field :images, Types::ImageType.connection_type, "A list of images related to a category", null: true
-    # field :translations, [Types::CategoryType::CategoryTranslationType], "Translations of translatable category fields", null: false, method: :translations
+    field :translations, [Types::CategoryType::CategoryTranslationType], "Translations of translatable category fields", null: false, method: :translations_array
     # field :versions, Types::CategoryType::CategoryVersionConnectionWithTotalCountType, null: false, connection: true
 
     # def versions
