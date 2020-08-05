@@ -1,28 +1,20 @@
 class ImagePolicy < OwnedResourcePolicy
-    class Scope
-        attr_reader :user, :scope
-        
-		def initialize(user, scope)
-			@user = user
-			@scope = scope
-		end
-		def resolve
-			# if user && user.admin?
-			# 	scope.all
-			# elsif user
-			# 	scope.where(visibility: :public).or(scope.where(owned_by: user.email))
-			# else
-			# 	scope.where(visibility: :public)
-            # end
-            scope.all
-		end
-
-	end
     def show?
-		if user
-			return true if user.admin?
-			return true if record.owned_by == user.email
-		end
-		record.imageable.visibility_public?
+        return true if user && record.imageable.owned_by == user.email
+        super
+	end
+
+    def update?
+        if user && user.can_write?
+            return true if record.imageable.owned_by == user.email
+        end
+        super
+	end
+
+    def destroy?
+        if user && user.can_write?
+            return true if record.imageable.owned_by == user.email
+        end
+        super
 	end
 end

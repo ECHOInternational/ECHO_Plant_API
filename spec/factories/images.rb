@@ -9,5 +9,17 @@ FactoryBot.define do
     s3_bucket { "images-us-east-1.echocommunity.org" }
     sequence("s3_key") { |n| "image#{n}.jpg" }
     imageable { create(:category) }
+    trait :public do
+      visibility { :public }
+    end
+    trait :draft do
+      visibility { :draft }
+  	end
+  	trait :deleted do
+  	  visibility { :deleted }
+  	end
+  	trait :private do
+  		visibility { :private }
+  	end
   end
 end

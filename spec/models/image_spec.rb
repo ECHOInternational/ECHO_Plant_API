@@ -48,6 +48,17 @@ RSpec.describe Image, type: :model do
   	expect(image.base_url).to end_with("find_this")
   end
 
+  it "has a default visibility of 'private'" do
+  	image = build(:image)
+  	expect(image).to be_valid
+  	expect(image.visibility).to eq('private')
+  end
+  it "can set visibility" do
+    image = build(:image, :public)
+    expect(image).to be_valid
+    expect(image.visibility).to eq('public')
+  end
+
   it "translates the name attribute" do
     image = create(:image, name_en: "name_en")
     image.name_es = "name_es"
@@ -80,8 +91,6 @@ RSpec.describe Image, type: :model do
       expect{image.destroy}.to_not change{ImageAttribute.count}
     end
   end
-
-  it "is destroyed when its imageable object is destroyed"
   
   it "is versioned" do
     is_expected.to be_versioned

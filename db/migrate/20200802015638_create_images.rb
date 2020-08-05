@@ -7,6 +7,7 @@ class CreateImages < ActiveRecord::Migration[6.0]
       t.string :s3_key, null: false
       t.string :created_by, null: false
       t.string :owned_by, null: false
+      t.integer :visibility, null: false, default: 0
       t.references :imageable, polymorphic: true, null: false, type: :uuid
 
       t.timestamps

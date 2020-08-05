@@ -48,6 +48,7 @@ ActiveRecord::Schema.define(version: 2020_08_02_233703) do
     t.string "s3_key", null: false
     t.string "created_by", null: false
     t.string "owned_by", null: false
+    t.integer "visibility", default: 0, null: false
     t.string "imageable_type", null: false
     t.uuid "imageable_id", null: false
     t.datetime "created_at", precision: 6, null: false

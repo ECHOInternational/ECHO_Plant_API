@@ -37,6 +37,13 @@ RSpec.describe Category, type: :model do
     expect(category.translations[:en][:name]).to eq('name_en')
     expect(category.translations[:es][:name]).to eq('name_es')
   end
+
+  it "is destroys all related images when it is destroyed" do
+    category = create(:category)
+    image = create(:image, imageable: category)
+    expect { category.destroy }.to change{ Image.count }.by(-1)
+  end
+
   it "is versioned" do
     is_expected.to be_versioned
     category = build(:category)
