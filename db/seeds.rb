@@ -5,3 +5,17 @@
 #
 #   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }])
 #   Character.create(name: 'Luke', movie: movies.first)
+
+# Categories
+categories_json = File.read('db/seeds/Categories.json')
+categories = JSON.parse(categories_json)
+categories.each do | category |
+    record  = Category.new(id: category['uuid'], owned_by:"echo@echonet.org", created_by:"echo@echonet.org", visibility: :public)
+    category['translations'].each do | translation |
+        Mobility.with_locale(translation['locale']) do
+            record.name = translation['name']
+            record.description = translation['description']
+        end
+    end
+    record.save!
+end
