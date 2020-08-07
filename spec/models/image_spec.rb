@@ -91,6 +91,17 @@ RSpec.describe Image, type: :model do
       expect{image.destroy}.to_not change{ImageAttribute.count}
     end
   end
+
+  it "translates the name attribute" do
+    image = create(:image, name_en: "name_en")
+    image.name_es = "name_es"
+    expect(image.translations).to have_key(:en)
+    expect(image.translations).to have_key(:es)
+    expect(image.translations[:en]).to have_key(:name)
+    expect(image.translations[:es]).to have_key(:name)
+    expect(image.translations[:en][:name]).to eq('name_en')
+    expect(image.translations[:es][:name]).to eq('name_es')
+  end
   
   it "is versioned" do
     is_expected.to be_versioned
@@ -103,8 +114,6 @@ RSpec.describe Image, type: :model do
   #   image.update!(owned_by: 'b')
   #   image.update!(owned_by: 'c')
   #   image.update!(owned_by: 'd')
-
-  #   # byebug if image.versions.count < 4
 
 
   #   expect(image).to have_a_version_with owned_by: 'b'

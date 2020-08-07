@@ -58,8 +58,6 @@ RSpec.describe Category, type: :model do
   #   category.update!(owned_by: 'c')
   #   category.update!(owned_by: 'd')
 
-  #   # byebug if category.versions.count < 4
-
 
   #   expect(category).to have_a_version_with owned_by: 'b'
   #   expect(category).to have_a_version_with owned_by: 'c'

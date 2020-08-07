@@ -198,8 +198,37 @@ RSpec.describe "Category Query", type: :graphql_query do
 		end
 	end
 
+	describe "images attribute" do 
+		it "returns a list of scoped image objects" do
+		  query_string = <<-GRAPHQL
+			query($id: ID!){
+				category(id: $id){
+					images{
+						nodes{
+							id
+							name
+							baseUrl
+						}
+					}
+				}
+			}
+		  GRAPHQL
+
+		  category = create(:category, :public, name: "category a")
+	  	  image_a = create(:image, :public, name: "public_name", imageable: category)
+		  image_b = create(:image, :private, name: "private_name", owned_by: "not me", imageable: category)
+		  category_id = PlantApiSchema.id_from_object(category, Category, {})
 
 
+		  result = PlantApiSchema.execute(query_string, variables: { id: category_id })
+		  images_result = result["data"]["category"]["images"]["nodes"]
+		  images_result_public = images_result.detect {|i| i["name"] == "public_name"}
+		  images_result_private = images_result.detect {|i| i["name"] == "private_name"}
+		  expect(images_result.count).to eq 1
+		  expect(images_result_public).to_not be nil
+		  expect(images_result_private).to be nil
 
+		end
+	end
 
 end

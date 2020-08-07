@@ -154,7 +154,7 @@ RSpec.describe ImagePolicy, type: :policy do
   	let(:user) { build(:user, :readwrite) }
 
   	let (:target) { Image }
-  	it { is_expected.to permit_action(:create)}
+  	it { is_expected.to forbid_action(:create)}
 
   	context 'for public records' do
   		let (:target) { build(:image, :public) }
@@ -210,7 +210,7 @@ RSpec.describe ImagePolicy, type: :policy do
   	let(:user) { build(:user, :admin) }
 
   	let (:target) { Image }
-  	it { is_expected.to permit_action(:create)}
+  	it { is_expected.to forbid_action(:create)}
 
   	describe 'scope' do
   		before :each  do
@@ -304,7 +304,7 @@ RSpec.describe ImagePolicy, type: :policy do
   	let(:user) { build(:user, :superadmin) }
 
   	let (:target) { Image }
-  	it { is_expected.to permit_action(:create)}
+  	it { is_expected.to forbid_action(:create)}
 
   	context 'for public records' do
   		let (:target) { build(:image, :public) }

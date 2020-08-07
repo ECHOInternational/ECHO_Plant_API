@@ -23,6 +23,16 @@ RSpec.describe ImageAttribute, type: :model do
   	expect(image_a.image_attributes.count).to eq 1
   	expect(image_b.image_attributes.count).to eq 1
   end
+  it "translates the name attribute" do
+    image_attribute = create(:image_attribute, name_en: "name_en")
+    image_attribute.name_es = "name_es"
+    expect(image_attribute.translations).to have_key(:en)
+    expect(image_attribute.translations).to have_key(:es)
+    expect(image_attribute.translations[:en]).to have_key(:name)
+    expect(image_attribute.translations[:es]).to have_key(:name)
+    expect(image_attribute.translations[:en][:name]).to eq('name_en')
+    expect(image_attribute.translations[:es][:name]).to eq('name_es')
+  end
   describe "when it is destroyed" do
 	it "destroys any related image_attributes_images records" do
 		image_a = create(:image, name: "Image_A")

@@ -26,7 +26,11 @@ class PlantApiSchema < GraphQL::Schema
     #
     # Then, based on `type_name` and `id`
     # find an object in your application
-    klass = type_name.constantize
+    begin
+      klass = type_name.constantize
+    rescue NameError
+      raise ActiveRecord::RecordNotFound
+    end
     klass.find item_id
   end
 
