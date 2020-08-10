@@ -120,6 +120,26 @@ RSpec.describe Image, type: :model do
   #   expect(image).to have_a_version_with owned_by: 'c'
   # end
 
+  it "can be created with an array of image attributes" do
+    attr_a = create(:image_attribute)
+    attr_b = create(:image_attribute)
+    category = create(:category)
+    image = Image.new(
+      id: SecureRandom.uuid,
+      imageable: category,
+      name: "A name",
+      owned_by: "me",
+      created_by: "me",
+      s3_bucket: "bucket",
+      s3_key: "key",
+      image_attributes: [attr_a, attr_b]
+    )
+    expect(image).to be_valid
+    expect(image.image_attributes).to include(attr_a)
+    expect(image.image_attributes).to include(attr_b)
+
+  end
+
   
   
 end

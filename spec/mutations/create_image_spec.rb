@@ -1,26 +1,5 @@
 require 'rails_helper'
 
-# argument :image_id, ID, "The ID for this image. This should be sourced from an upload.", required: true
-# argument :object_id, ID, "The ID for the object to which the image should be attached.", required: true
-# argument :name, String, "The translatable name of the image." required: true
-# argument :description, String, "A translatable description of the image", required: false
-# argument :attribution, String, "The copyright or attribution statement for the image.", required: false
-# argument :language, String, "Language of the translatable fields supplied", required: false
-# argument :bucket, String, "The S3 bucket where the image is stored.", required: true
-# argument :key, String, "
-
-
-# field :uuid, ID, "The internal database ID for an image", null: false, method: :id
-# field :name, String, "The translated name of an image", null: true
-# field :description, String, "A translated description of an image", null: true
-# field :attribution, String, "Copyright and attribution data", null: true
-# field :base_url, String, "The URL for the image", null: false
-# field :image_attributes, [Types::ImageAttributeType], null: false
-# field :created_by, String, "The user ID of an image's creator", null: true
-# field :owned_by, String, "The user ID of an image's owner", null: true
-
-
-
 RSpec.describe "Create Image Mutation", type: :graphql_mutation do
 
 	let(:current_user) { nil }
@@ -35,7 +14,10 @@ RSpec.describe "Create Image Mutation", type: :graphql_mutation do
                     attribution
                     baseUrl
                     createdBy
-                    ownedBy
+					ownedBy
+					imageAttributes{
+						id
+					}
 				}
 			}
 		}
@@ -135,7 +117,63 @@ RSpec.describe "Create Image Mutation", type: :graphql_mutation do
   end
   describe "parameters" do
       let(:current_user) { build(:user, :readwrite) }
-      let(:imageable) {create(:category, owned_by: current_user.email)}
+	  let(:imageable) {create(:category, owned_by: current_user.email)}
+	  
+	describe "image_attributes" do
+		it "adds an array of provided attributes" do
+			imageable_id = PlantApiSchema.id_from_object(imageable, Category, {})
+			attr_a = create(:image_attribute)
+			attr_b = create(:image_attribute)
+			attr_a_id = PlantApiSchema.id_from_object(attr_a, ImageAttribute, {})
+			attr_b_id = PlantApiSchema.id_from_object(attr_b, ImageAttribute, {})
+
+			result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: { 
+				input: {
+					imageId: "da5818be-da49-428f-87e6-e944dbb502f9",
+					objectId: imageable_id,
+					bucket: "images.us-east-1.echocommunity.org",
+					key: "a file name",
+					name: "newly created record",
+					description: "with an attached description",
+					language: "es",
+					imageAttributeIds: [attr_a_id, attr_b_id]
+				}
+			})
+			image_result = result["data"]["createImage"]["image"]
+			created_image = Image.find image_result["uuid"]
+
+			expect(created_image.image_attributes).to include attr_a
+			expect(created_image.image_attributes).to include attr_b
+
+		end
+		it "succeeds with included errors when the provided attribute doesn't exist" do
+			imageable_id = PlantApiSchema.id_from_object(imageable, Category, {})
+			attr_a = create(:image_attribute)
+			attr_a_id = PlantApiSchema.id_from_object(attr_a, ImageAttribute, {})
+			attr_b_id = attr_a_id[0...-4] + "fake"
+
+			result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: { 
+				input: {
+					imageId: "da5818be-da49-428f-87e6-e944dbb502f9",
+					objectId: imageable_id,
+					bucket: "images.us-east-1.echocommunity.org",
+					key: "a file name",
+					name: "newly created record",
+					description: "with an attached description",
+					language: "es",
+					imageAttributeIds: [attr_a_id, attr_b_id]
+				}
+			})
+			
+			expect(result).to include("errors")
+			expect(result).to include("data")
+			image_result = result["data"]["createImage"]["image"]
+			created_image = Image.find image_result["uuid"]
+			expect(created_image.image_attributes).to include attr_a
+			expect(created_image.image_attributes.count).to eq 1
+
+		end
+	end
 
   	describe "language" do
           it "sets the language" do

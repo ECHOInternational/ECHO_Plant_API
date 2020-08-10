@@ -8,8 +8,8 @@ module Mutations
         argument :language, String, "Language of the translatable fields supplied", required: false
         argument :bucket, String, "The S3 bucket where the image is stored.", required: true
         argument :key, String, "The S3 key for the image", required: true
-        argument :visibility, Types::VisibilityEnum, "The visibility of the image. Can be: PUBLIC, PRIVATE, DRAFT, DELETED", required: false, default_value: 'PRIVATE'
-
+        argument :visibility, Types::VisibilityEnum, "The visibility of the image. Can be: PUBLIC, PRIVATE, DRAFT, DELETED", required: false, default_value: :private
+        argument :image_attribute_ids, [ID], "Attributes for the image", required: false
 
 		field :image, Types::ImageType, null:true
 		field :errors, [String], null: false
@@ -21,6 +21,7 @@ module Mutations
 		end
 
         def resolve(**attributes)
+ 
             language = attributes.delete(:language) || I18n.locale
 
             object_id = attributes.delete :object_id
@@ -33,6 +34,20 @@ module Mutations
             attributes[:created_by] = context[:current_user].email
             attributes[:owned_by] = context[:current_user].email
             attributes[:imageable] = obj            
+
+            # Check image attributes but don't fail on errors
+            image_attributes = []
+            
+            attributes[:image_attribute_ids].each do |attribute_id|
+                begin
+                    image_attribute = PlantApiSchema.object_from_id(attribute_id, {})
+                    image_attributes << image_attribute.id
+                rescue ActiveRecord::RecordNotFound
+                    context.add_error(GraphQL::ExecutionError.new("ImageAttribute: #{attribute_id} not found."))
+                end
+            end if attributes[:image_attribute_ids]
+
+            attributes[:image_attribute_ids] = image_attributes
 
 			Mobility.with_locale(language) do
 				image = Image.new(attributes)
