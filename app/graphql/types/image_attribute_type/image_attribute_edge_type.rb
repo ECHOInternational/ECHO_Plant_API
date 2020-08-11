@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Types
   class ImageAttributeType
     class ImageAttributeEdgeType < GraphQL::Types::Relay::BaseEdge

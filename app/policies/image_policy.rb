@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ImagePolicy < OwnedResourcePolicy
   def show?
     return true if user && record.imageable.owned_by == user.email

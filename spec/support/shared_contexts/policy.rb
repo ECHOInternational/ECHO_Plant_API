@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'pundit/rspec'
 
 RSpec.shared_context 'Policy' do

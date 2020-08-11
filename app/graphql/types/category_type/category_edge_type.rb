@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Types
   class CategoryType
     class CategoryEdgeType < GraphQL::Types::Relay::BaseEdge

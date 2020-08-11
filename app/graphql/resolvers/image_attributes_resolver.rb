@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'search_object'
 require 'search_object/plugin/graphql'
 

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
 RSpec.describe 'Remove Image Attributes From Image Mutation', type: :graphql_mutation do

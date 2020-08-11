@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutations
   class DeleteCategory < BaseMutation
     argument :category_id, ID, required: true, loads: Types::CategoryType

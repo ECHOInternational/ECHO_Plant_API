@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class UploadPolicy < ApplicationPolicy
   def show?
     user.can_write?

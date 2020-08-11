@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Types
   class MutationType < Types::BaseObject
     field :create_category, mutation: Mutations::CreateCategory, description: 'Creates a new plant category'

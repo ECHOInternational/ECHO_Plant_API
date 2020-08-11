@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Generates the output from ECHOcommunity expected by the seeds.rb file.
 output = []
 Resource.where(resourceable_type: 'Plant::Category').each do |category|

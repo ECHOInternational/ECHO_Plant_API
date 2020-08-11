@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mutations
   class UpdateCategory < BaseMutation
     argument :category_id, ID, required: true, loads: Types::CategoryType

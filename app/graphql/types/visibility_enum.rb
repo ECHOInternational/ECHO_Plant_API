@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Types
   class VisibilityEnum < Types::BaseEnum
     graphql_name 'Visibility'

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class User
   extend ActiveModel::Naming
   attr_reader :id
