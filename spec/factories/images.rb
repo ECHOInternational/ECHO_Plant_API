@@ -14,12 +14,12 @@ FactoryBot.define do
     end
     trait :draft do
       visibility { :draft }
-  	end
-  	trait :deleted do
-  	  visibility { :deleted }
-  	end
-  	trait :private do
-  		visibility { :private }
-  	end
+    end
+    trait :deleted do
+      visibility { :deleted }
+    end
+    trait :private do
+      visibility { :private }
+    end
   end
 end

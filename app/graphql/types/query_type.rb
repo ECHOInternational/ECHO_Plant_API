@@ -3,7 +3,7 @@ module Types
     # Add root-level fields here.
     # They will be entry points for queries on your schema.
 
-	# Used by Relay to lookup objects by UUID:
+    # Used by Relay to lookup objects by UUID:
     add_field(GraphQL::Types::Relay::NodeField)
     # Fetches a list of objects given a list of IDs
     add_field(GraphQL::Types::Relay::NodesField)
@@ -19,7 +19,7 @@ module Types
       argument :language, String, required: false, description: "Request returned fields in a specific languge. Overrides ACCEPT-LANGUAGE header."
     end
     def category(id:, language: nil)
-      type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
+      _type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
       Mobility.locale = language || I18n.locale
       Pundit.policy_scope(context[:current_user], Category).find(item_id)
     end
@@ -30,10 +30,9 @@ module Types
       argument :language, String, required: false, description: "Request returned fields in a specific language. Overrides ACCEPT-LANGUAGE header."
     end
     def image_attribute(id:, language: nil)
-      type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
+      _type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
       Mobility.locale = language || I18n.locale
       ImageAttribute.find(item_id)
     end
-
   end
 end

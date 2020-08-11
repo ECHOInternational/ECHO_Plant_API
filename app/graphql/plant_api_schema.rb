@@ -7,9 +7,9 @@ class PlantApiSchema < GraphQL::Schema
   use GraphQL::Analysis::AST
   use GraphQL::Execution::Errors
 
-  rescue_from(ActiveRecord::RecordNotFound) do |err, obj, args, ctx, field|
+  rescue_from(ActiveRecord::RecordNotFound) do |err, _obj, _args, _ctx, _field|
     # Raise a graphql-friendly error with a custom message
-    
+
     # object_not_found_type = err.model.constantize
     # object_not_found_id = id_from_object(err.id, object_not_found_type, ctx)
 
@@ -17,14 +17,13 @@ class PlantApiSchema < GraphQL::Schema
     raise GraphQL::ExecutionError, "#{err.model}: #{object_not_found_id} not found."
   end
 
-
   # Add built-in connections for pagination
   use GraphQL::Pagination::Connections
 
   # Relay Object Identification:
 
   # Return a string UUID for `object`
-  def self.id_from_object(object, type_definition, query_ctx)
+  def self.id_from_object(object, type_definition, _query_ctx)
     # Here's a simple implementation which:
     # - joins the type name & object.id
     # - encodes it with base64:
@@ -32,7 +31,7 @@ class PlantApiSchema < GraphQL::Schema
   end
 
   # Given a string UUID, find the object
-  def self.object_from_id(id, query_ctx)
+  def self.object_from_id(id, _query_ctx)
     # For example, to decode the UUIDs generated abovcone:
     type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
     #
@@ -47,7 +46,7 @@ class PlantApiSchema < GraphQL::Schema
   end
 
   # Object Resolution
-  def self.resolve_type(type, obj, ctx)
+  def self.resolve_type(_type, obj, _ctx)
     case obj
     when Category
       Types::CategoryType

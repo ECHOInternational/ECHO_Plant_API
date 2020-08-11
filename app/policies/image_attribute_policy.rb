@@ -1,21 +1,21 @@
 class ImageAttributePolicy < ApplicationPolicy
-	def index?
-		true
-	end
-	
-	def show?
-		true
-	end
+  def index?
+    true
+  end
 
-	def create?
-		user && user.super_admin?
-	end
+  def show?
+    true
+  end
 
-	def update?
-		create?
-	end
+  def create?
+    user&.super_admin?
+  end
 
-	def destroy?
-		create?
-	end
+  def update?
+    create?
+  end
+
+  def destroy?
+    create?
+  end
 end

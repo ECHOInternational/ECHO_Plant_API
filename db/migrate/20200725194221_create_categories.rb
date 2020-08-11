@@ -5,7 +5,7 @@ class CreateCategories < ActiveRecord::Migration[6.0]
       t.string :created_by, null: false
       t.string :owned_by, null: false
       t.integer :visibility, null: false, default: 0
-      
+
       t.timestamps
     end
   end

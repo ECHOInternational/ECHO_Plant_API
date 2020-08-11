@@ -28,30 +28,30 @@ gem 'jwt'
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin AJAX possible
 # gem 'rack-cors'
 
-#Features
-#Versioning
+# Features
+# Versioning
 gem 'paper_trail', '~> 10.3.1'
-#I18n
+# I18n
 gem 'mobility', '~> 0.8.13'
-#Graphql
+# Graphql
 gem 'graphql', '~>1.9'
 gem 'search_object_graphql'
-#Authorization Policies
+# Authorization Policies
 gem 'pundit'
-
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug', platforms: [:mri, :mingw, :x64_mingw]
-  gem 'rspec-rails', '~> 4.0.0'
-  gem 'pundit-matchers'
   gem 'factory_bot_rails'
   gem 'faker'
+  gem 'pundit-matchers'
+  gem 'rspec-rails', '~> 4.0.0'
 end
 
 group :development do
   gem 'listen', '~> 3.2'
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
+  gem 'rubocop', require: false
   gem 'spring'
   gem 'spring-watcher-listen', '~> 2.0.0'
 end

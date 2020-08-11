@@ -2,25 +2,25 @@ require 'rails_helper'
 
 RSpec.describe Category, type: :model do
   it "is valid with valid attributes" do
-  	category = build(:category)
-  	expect(category).to be_valid
+    category = build(:category)
+    expect(category).to be_valid
   end
   it "is not valid without a name" do
-  	category = build(:category, name: nil)
-  	expect(category).to_not be_valid
+    category = build(:category, name: nil)
+    expect(category).to_not be_valid
   end
   it "is not valid without a creator" do
-  	category = build(:category, created_by: nil)
-  	expect(category).to_not be_valid
+    category = build(:category, created_by: nil)
+    expect(category).to_not be_valid
   end
   it "is not valid without an owner" do
-  	category = build(:category, owned_by: nil)
-  	expect(category).to_not be_valid
+    category = build(:category, owned_by: nil)
+    expect(category).to_not be_valid
   end
   it "has a default visibility of 'private'" do
-  	category = build(:category)
-  	expect(category).to be_valid
-  	expect(category.visibility).to eq('private')
+    category = build(:category)
+    expect(category).to be_valid
+    expect(category.visibility).to eq('private')
   end
   it "can set visibility" do
     category = build(:category, :public)
@@ -40,8 +40,8 @@ RSpec.describe Category, type: :model do
 
   it "is destroys all related images when it is destroyed" do
     category = create(:category)
-    image = create(:image, imageable: category)
-    expect { category.destroy }.to change{ Image.count }.by(-1)
+    create(:image, imageable: category)
+    expect { category.destroy }.to change { Image.count }.by(-1)
   end
 
   it "is versioned" do
@@ -50,7 +50,6 @@ RSpec.describe Category, type: :model do
     expect(category).to respond_to(:versions)
   end
 
-
   # it 'can track changes', versioning: true do
   #   expect(PaperTrail).to be_enabled
   #   category = create(:category, owned_by: 'a')
@@ -58,11 +57,7 @@ RSpec.describe Category, type: :model do
   #   category.update!(owned_by: 'c')
   #   category.update!(owned_by: 'd')
 
-
   #   expect(category).to have_a_version_with owned_by: 'b'
   #   expect(category).to have_a_version_with owned_by: 'c'
   # end
-
-  
-  
 end
