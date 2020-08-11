@@ -9,6 +9,7 @@ module Types
     add_field(GraphQL::Types::Relay::NodesField)
 
     field :categories, resolver: Resolvers::CategoriesResolver, connection: true
+    field :image_attributes, resolver: Resolvers::ImageAttributesResolver, connection: true
 
 
 

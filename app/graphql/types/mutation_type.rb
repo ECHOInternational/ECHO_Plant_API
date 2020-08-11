@@ -7,5 +7,6 @@ module Types
     field :update_image, mutation: Mutations::UpdateImage, description: "Updates an image's editable metadata"
     field :delete_image, mutation: Mutations::DeleteImage, description: "Deletes an image"
     field :add_image_attributes_to_image, mutation: Mutations::AddImageAttributesToImage, description: "Adds image attributes to an image"
+    field :remove_image_attributes_from_image, mutation: Mutations::RemoveImageAttributesFromImage, description: "Removes image attributes from an image"
   end
 end
