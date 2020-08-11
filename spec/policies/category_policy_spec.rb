@@ -111,7 +111,7 @@ RSpec.describe CategoryPolicy, type: :policy do
     end
     context 'for draft records' do
       context 'when not owned by the user' do
-        let(:target) { build(:category, :draft, owned_by: "no@no.com") }
+        let(:target) { build(:category, :draft, owned_by: 'no@no.com') }
         it { is_expected.to forbid_action(:show) }
         it { is_expected.to forbid_action(:update) }
         it { is_expected.to forbid_action(:destroy) }
@@ -125,7 +125,7 @@ RSpec.describe CategoryPolicy, type: :policy do
     end
     context 'for deleted records' do
       context 'when not owned by the user' do
-        let(:target) { build(:category, :deleted, owned_by: "no@no.com") }
+        let(:target) { build(:category, :deleted, owned_by: 'no@no.com') }
         it { is_expected.to forbid_action(:show) }
         it { is_expected.to forbid_action(:update) }
         it { is_expected.to forbid_action(:destroy) }
@@ -139,7 +139,7 @@ RSpec.describe CategoryPolicy, type: :policy do
     end
     context 'for private records' do
       context 'when not owned by the user' do
-        let(:target) { build(:category, :private, owned_by: "no@no.com") }
+        let(:target) { build(:category, :private, owned_by: 'no@no.com') }
         it { is_expected.to forbid_action(:show) }
         it { is_expected.to forbid_action(:update) }
         it { is_expected.to forbid_action(:destroy) }
@@ -167,7 +167,7 @@ RSpec.describe CategoryPolicy, type: :policy do
     end
     context 'for draft records' do
       context 'when not owned by the user' do
-        let(:target) { build(:category, :draft, owned_by: "no@no.com") }
+        let(:target) { build(:category, :draft, owned_by: 'no@no.com') }
         it { is_expected.to forbid_action(:show) }
         it { is_expected.to forbid_action(:update) }
         it { is_expected.to forbid_action(:destroy) }
@@ -181,7 +181,7 @@ RSpec.describe CategoryPolicy, type: :policy do
     end
     context 'for deleted records' do
       context 'when not owned by the user' do
-        let(:target) { build(:category, :deleted, owned_by: "no@no.com") }
+        let(:target) { build(:category, :deleted, owned_by: 'no@no.com') }
         it { is_expected.to forbid_action(:show) }
         it { is_expected.to forbid_action(:update) }
         it { is_expected.to forbid_action(:destroy) }
@@ -195,7 +195,7 @@ RSpec.describe CategoryPolicy, type: :policy do
     end
     context 'for private records' do
       context 'when not owned by the user' do
-        let(:target) { build(:category, :private, owned_by: "no@no.com") }
+        let(:target) { build(:category, :private, owned_by: 'no@no.com') }
         it { is_expected.to forbid_action(:show) }
         it { is_expected.to forbid_action(:update) }
         it { is_expected.to forbid_action(:destroy) }
@@ -261,7 +261,7 @@ RSpec.describe CategoryPolicy, type: :policy do
     end
     context 'for draft records' do
       context 'when not owned by the user' do
-        let(:target) { build(:category, :draft, owned_by: "no@no.com") }
+        let(:target) { build(:category, :draft, owned_by: 'no@no.com') }
         it { is_expected.to permit_action(:show) }
         it { is_expected.to permit_action(:update) }
         it { is_expected.to forbid_action(:destroy) }
@@ -275,7 +275,7 @@ RSpec.describe CategoryPolicy, type: :policy do
     end
     context 'for deleted records' do
       context 'when not owned by the user' do
-        let(:target) { build(:category, :deleted, owned_by: "no@no.com") }
+        let(:target) { build(:category, :deleted, owned_by: 'no@no.com') }
         it { is_expected.to permit_action(:show) }
         it { is_expected.to permit_action(:update) }
         it { is_expected.to forbid_action(:destroy) }
@@ -289,7 +289,7 @@ RSpec.describe CategoryPolicy, type: :policy do
     end
     context 'for private records' do
       context 'when not owned by the user' do
-        let(:target) { build(:category, :private, owned_by: "no@no.com") }
+        let(:target) { build(:category, :private, owned_by: 'no@no.com') }
         it { is_expected.to permit_action(:show) }
         it { is_expected.to permit_action(:update) }
         it { is_expected.to forbid_action(:destroy) }
@@ -317,7 +317,7 @@ RSpec.describe CategoryPolicy, type: :policy do
     end
     context 'for draft records' do
       context 'when not owned by the user' do
-        let(:target) { build(:category, :draft, owned_by: "no@no.com") }
+        let(:target) { build(:category, :draft, owned_by: 'no@no.com') }
         it { is_expected.to permit_action(:show) }
         it { is_expected.to permit_action(:update) }
         it { is_expected.to permit_action(:destroy) }
@@ -331,7 +331,7 @@ RSpec.describe CategoryPolicy, type: :policy do
     end
     context 'for deleted records' do
       context 'when not owned by the user' do
-        let(:target) { build(:category, :deleted, owned_by: "no@no.com") }
+        let(:target) { build(:category, :deleted, owned_by: 'no@no.com') }
         it { is_expected.to permit_action(:show) }
         it { is_expected.to permit_action(:update) }
         it { is_expected.to permit_action(:destroy) }
@@ -345,7 +345,7 @@ RSpec.describe CategoryPolicy, type: :policy do
     end
     context 'for private records' do
       context 'when not owned by the user' do
-        let(:target) { build(:category, :private, owned_by: "no@no.com") }
+        let(:target) { build(:category, :private, owned_by: 'no@no.com') }
         it { is_expected.to permit_action(:show) }
         it { is_expected.to permit_action(:update) }
         it { is_expected.to permit_action(:destroy) }

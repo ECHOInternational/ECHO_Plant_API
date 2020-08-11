@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe "Remove Image Attributes From Image Mutation", type: :graphql_mutation do
+RSpec.describe 'Remove Image Attributes From Image Mutation', type: :graphql_mutation do
   let(:current_user) { nil }
   let(:image_attribute_a) { create(:image_attribute) }
   let(:image_attribute_b) { create(:image_attribute) }
@@ -22,10 +22,10 @@ RSpec.describe "Remove Image Attributes From Image Mutation", type: :graphql_mut
     GRAPHQL
   }
 
-  context "when the image does not exist" do
-    it "returns a not found error" do
+  context 'when the image does not exist' do
+    it 'returns a not found error' do
       image_id = PlantApiSchema.id_from_object(image, Image, {})
-      fake_image_id = image_id[0...-4] + "fake"
+      fake_image_id = image_id[0...-4] + 'fake'
       image_attribute_a_id = PlantApiSchema.id_from_object(image_attribute_a, ImageAttribute, {})
       result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
                                         input: {
@@ -33,14 +33,14 @@ RSpec.describe "Remove Image Attributes From Image Mutation", type: :graphql_mut
                                           imageAttributeIds: [image_attribute_a_id]
                                         }
                                       })
-      expect(result["data"]).to be nil
-      expect(result["errors"].count).to eq 1
+      expect(result['data']).to be nil
+      expect(result['errors'].count).to eq 1
     end
   end
 
-  context "when user is not authenticated" do
+  context 'when user is not authenticated' do
     let(:current_user) { nil }
-    it "returns an error when called" do
+    it 'returns an error when called' do
       image_id = PlantApiSchema.id_from_object(image, Image, {})
       image_attribute_a_id = PlantApiSchema.id_from_object(image_attribute_a, ImageAttribute, {})
       expect {
@@ -54,9 +54,9 @@ RSpec.describe "Remove Image Attributes From Image Mutation", type: :graphql_mut
     end
   end
 
-  context "when user is read only" do
+  context 'when user is read only' do
     let(:current_user) { build(:user, :readonly) }
-    it "returns an error when called" do
+    it 'returns an error when called' do
       image_id = PlantApiSchema.id_from_object(image, Image, {})
       image_attribute_a_id = PlantApiSchema.id_from_object(image_attribute_a, ImageAttribute, {})
       expect {
@@ -70,12 +70,12 @@ RSpec.describe "Remove Image Attributes From Image Mutation", type: :graphql_mut
     end
   end
 
-  context "when user is not an admin" do
+  context 'when user is not an admin' do
     let(:current_user) { build(:user, :readwrite) }
 
-    context "when the user does not own the record" do
-      let(:image) { create(:image, owned_by: "notme", created_by: "notme", image_attributes: [image_attribute_a, image_attribute_b]) }
-      it "raises an error" do
+    context 'when the user does not own the record' do
+      let(:image) { create(:image, owned_by: 'notme', created_by: 'notme', image_attributes: [image_attribute_a, image_attribute_b]) }
+      it 'raises an error' do
         image_id = PlantApiSchema.id_from_object(image, Image, {})
         image_attribute_a_id = PlantApiSchema.id_from_object(image_attribute_a, ImageAttribute, {})
         expect {
@@ -88,14 +88,14 @@ RSpec.describe "Remove Image Attributes From Image Mutation", type: :graphql_mut
         }.to raise_error(Pundit::NotAuthorizedError)
       end
     end
-    context "when user owns the record" do
+    context 'when user owns the record' do
       let(:image) { create(:image, owned_by: current_user.email, created_by: current_user.email, image_attributes: [image_attribute_a, image_attribute_b]) }
       before :each do
         @image_id = PlantApiSchema.id_from_object(image, Image, {})
         @image_attribute_a_id = PlantApiSchema.id_from_object(image_attribute_a, ImageAttribute, {})
         @image_attribute_b_id = PlantApiSchema.id_from_object(image_attribute_b, ImageAttribute, {})
       end
-      it "deletes a single record" do
+      it 'deletes a single record' do
         expect { ImageAttributesImage.find_by!(image_id: image.id, image_attribute_id: image_attribute_a.id) }.to_not raise_error(ActiveRecord::RecordNotFound)
 
         result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
@@ -104,11 +104,11 @@ RSpec.describe "Remove Image Attributes From Image Mutation", type: :graphql_mut
                                             imageAttributeIds: [@image_attribute_a_id]
                                           }
                                         })
-        expect(result).to_not include "errors"
-        expect(result).to include "data"
+        expect(result).to_not include 'errors'
+        expect(result).to include 'data'
         expect { ImageAttributesImage.find_by!(image_id: image.id, image_attribute_id: image_attribute_a.id) }.to raise_error(ActiveRecord::RecordNotFound)
       end
-      it "deletes multiple records" do
+      it 'deletes multiple records' do
         expect { ImageAttributesImage.find_by!(image_id: image.id, image_attribute_id: image_attribute_a.id) }.to_not raise_error(ActiveRecord::RecordNotFound)
         expect { ImageAttributesImage.find_by!(image_id: image.id, image_attribute_id: image_attribute_b.id) }.to_not raise_error(ActiveRecord::RecordNotFound)
         expect {
@@ -120,12 +120,12 @@ RSpec.describe "Remove Image Attributes From Image Mutation", type: :graphql_mut
                                  })
         }.to change { ImageAttributesImage.count }.by(-2)
       end
-      context "when a passed image_attribute is invalid" do
+      context 'when a passed image_attribute is invalid' do
         context "when the image_attribute doesn't exist" do
           before :each do
-            @fake_image_attribute_id = @image_attribute_a_id[0...-4] + "fake"
+            @fake_image_attribute_id = @image_attribute_a_id[0...-4] + 'fake'
           end
-          it "returns both errors and data" do
+          it 'returns both errors and data' do
             expect { ImageAttributesImage.find_by!(image_id: image.id, image_attribute_id: image_attribute_a.id) }.to_not raise_error(ActiveRecord::RecordNotFound)
             expect { ImageAttributesImage.find_by!(image_id: image.id, image_attribute_id: image_attribute_b.id) }.to_not raise_error(ActiveRecord::RecordNotFound)
             result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
@@ -134,10 +134,10 @@ RSpec.describe "Remove Image Attributes From Image Mutation", type: :graphql_mut
                                                 imageAttributeIds: [@image_attribute_a_id, @image_attribute_b_id, @fake_image_attribute_id]
                                               }
                                             })
-            expect(result["data"]["removeImageAttributesFromImage"]["image"]).to_not be nil
-            expect(result["errors"].count).to eq 1
+            expect(result['data']['removeImageAttributesFromImage']['image']).to_not be nil
+            expect(result['errors'].count).to eq 1
           end
-          it "removes attributes that do exist" do
+          it 'removes attributes that do exist' do
             expect { ImageAttributesImage.find_by!(image_id: image.id, image_attribute_id: image_attribute_a.id) }.to_not raise_error(ActiveRecord::RecordNotFound)
             expect { ImageAttributesImage.find_by!(image_id: image.id, image_attribute_id: image_attribute_b.id) }.to_not raise_error(ActiveRecord::RecordNotFound)
             expect {
@@ -155,7 +155,7 @@ RSpec.describe "Remove Image Attributes From Image Mutation", type: :graphql_mut
           before :each do
             @not_related_attribute_id = PlantApiSchema.id_from_object(not_related_attribute, ImageAttribute, {})
           end
-          it "returns both errors and data" do
+          it 'returns both errors and data' do
             expect { ImageAttributesImage.find_by!(image_id: image.id, image_attribute_id: image_attribute_a.id) }.to_not raise_error(ActiveRecord::RecordNotFound)
             expect { ImageAttributesImage.find_by!(image_id: image.id, image_attribute_id: image_attribute_b.id) }.to_not raise_error(ActiveRecord::RecordNotFound)
             expect { ImageAttributesImage.find_by!(image_id: image.id, image_attribute_id: not_related_attribute.id) }.to raise_error(ActiveRecord::RecordNotFound)
@@ -165,10 +165,10 @@ RSpec.describe "Remove Image Attributes From Image Mutation", type: :graphql_mut
                                                 imageAttributeIds: [@image_attribute_a_id, @not_related_attribute_id]
                                               }
                                             })
-            expect(result["data"]["removeImageAttributesFromImage"]["image"]).to_not be nil
-            expect(result["errors"].count).to eq 1
+            expect(result['data']['removeImageAttributesFromImage']['image']).to_not be nil
+            expect(result['errors'].count).to eq 1
           end
-          it "removes attributes that do exist" do
+          it 'removes attributes that do exist' do
             expect { ImageAttributesImage.find_by!(image_id: image.id, image_attribute_id: image_attribute_a.id) }.to_not raise_error(ActiveRecord::RecordNotFound)
             expect { ImageAttributesImage.find_by!(image_id: image.id, image_attribute_id: image_attribute_b.id) }.to_not raise_error(ActiveRecord::RecordNotFound)
             expect { ImageAttributesImage.find_by!(image_id: image.id, image_attribute_id: not_related_attribute.id) }.to raise_error(ActiveRecord::RecordNotFound)

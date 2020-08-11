@@ -15,13 +15,13 @@ class Image < ApplicationRecord
 
   # Raise an error when trying to update readonly fields
   def s3_key=(val)
-    raise(ActiveRecord::ReadOnlyRecord, "s3_key is readonly") if persisted?
+    raise(ActiveRecord::ReadOnlyRecord, 's3_key is readonly') if persisted?
 
     super
   end
 
   def s3_bucket=(val)
-    raise(ActiveRecord::ReadOnlyRecord, "s3_bucket is readonly") if persisted?
+    raise(ActiveRecord::ReadOnlyRecord, 's3_bucket is readonly') if persisted?
 
     super
   end

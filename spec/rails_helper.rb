@@ -5,11 +5,11 @@ require 'support/factory_bot.rb'
 ENV['RAILS_ENV'] ||= 'test'
 require File.expand_path('../config/environment', __dir__)
 # Prevent database truncation if the environment is production
-abort("The Rails environment is running in production mode!") if Rails.env.production?
+abort('The Rails environment is running in production mode!') if Rails.env.production?
 require 'rspec/rails'
 require 'paper_trail/frameworks/rspec'
-require "pundit/rspec"
-require "support/shared_contexts/policy.rb"
+require 'pundit/rspec'
+require 'support/shared_contexts/policy.rb'
 
 # Add additional requires below this line. Rails is not loaded until this point!
 

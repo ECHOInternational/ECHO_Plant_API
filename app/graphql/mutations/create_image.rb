@@ -1,15 +1,15 @@
 module Mutations
   class CreateImage < BaseMutation
-    argument :image_id, ID, "The ID for this image. This should be sourced from an upload.", required: true
-    argument :object_id, ID, "The ID for the object to which the image should be attached.", required: true
-    argument :name, String, "The translatable name of the image.", required: true
-    argument :description, String, "A translatable description of the image", required: false
-    argument :attribution, String, "The copyright or attribution statement for the image.", required: false
-    argument :language, String, "Language of the translatable fields supplied", required: false
-    argument :bucket, String, "The S3 bucket where the image is stored.", required: true
-    argument :key, String, "The S3 key for the image", required: true
-    argument :visibility, Types::VisibilityEnum, "The visibility of the image. Can be: PUBLIC, PRIVATE, DRAFT, DELETED", required: false, default_value: :private
-    argument :image_attribute_ids, [ID], "Attributes for the image", required: false
+    argument :image_id, ID, 'The ID for this image. This should be sourced from an upload.', required: true
+    argument :object_id, ID, 'The ID for the object to which the image should be attached.', required: true
+    argument :name, String, 'The translatable name of the image.', required: true
+    argument :description, String, 'A translatable description of the image', required: false
+    argument :attribution, String, 'The copyright or attribution statement for the image.', required: false
+    argument :language, String, 'Language of the translatable fields supplied', required: false
+    argument :bucket, String, 'The S3 bucket where the image is stored.', required: true
+    argument :key, String, 'The S3 key for the image', required: true
+    argument :visibility, Types::VisibilityEnum, 'The visibility of the image. Can be: PUBLIC, PRIVATE, DRAFT, DELETED', required: false, default_value: :private
+    argument :image_attribute_ids, [ID], 'Attributes for the image', required: false
 
     field :image, Types::ImageType, null: true
     field :errors, [String], null: false

@@ -1,6 +1,6 @@
 require 'pundit/rspec'
 
-RSpec.shared_context "Policy" do
+RSpec.shared_context 'Policy' do
   subject { described_class.new(user, target) }
   let(:model_class) { described_class.to_s.chomp('Policy').constantize }
   # let(:permitted_attributes) do
@@ -11,5 +11,5 @@ RSpec.shared_context "Policy" do
 end
 
 RSpec.configure do |config|
-  config.include_context "Policy", type: :policy
+  config.include_context 'Policy', type: :policy
 end

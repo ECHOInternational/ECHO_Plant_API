@@ -5,9 +5,9 @@ class User
   attr_reader :permissions
 
   def initialize(options)
-    @id = options["uid"]
-    @email = options["email"]
-    @permissions = options["trust_levels"]
+    @id = options['uid']
+    @email = options['email']
+    @permissions = options['trust_levels']
   end
 
   # plant permissions
@@ -20,20 +20,20 @@ class User
   # 9 Can delete public records
 
   def super_admin?
-    @permissions["plant"] > 8
+    @permissions['plant'] > 8
   end
 
   def admin?
     # Can CRUD things with restricted ownership
-    @permissions["plant"] > 7
+    @permissions['plant'] > 7
   end
 
   def can_read?
-    (@permissions["plant"]).positive?
+    (@permissions['plant']).positive?
   end
 
   def can_write?
-    @permissions["plant"] > 1
+    @permissions['plant'] > 1
   end
 
   def to_model() end
