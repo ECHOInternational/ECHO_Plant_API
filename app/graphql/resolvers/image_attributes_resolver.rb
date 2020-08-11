@@ -7,7 +7,7 @@ module Resolvers
       type Types::ImageAttributeType::ImageAttributeConnectionWithTotalCountType, null: false
 	  description "Returns a list of Image Attributes"
 
-	  scope {ImageAttribute.all}
+	  scope {ImageAttribute.all.i18n.order(name: :asc)}
 
 	  option :language, type: String, with: :apply_language_filter, description: "Request returned fields in a specific languge. Overrides ACCEPT-LANGUAGE header."
 	  option :name, type: String, with: :apply_name_filter, description: "Performs a case-insensitive LIKE match on the name field"
