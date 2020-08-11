@@ -5,6 +5,18 @@ class PlantApiSchema < GraphQL::Schema
   # Opt in to the new runtime (default in future graphql-ruby versions)
   use GraphQL::Execution::Interpreter
   use GraphQL::Analysis::AST
+  use GraphQL::Execution::Errors
+
+  rescue_from(ActiveRecord::RecordNotFound) do |err, obj, args, ctx, field|
+    # Raise a graphql-friendly error with a custom message
+    
+    # object_not_found_type = err.model.constantize
+    # object_not_found_id = id_from_object(err.id, object_not_found_type, ctx)
+
+    object_not_found_id = GraphQL::Schema::UniqueWithinType.encode(err.model, err.id)
+    raise GraphQL::ExecutionError, "#{err.model}: #{object_not_found_id} not found."
+  end
+
 
   # Add built-in connections for pagination
   use GraphQL::Pagination::Connections
@@ -21,12 +33,16 @@ class PlantApiSchema < GraphQL::Schema
 
   # Given a string UUID, find the object
   def self.object_from_id(id, query_ctx)
-    # For example, to decode the UUIDs generated above:
+    # For example, to decode the UUIDs generated abovcone:
     type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
     #
     # Then, based on `type_name` and `id`
     # find an object in your application
-    klass = type_name.constantize
+    begin
+      klass = type_name.constantize
+    rescue NameError
+      raise GraphQL::ExecutionError, "#{id} not found."
+    end
     klass.find item_id
   end
 
@@ -38,9 +54,7 @@ class PlantApiSchema < GraphQL::Schema
     when Image
       Types::ImageType
     when ImageAttribute
-      Types::ImageAttribute
-    when Upload
-      Types::Upload
+      Types::ImageAttributeType
     else
       raise("Unexpected object: #{obj}")
     end

@@ -19,3 +19,10 @@ categories.each do | category |
     end
     record.save!
 end
+
+# ImageAttributes
+image_attributes_json = File.read('db/seeds/ImageAttributes.json')
+image_attributes = JSON.parse(image_attributes_json)
+image_attributes.each do | image_attribute |
+    ImageAttribute.create!(image_attribute)
+end

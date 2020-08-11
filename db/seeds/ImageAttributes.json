@@ -1,0 +1,35 @@
+
+[
+    {
+        "id": "1a752a28-bba9-42ff-bcbc-62cec18da84e",
+        "name": "Roots"
+    },
+    {
+        "id": "aa3401ce-0ee7-4c1a-83ff-8f6596ca1eea",
+        "name": "Stems"
+    },
+    {
+        "id": "4bb793a7-a2aa-4dce-9173-5c0989dfc4b4",
+        "name": "Leaves"
+    },
+    {
+        "id": "614dd092-d04f-43ae-9347-623577c569ac",
+        "name": "Flowers"
+    },
+    {
+        "id": "ffc6dbea-26b8-47c0-9ed9-b053df427962",
+        "name": "Fruits"
+    },
+    {
+        "id": "1e350f7b-fcd0-4bd7-83a8-50d5015be7e3",
+        "name": "Seeds"
+    },
+    {
+        "id": "ce7faa09-a045-4d61-829c-99b7dc90137c",
+        "name": "Mature"
+    },
+    {
+        "id": "d7683e2b-3fdc-4d5d-a692-9c1539a37ace",
+        "name": "Immature"
+    }
+]

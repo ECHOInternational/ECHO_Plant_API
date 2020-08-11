@@ -8,10 +8,11 @@ module Types
     # Fetches a list of objects given a list of IDs
     add_field(GraphQL::Types::Relay::NodesField)
 
+    # Collection Queries
     field :categories, resolver: Resolvers::CategoriesResolver, connection: true
+    field :image_attributes, resolver: Resolvers::ImageAttributesResolver, connection: true
 
-
-
+    # Object Queries
     field :category, Types::CategoryType, null: true do
       description "Find a category by ID"
       argument :id, ID, required: true
@@ -21,6 +22,17 @@ module Types
       type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
       Mobility.locale = language || I18n.locale
       Pundit.policy_scope(context[:current_user], Category).find(item_id)
+    end
+
+    field :image_attribute, Types::ImageAttributeType, null: true do
+      description "Find an image attribute by ID"
+      argument :id, ID, required: true
+      argument :language, String, required: false, description: "Request returned fields in a specific language. Overrides ACCEPT-LANGUAGE header."
+    end
+    def image_attribute(id:, language: nil)
+      type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
+      Mobility.locale = language || I18n.locale
+      ImageAttribute.find(item_id)
     end
 
   end
