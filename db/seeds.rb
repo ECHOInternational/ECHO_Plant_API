@@ -12,7 +12,12 @@
 categories_json = File.read('db/seeds/Categories.json')
 categories = JSON.parse(categories_json)
 categories.each do |category|
-  record = Category.new(id: category['uuid'], owned_by: 'echo@echonet.org', created_by: 'echo@echonet.org', visibility: :public)
+  record = Category.new(
+    id: category['uuid'],
+    owned_by: 'echo@echonet.org',
+    created_by: 'echo@echonet.org',
+    visibility: :public
+  )
   category['translations'].each do |translation|
     Mobility.with_locale(translation['locale']) do
       record.name = translation['name']

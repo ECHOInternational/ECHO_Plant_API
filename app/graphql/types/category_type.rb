@@ -7,14 +7,31 @@ module Types
 
     description 'A category contains a group of plant objects.'
 
-    field :uuid, ID, 'The internal database ID for a category', null: false, method: :id
-    field :name, String, 'The translated name of a category', null: true
-    field :description, String, 'A translated description of a category', null: true
-    field :created_by, String, "The user ID of a category's creator", null: true
-    field :owned_by, String, "The user ID of a category's owner", null: true
-    field :images, Types::ImageType.connection_type, 'A list of images related to a category', null: true
-    field :translations, [Types::CategoryType::CategoryTranslationType], 'Translations of translatable category fields', null: false, method: :translations_array
-    field :visibility, Types::VisibilityEnum, 'The visibility of the category. Can be: PUBLIC, PRIVATE, DRAFT, DELETED', null: false
+    field :uuid, ID,
+          description: 'The internal database ID for a category',
+          null: false, method: :id
+    field :name, String,
+          description: 'The translated name of a category',
+          null: true
+    field :description, String,
+          description: 'A translated description of a category',
+          null: true
+    field :created_by, String,
+          description: "The user ID of a category's creator",
+          null: true
+    field :owned_by, String,
+          description: "The user ID of a category's owner",
+          null: true
+    field :images, Types::ImageType.connection_type,
+          description: 'A list of images related to a category',
+          null: true
+    field :translations, [Types::CategoryType::CategoryTranslationType],
+          description: 'Translations of translatable category fields',
+          null: false,
+          method: :translations_array
+    field :visibility, Types::VisibilityEnum,
+          description: 'The visibility of the category. Can be: PUBLIC, PRIVATE, DRAFT, DELETED',
+          null: false
     # field :versions, Types::CategoryType::CategoryVersionConnectionWithTotalCountType, null: false, connection: true
 
     def images

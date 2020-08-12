@@ -3,13 +3,25 @@
 module Mutations
   # Modifies editable fields for an Image
   class UpdateImage < BaseMutation
-    argument :image_id, ID, required: true, loads: Types::ImageType
-
-    argument :name, String, required: false
-    argument :description, String, required: false
-    argument :language, String, required: false
-    argument :attribution, String, required: false
-    argument :visibility, Types::VisibilityEnum, required: false
+    argument :image_id, ID,
+             description: 'The image to be updated.',
+             required: true,
+             loads: Types::ImageType
+    argument :name, String,
+             description: 'The translatable name of the image.',
+             required: false
+    argument :description, String,
+             description: 'A translatable description of the image',
+             required: false
+    argument :language, String,
+             description: 'Language of the translatable fields supplied',
+             required: false
+    argument :attribution, String,
+             description: 'The copyright or attribution statement for the image.',
+             required: false
+    argument :visibility, Types::VisibilityEnum,
+             description: 'The visibility of the image.',
+             required: false
 
     field :image, Types::ImageType, null: true
     field :errors, [String], null: false

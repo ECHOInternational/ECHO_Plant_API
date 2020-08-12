@@ -147,7 +147,7 @@ RSpec.describe 'Create Image Mutation', type: :graphql_mutation do
         imageable_id = PlantApiSchema.id_from_object(imageable, Category, {})
         attr_a = create(:image_attribute)
         attr_a_id = PlantApiSchema.id_from_object(attr_a, ImageAttribute, {})
-        attr_b_id = attr_a_id[0...-4] + 'fake'
+        attr_b_id = "#{attr_a_id[0...-4]}fake"
 
         result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
                                           input: {

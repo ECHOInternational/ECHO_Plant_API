@@ -12,11 +12,25 @@ module Resolvers
 
     scope { Pundit.policy_scope(context[:current_user], Category).i18n }
 
-    option :language, type: String, with: :apply_language_filter, description: 'Request returned fields in a specific languge. Overrides ACCEPT-LANGUAGE header.'
-    option :name, type: String, with: :apply_name_filter, description: 'Performs a case-insensitive LIKE match on the name field'
-    option :visibility, type: Types::VisibilityEnum, default: :visible
-    option :sort_direction, type: Types::SortDirectionEnum, default: :asc, description: 'Sorts by name either ascending or descending'
-    option :owned_by, type: String, with: :apply_owned_by_filter, description: 'Returns only records owned by the specified user'
+    option :language,
+           type: String,
+           with: :apply_language_filter,
+           description: 'Request returned fields in a specific languge. Overrides ACCEPT-LANGUAGE header.'
+    option :name,
+           type: String,
+           with: :apply_name_filter,
+           description: 'Performs a case-insensitive LIKE match on the name field'
+    option :visibility,
+           type: Types::VisibilityEnum,
+           default: :visible
+    option :sort_direction,
+           type: Types::SortDirectionEnum,
+           default: :asc,
+           description: 'Sorts by name either ascending or descending'
+    option :owned_by,
+           type: String,
+           with: :apply_owned_by_filter,
+           description: 'Returns only records owned by the specified user'
 
     def apply_owned_by_filter(scope, value)
       return scope if value.blank?

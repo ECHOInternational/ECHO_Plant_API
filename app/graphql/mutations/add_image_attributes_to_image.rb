@@ -3,8 +3,14 @@
 module Mutations
   # Adds one or more ImageAttributes to a supplied Image Object
   class AddImageAttributesToImage < BaseMutation
-    argument :image_id, ID, required: true, loads: Types::ImageType
-    argument :image_attribute_ids, [ID], required: true
+    argument :image_id, ID,
+             required: true,
+             loads: Types::ImageType,
+             description: 'ID for image to which the attribute(s) should be added'
+
+    argument :image_attribute_ids, [ID],
+             required: true,
+             description: 'ID(s) of the image attributes that should be associated with the image'
 
     field :image, Types::ImageType, null: true
     field :errors, [String], null: false

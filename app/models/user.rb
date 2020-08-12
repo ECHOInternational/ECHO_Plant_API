@@ -3,9 +3,7 @@
 # User class for storing information about the current user in memory.
 class User
   extend ActiveModel::Naming
-  attr_reader :id
-  attr_reader :email
-  attr_reader :permissions
+  attr_reader :id, :email, :permissions
 
   def initialize(options)
     @id = options['uid']

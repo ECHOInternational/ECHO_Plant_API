@@ -3,7 +3,10 @@
 module Mutations
   # Deletes a Category
   class DeleteCategory < BaseMutation
-    argument :category_id, ID, required: true, loads: Types::CategoryType
+    argument :category_id, ID,
+             description: 'The category to be deleted',
+             required: true,
+             loads: Types::CategoryType
 
     field :category_id, ID, null: true
     field :errors, [String], null: false

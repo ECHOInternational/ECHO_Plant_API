@@ -3,8 +3,13 @@
 module Mutations
   # Removes one or more ImageAttributes from a supplied Image
   class RemoveImageAttributesFromImage < BaseMutation
-    argument :image_id, ID, required: true, loads: Types::ImageType
-    argument :image_attribute_ids, [ID], required: true
+    argument :image_id, ID,
+             description: 'ID for image from which the attribute(s) should be removed',
+             required: true,
+             loads: Types::ImageType
+    argument :image_attribute_ids, [ID],
+             description: 'ID(s) of the image attributes that should be removed from the image',
+             required: true
 
     field :image, Types::ImageType, null: true
     field :errors, [String], null: false

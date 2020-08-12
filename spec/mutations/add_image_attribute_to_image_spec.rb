@@ -27,7 +27,7 @@ RSpec.describe 'Add Image Attributes To Image Mutation', type: :graphql_mutation
   context 'when the imageId is invalid' do
     it 'returns a record not found error' do
       real_image_id = PlantApiSchema.id_from_object(image, Image, {})
-      fake_image_id = real_image_id[0...-4] + 'fake'
+      fake_image_id = "#{real_image_id[0...-4]}fake"
       attr_a_id = PlantApiSchema.id_from_object(attr_a, ImageAttribute, {})
       result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
                                         input: {
@@ -147,7 +147,7 @@ RSpec.describe 'Add Image Attributes To Image Mutation', type: :graphql_mutation
           before :each do
             @image_id = PlantApiSchema.id_from_object(image, Image, {})
             @attr_a_id = PlantApiSchema.id_from_object(attr_a, ImageAttribute, {})
-            @attr_b_id = @attr_a_id[0...-4] + 'fake'
+            @attr_b_id = "#{@attr_a_id[0...-4]}fake"
             @result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
                                                input: {
                                                  imageId: @image_id,

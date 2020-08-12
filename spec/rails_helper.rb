@@ -3,7 +3,7 @@
 $VERBOSE = nil
 # This file is copied to spec/ when you run 'rails generate rspec:install'
 require 'spec_helper'
-require 'support/factory_bot.rb'
+require 'support/factory_bot'
 ENV['RAILS_ENV'] ||= 'test'
 require File.expand_path('../config/environment', __dir__)
 # Prevent database truncation if the environment is production
@@ -11,7 +11,7 @@ abort('The Rails environment is running in production mode!') if Rails.env.produ
 require 'rspec/rails'
 require 'paper_trail/frameworks/rspec'
 require 'pundit/rspec'
-require 'support/shared_contexts/policy.rb'
+require 'support/shared_contexts/policy'
 
 # Add additional requires below this line. Rails is not loaded until this point!
 

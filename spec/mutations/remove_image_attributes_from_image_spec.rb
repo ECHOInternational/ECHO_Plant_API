@@ -27,7 +27,7 @@ RSpec.describe 'Remove Image Attributes From Image Mutation', type: :graphql_mut
   context 'when the image does not exist' do
     it 'returns a not found error' do
       image_id = PlantApiSchema.id_from_object(image, Image, {})
-      fake_image_id = image_id[0...-4] + 'fake'
+      fake_image_id = "#{image_id[0...-4]}fake"
       image_attribute_a_id = PlantApiSchema.id_from_object(image_attribute_a, ImageAttribute, {})
       result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
                                         input: {
@@ -125,7 +125,7 @@ RSpec.describe 'Remove Image Attributes From Image Mutation', type: :graphql_mut
       context 'when a passed image_attribute is invalid' do
         context "when the image_attribute doesn't exist" do
           before :each do
-            @fake_image_attribute_id = @image_attribute_a_id[0...-4] + 'fake'
+            @fake_image_attribute_id = "#{@image_attribute_a_id[0...-4]}fake"
           end
           it 'returns both errors and data' do
             expect { ImageAttributesImage.find_by!(image_id: image.id, image_attribute_id: image_attribute_a.id) }.to_not raise_error(ActiveRecord::RecordNotFound)

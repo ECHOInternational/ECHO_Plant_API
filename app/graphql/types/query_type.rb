@@ -18,8 +18,13 @@ module Types
     # Object Queries
     field :category, Types::CategoryType, null: true do
       description 'Find a category by ID'
-      argument :id, ID, required: true
-      argument :language, String, required: false, description: 'Request returned fields in a specific languge. Overrides ACCEPT-LANGUAGE header.'
+      argument :id,
+               type: ID,
+               required: true
+      argument :language,
+               type: String,
+               required: false,
+               description: 'Request returned fields in a specific languge. Overrides ACCEPT-LANGUAGE header.'
     end
     def category(id:, language: nil)
       _type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
@@ -29,8 +34,13 @@ module Types
 
     field :image_attribute, Types::ImageAttributeType, null: true do
       description 'Find an image attribute by ID'
-      argument :id, ID, required: true
-      argument :language, String, required: false, description: 'Request returned fields in a specific language. Overrides ACCEPT-LANGUAGE header.'
+      argument :id,
+               type: ID,
+               required: true
+      argument :language,
+               type: String,
+               required: false,
+               description: 'Request returned fields in a specific language. Overrides ACCEPT-LANGUAGE header.'
     end
     def image_attribute(id:, language: nil)
       _type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)

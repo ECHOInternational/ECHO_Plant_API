@@ -3,10 +3,18 @@
 module Mutations
   # Creates a Plant Category
   class CreateCategory < BaseMutation
-    argument :name, String, required: true
-    argument :description, String, required: false
-    argument :language, String, required: false
-    argument :visibility, Types::VisibilityEnum, required: false
+    argument :name, String,
+             required: true,
+             description: 'The translatable name of the category'
+    argument :description, String,
+             required: false,
+             description: 'The translatable description of the category'
+    argument :language, String,
+             required: false,
+             description: 'Language of the translatable fields supplied'
+    argument :visibility, Types::VisibilityEnum,
+             required: false,
+             description: 'The visibility of the category'
 
     field :category, Types::CategoryType, null: true
     field :errors, [String], null: false
