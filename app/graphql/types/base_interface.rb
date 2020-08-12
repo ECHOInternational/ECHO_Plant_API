@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Types
-  module BaseInterface
+  module BaseInterface # :nodoc:
     include GraphQL::Schema::Interface
 
     field_class Types::BaseField

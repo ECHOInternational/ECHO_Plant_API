@@ -2,6 +2,7 @@
 
 module Types
   class CategoryType
+    # Adds a total_count field to the category connection
     class CategoryConnectionWithTotalCountType < GraphQL::Types::Relay::BaseConnection
       edge_type(CategoryEdgeType)
 

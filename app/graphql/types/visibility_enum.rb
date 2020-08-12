@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Types
+  # A reuseable enumerator for visibility values.
   class VisibilityEnum < Types::BaseEnum
     graphql_name 'Visibility'
     description 'Returns records based on visbility'

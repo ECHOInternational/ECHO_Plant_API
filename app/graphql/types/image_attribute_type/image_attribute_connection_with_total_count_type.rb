@@ -2,6 +2,7 @@
 
 module Types
   class ImageAttributeType
+    # Adds a total_count field to the image attribute connection
     class ImageAttributeConnectionWithTotalCountType < GraphQL::Types::Relay::BaseConnection
       edge_type(ImageAttributeEdgeType)
 

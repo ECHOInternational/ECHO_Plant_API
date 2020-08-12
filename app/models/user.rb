@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# User class for storing information about the current user in memory.
 class User
   extend ActiveModel::Naming
   attr_reader :id

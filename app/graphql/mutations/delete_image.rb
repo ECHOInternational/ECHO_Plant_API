@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Mutations
+  # Deletes an Image
   class DeleteImage < BaseMutation
     argument :image_id, ID, required: true, loads: Types::ImageType
 

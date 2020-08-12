@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Mutations
+  # Modifies editable fields for an Image
   class UpdateImage < BaseMutation
     argument :image_id, ID, required: true, loads: Types::ImageType
 

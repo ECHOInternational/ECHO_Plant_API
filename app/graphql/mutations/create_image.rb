@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Mutations
+  # Creates an Image
   class CreateImage < BaseMutation
     argument :image_id, ID, 'The ID for this image. This should be sourced from an upload.', required: true
     argument :object_id, ID, 'The ID for the object to which the image should be attached.', required: true

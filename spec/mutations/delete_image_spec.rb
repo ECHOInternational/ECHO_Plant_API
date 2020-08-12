@@ -70,7 +70,7 @@ RSpec.describe 'Delete Image Mutation', type: :graphql_mutation do
         expect { Image.find record_id }.to_not raise_error(ActiveRecord::RecordNotFound)
         result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
                                           input: {
-                                            imageId: @image_id,
+                                            imageId: @image_id
                                           }
                                         })
         expect(result).to_not include 'errors'

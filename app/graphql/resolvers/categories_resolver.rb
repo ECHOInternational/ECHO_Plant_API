@@ -4,6 +4,7 @@ require 'search_object'
 require 'search_object/plugin/graphql'
 
 module Resolvers
+  # Populates the data for the categories Query
   class CategoriesResolver < Resolvers::BaseResolver
     include SearchObject.module(:graphql)
     type Types::CategoryType::CategoryConnectionWithTotalCountType, null: false
@@ -40,7 +41,7 @@ module Resolvers
     end
 
     def apply_visibility_with_visible(scope)
-      scope.where(visibility: [:public, :private])
+      scope.where(visibility: %i[public private])
     end
 
     def apply_sort_direction_with_asc(scope)

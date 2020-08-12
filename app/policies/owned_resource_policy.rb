@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
+# Default Pundit policy base for objects that can be owned by users
 class OwnedResourcePolicy < ApplicationPolicy
+  # Defines the parameters necessary to provide a protected scope
   class Scope
     attr_reader :user, :scope
     def initialize(user, scope)

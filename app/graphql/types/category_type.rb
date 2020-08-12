@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Types
+  # Defines fields for a category - categories contains a group of plant objects
   class CategoryType < Types::BaseObject
     global_id_field :id
 

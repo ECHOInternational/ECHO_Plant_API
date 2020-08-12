@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# Categories are groupings of plant objects
 class Category < ApplicationRecord
   extend Mobility
   translates :name, :description

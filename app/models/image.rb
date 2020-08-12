@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# Images can be related to any 'imageable' object
 class Image < ApplicationRecord
   extend Mobility
   after_initialize :build_urls

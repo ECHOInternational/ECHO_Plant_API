@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# Defines the unique secuirty policy for Image objects
 class ImagePolicy < OwnedResourcePolicy
   def show?
     return true if user && record.imageable.owned_by == user.email

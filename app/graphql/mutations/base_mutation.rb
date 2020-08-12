@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Mutations
+  # All mutations inherit from this set of defaults
   class BaseMutation < GraphQL::Schema::RelayClassicMutation
     include Pundit
     def pundit_user

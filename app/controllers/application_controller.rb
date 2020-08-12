@@ -1,13 +1,12 @@
 # frozen_string_literal: true
 
+# Controller for all application actions
 class ApplicationController < ActionController::API
   include ActionController::HttpAuthentication::Token::ControllerMethods
   before_action :require_token
   before_action :set_paper_trail_whodunnit
 
-  def current_user
-    @current_user
-  end
+  attr_reader :current_user
 
   private
 

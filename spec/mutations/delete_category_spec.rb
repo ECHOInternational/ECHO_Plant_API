@@ -70,7 +70,7 @@ RSpec.describe 'Delete Category Mutation', type: :graphql_mutation do
         expect { Category.find record_id }.to_not raise_error(ActiveRecord::RecordNotFound)
         result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
                                           input: {
-                                            categoryId: @category_id,
+                                            categoryId: @category_id
                                           }
                                         })
         expect(result).to_not include 'errors'

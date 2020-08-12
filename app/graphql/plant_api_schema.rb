@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# Defines the GraphQL Plant API Schema
 class PlantApiSchema < GraphQL::Schema
   mutation(Types::MutationType)
   query(Types::QueryType)

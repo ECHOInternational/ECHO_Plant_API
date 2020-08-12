@@ -8,6 +8,6 @@ class CreateImageAttributesImages < ActiveRecord::Migration[6.0]
 
       t.timestamps
     end
-    add_index :image_attributes_images, [:image_id, :image_attribute_id], unique: true, name: 'index_image_attributes_image_on_both_ids'
+    add_index :image_attributes_images, %i[image_id image_attribute_id], unique: true, name: 'index_image_attributes_image_on_both_ids'
   end
 end

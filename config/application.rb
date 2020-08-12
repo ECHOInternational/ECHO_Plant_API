@@ -22,6 +22,7 @@ require 'action_cable/engine'
 Bundler.require(*Rails.groups)
 
 module API
+  # Defines configuration for the entire Rails Application
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 6.0
@@ -36,7 +37,7 @@ module API
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
     config.i18n.fallbacks = true
-    config.i18n.available_locales = [:en, :es, :fr, :th, :zh, :km, :id, :vi, :my, :sw, :hi, :ht, :sv, :pt, :de, :am, :ne, :bi, :rw, :ko, :so, :ber, :bn]
+    config.i18n.available_locales = %i[en es fr th zh km id vi my sw hi ht sv pt de am ne bi rw ko so ber bn]
     config.i18n.default_locale = :en
   end
 end

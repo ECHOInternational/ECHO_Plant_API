@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Mutations
+  # Removes one or more ImageAttributes from a supplied Image
   class RemoveImageAttributesFromImage < BaseMutation
     argument :image_id, ID, required: true, loads: Types::ImageType
     argument :image_attribute_ids, [ID], required: true

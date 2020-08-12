@@ -2,6 +2,7 @@
 
 module Types
   class CategoryType
+    # Defines translated fields for a category
     class CategoryTranslationType < Types::BaseObject
       description 'Translated fields for a Category'
       field :locale, String, 'The locale for this translation', null: false

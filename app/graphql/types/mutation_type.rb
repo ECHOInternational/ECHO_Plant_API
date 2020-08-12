@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Types
+  # Defines the available mutations for the Plant API
   class MutationType < Types::BaseObject
     field :create_category, mutation: Mutations::CreateCategory, description: 'Creates a new plant category'
     field :update_category, mutation: Mutations::UpdateCategory, description: 'Updates a plant category'

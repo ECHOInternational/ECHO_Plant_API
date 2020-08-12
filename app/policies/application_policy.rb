@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# Default Pundit policy
 class ApplicationPolicy
   attr_reader :user, :record
 
@@ -36,6 +37,7 @@ class ApplicationPolicy
     false
   end
 
+  # Defines the parameters necessary to provide a protected scope
   class Scope
     attr_reader :user, :scope
 

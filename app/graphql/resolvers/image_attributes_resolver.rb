@@ -4,6 +4,7 @@ require 'search_object'
 require 'search_object/plugin/graphql'
 
 module Resolvers
+  # Populates the data for the imageAttributes Query
   class ImageAttributesResolver < Resolvers::BaseResolver
     include SearchObject.module(:graphql)
     type Types::ImageAttributeType::ImageAttributeConnectionWithTotalCountType, null: false

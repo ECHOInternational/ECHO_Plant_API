@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Mutations
+  # Modifies editble fields for a Category
   class UpdateCategory < BaseMutation
     argument :category_id, ID, required: true, loads: Types::CategoryType
 

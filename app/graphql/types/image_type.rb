@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Types
+  # Defines fields for an Image
   class ImageType < Types::BaseObject
     global_id_field :id
 

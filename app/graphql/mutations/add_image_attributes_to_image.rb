@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Mutations
+  # Adds one or more ImageAttributes to a supplied Image Object
   class AddImageAttributesToImage < BaseMutation
     argument :image_id, ID, required: true, loads: Types::ImageType
     argument :image_attribute_ids, [ID], required: true

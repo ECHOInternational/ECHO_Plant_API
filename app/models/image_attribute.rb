@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# ImageAttributes provide metadata for image objects
 class ImageAttribute < ApplicationRecord
   extend Mobility
   translates :name

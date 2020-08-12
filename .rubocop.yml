@@ -4,13 +4,22 @@ inherit_from: .rubocop_todo.yml
 Style/BlockDelimiters:
     Exclude:
       - 'spec/**/*.rb'
+Lint/AmbiguousBlockAssociation:
+    Exclude:
+        - 'spec/**/*.rb'
 Style/PercentLiteralDelimiters:
     Exclude:
         - 'db/migrate/20200702173418_create_versions.rb'
 Style/NumericLiterals:
     Exclude:
         - 'db/schema.rb'
-# AllCops:
+Style/WordArray:
+    Exclude:
+        - 'db/schema.rb'
+Style/Documentation:
+    Exclude:
+        - 'db/migrate/*.rb'
+        # AllCops:
 #     Exclude:
 #         - 'db/schema.rb'
 

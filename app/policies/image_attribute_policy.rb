@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# Defines the unique secuirty policy for ImageAttribute objects
 class ImageAttributePolicy < ApplicationPolicy
   def index?
     true
