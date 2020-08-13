@@ -12,18 +12,24 @@ module Mutations
              required: true
 
     field :image, Types::ImageType, null: true
-    field :errors, [String], null: false
+    field :errors, [Types::MutationError], null: false
 
     def authorized?(image:, **_attributes)
       authorize image, :update?
     end
 
-    def resolve(image:, **attributes)
+    def resolve(image:, **attributes) # rubocop:disable Metrics/MethodLength
+      errors = []
       attributes[:image_attribute_ids]&.each do |attribute_id|
         begin
           image_attribute = PlantApiSchema.object_from_id(attribute_id, {})
         rescue ActiveRecord::RecordNotFound
-          context.add_error(GraphQL::ExecutionError.new("ImageAttribute: #{attribute_id} not found."))
+          errors << {
+            field: 'imageAttributeIds',
+            value: attribute_id,
+            message: "ImageAttribute #{attribute_id} not found.",
+            code: 404
+          }
         end
 
         next unless image_attribute
@@ -32,13 +38,18 @@ module Mutations
           join_record = ImageAttributesImage.find_by!(image_id: image.id, image_attribute_id: image_attribute.id)
           join_record.destroy
         rescue ActiveRecord::RecordNotFound
-          context.add_error(GraphQL::ExecutionError.new("Image does not have associated attribute: #{attribute_id}"))
+          errors << {
+            field: 'imageAttributeIds',
+            value: attribute_id,
+            message: "Image does not have associated attribute: #{attribute_id}.",
+            code: 404
+          }
         end
       end
 
       {
         image: image,
-        errors: []
+        errors: errors
       }
     end
   end

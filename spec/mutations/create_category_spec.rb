@@ -8,6 +8,12 @@ RSpec.describe 'Create Category Mutation', type: :graphql_mutation do
     <<-GRAPHQL
 		mutation($input: CreateCategoryInput!){
 			createCategory(input: $input){
+        errors{
+          field
+          value
+          message
+          code
+        }
 				category{
 					id
 					name
@@ -121,6 +127,18 @@ RSpec.describe 'Create Category Mutation', type: :graphql_mutation do
         expect(created_category.visibility_public?).to be true
         expect(created_category.visibility_private?).to be false
       end
+    end
+    it 'returns errors when the input is invalid' do
+      result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                        input: {
+                                          name: '',
+                                          description: 'A description'
+                                        }
+                                      })
+      error_result = result['data']['createCategory']['errors']
+      expect(error_result[0]['field']).to eq 'name'
+      expect(error_result[0]['message']).to eq "name can't be blank"
+      expect(error_result[0]['code']).to eq 400
     end
   end
 end

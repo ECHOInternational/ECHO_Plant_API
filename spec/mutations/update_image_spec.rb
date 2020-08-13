@@ -9,6 +9,12 @@ RSpec.describe 'Update Image Mutation', type: :graphql_mutation do
     <<-GRAPHQL
 		mutation($input: UpdateImageInput!){
 			updateImage(input: $input){
+        errors{
+          field
+          value
+          message
+          code
+        }
 				image{
                     id
                     uuid
@@ -135,6 +141,18 @@ RSpec.describe 'Update Image Mutation', type: :graphql_mutation do
 
         expect(created_image.visibility_public?).to be true
         expect(created_image.visibility_private?).to be false
+      end
+      it 'returns errors when the input is invalid' do
+        result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                          input: {
+                                            imageId: @image_id,
+                                            name: nil
+                                          }
+                                        })
+        error_result = result['data']['updateImage']['errors']
+        expect(error_result[0]['field']).to eq 'name'
+        expect(error_result[0]['message']).to eq "name can't be blank"
+        expect(error_result[0]['code']).to eq 400
       end
     end
   end

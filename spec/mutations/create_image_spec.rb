@@ -8,7 +8,13 @@ RSpec.describe 'Create Image Mutation', type: :graphql_mutation do
     <<-GRAPHQL
 		mutation($input: CreateImageInput!){
 			createImage(input: $input){
-				image{
+        errors {
+          field,
+          value,
+          message,
+          code,
+        }
+        image{
                     id
                     uuid
                     name
@@ -162,9 +168,14 @@ RSpec.describe 'Create Image Mutation', type: :graphql_mutation do
                                           }
                                         })
 
-        expect(result).to include('errors')
+        expect(result).to_not include('errors')
         expect(result).to include('data')
         image_result = result['data']['createImage']['image']
+        error_result = result['data']['createImage']['errors']
+        expect(error_result.count).to eq 1
+        expect(error_result[0]['field']).to eq 'imageAttributeIds'
+        expect(error_result[0]['value']).to eq attr_b_id
+        expect(error_result[0]['code']).to eq 404
         created_image = Image.find image_result['uuid']
         expect(created_image.image_attributes).to include attr_a
         expect(created_image.image_attributes.count).to eq 1

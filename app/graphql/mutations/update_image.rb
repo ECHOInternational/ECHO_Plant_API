@@ -24,7 +24,7 @@ module Mutations
              required: false
 
     field :image, Types::ImageType, null: true
-    field :errors, [String], null: false
+    field :errors, [Types::MutationError], null: false
 
     def authorized?(image:, **_attributes)
       authorize image, :update?
@@ -34,17 +34,11 @@ module Mutations
       language = attributes[:language] || I18n.locale
 
       Mobility.with_locale(language) do
-        if image.update(attributes.except(:language))
-          {
-            image: image,
-            errors: []
-          }
-        else
-          {
-            image: image,
-            errors: image.errors.full_messages
-          }
-        end
+        image.update(attributes.except(:language))
+        {
+          image: image,
+          errors: errors_from_active_record(image.errors)
+        }
       end
     end
   end

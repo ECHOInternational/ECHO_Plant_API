@@ -17,7 +17,7 @@ module Mutations
              description: 'The visibility of the category'
 
     field :category, Types::CategoryType, null: true
-    field :errors, [String], null: false
+    field :errors, [Types::MutationError], null: false
 
     def authorized?(**_attributes)
       authorize Category, :create?
@@ -33,17 +33,12 @@ module Mutations
 
       Mobility.with_locale(language) do
         category = Category.new(attributes)
-        if category.save
-          {
-            category: category,
-            errors: []
-          }
-        else
-          {
-            category: nil,
-            errors: category.errors.full_messages
-          }
-        end
+        result = category.save
+        errors = errors_from_active_record category.errors
+        {
+          category: result ? category : nil,
+          errors: errors
+        }
       end
     end
   end

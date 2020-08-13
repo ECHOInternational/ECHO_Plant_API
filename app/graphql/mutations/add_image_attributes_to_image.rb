@@ -13,23 +13,29 @@ module Mutations
              description: 'ID(s) of the image attributes that should be associated with the image'
 
     field :image, Types::ImageType, null: true
-    field :errors, [String], null: false
+    field :errors, [Types::MutationError], null: false
 
     def authorized?(image:, **_attributes)
       authorize image, :update?
     end
 
     def resolve(image:, **attributes)
+      errors = []
       attributes[:image_attribute_ids]&.each do |attribute_id|
         image_attribute = PlantApiSchema.object_from_id(attribute_id, {})
         image.image_attributes << image_attribute
       rescue ActiveRecord::RecordNotFound
-        context.add_error(GraphQL::ExecutionError.new("ImageAttribute: #{attribute_id} not found."))
+        errors << {
+          field: 'imageAttributeIds',
+          value: attribute_id,
+          message: "ImageAttribute #{attribute_id} not found.",
+          code: 404
+        }
       end
 
       {
         image: image,
-        errors: []
+        errors: errors
       }
     end
   end

@@ -11,7 +11,7 @@ module Mutations
     argument :visibility, Types::VisibilityEnum, required: false
 
     field :category, Types::CategoryType, null: true
-    field :errors, [String], null: false
+    field :errors, [Types::MutationError], null: false
 
     def authorized?(category:, **_attributes)
       authorize category, :update?
@@ -21,17 +21,11 @@ module Mutations
       language = attributes[:language] || I18n.locale
 
       Mobility.with_locale(language) do
-        if category.update(attributes.except(:language))
-          {
-            category: category,
-            errors: []
-          }
-        else
-          {
-            category: category,
-            errors: category.errors.full_messages
-          }
-        end
+        category.update(attributes.except(:language))
+        {
+          category: category,
+          errors: errors_from_active_record(category.errors)
+        }
       end
     end
   end

@@ -10,7 +10,12 @@ RSpec.describe 'Delete Category Mutation', type: :graphql_mutation do
 		mutation($input: DeleteCategoryInput!){
 			deleteCategory(input: $input){
 				categoryId
-				errors
+				errors {
+          field
+          value
+          message
+          code
+        }
 			}
 		}
     GRAPHQL
@@ -75,6 +80,8 @@ RSpec.describe 'Delete Category Mutation', type: :graphql_mutation do
                                         })
         expect(result).to_not include 'errors'
         expect(result).to include 'data'
+        expect(result['data']['deleteCategory']).to include 'categoryId'
+        expect(result['data']['deleteCategory']['categoryId']).to eq @category_id
         expect { Category.find record_id }.to raise_error(ActiveRecord::RecordNotFound)
       end
     end

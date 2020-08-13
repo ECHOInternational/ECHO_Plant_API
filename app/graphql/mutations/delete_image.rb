@@ -16,18 +16,13 @@ module Mutations
     end
 
     def resolve(image:, **_attributes)
-      id = image.id
-      if image.destroy
-        {
-          image_id: id,
-          errors: []
-        }
-      else
-        {
-          image_id: nil,
-          errors: image.errors.full_messages
-        }
-      end
+      id = PlantApiSchema.id_from_object(image, Image, {})
+      result = image.destroy
+      errors = errors_from_active_record image.errors
+      {
+        image_id: result.destroyed? ? id : nil,
+        errors: errors
+      }
     end
   end
 end

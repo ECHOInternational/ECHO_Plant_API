@@ -75,6 +75,8 @@ RSpec.describe 'Delete Image Mutation', type: :graphql_mutation do
                                         })
         expect(result).to_not include 'errors'
         expect(result).to include 'data'
+        expect(result['data']['deleteImage']).to include 'imageId'
+        expect(result['data']['deleteImage']['imageId']).to eq @image_id
         expect { Image.find record_id }.to raise_error(ActiveRecord::RecordNotFound)
       end
     end

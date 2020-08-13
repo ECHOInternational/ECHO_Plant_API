@@ -70,3 +70,5 @@ yarn-debug.log*
 /config/master.key
 
 /spec/examples.txt
+
+coverage

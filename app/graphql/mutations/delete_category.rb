@@ -9,25 +9,20 @@ module Mutations
              loads: Types::CategoryType
 
     field :category_id, ID, null: true
-    field :errors, [String], null: false
+    field :errors, [Types::MutationError], null: false
 
     def authorized?(category:, **_attributes)
       authorize category, :destroy?
     end
 
     def resolve(category:, **_attributes)
-      id = category.id
-      if category.destroy
-        {
-          category_id: id,
-          errors: []
-        }
-      else
-        {
-          category_id: nil,
-          errors: category.errors.full_messages
-        }
-      end
+      id = PlantApiSchema.id_from_object(category, Category, {})
+      result = category.destroy
+      errors = errors_from_active_record category.errors
+      {
+        category_id: result.destroyed? ? id : nil,
+        errors: errors
+      }
     end
   end
 end

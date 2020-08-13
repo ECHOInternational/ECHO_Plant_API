@@ -11,6 +11,12 @@ RSpec.describe 'Remove Image Attributes From Image Mutation', type: :graphql_mut
     <<-GRAPHQL
 		mutation($input: RemoveImageAttributesFromImageInput!){
 			removeImageAttributesFromImage(input: $input){
+        errors{
+          field
+          value
+          message
+          code
+        }
 				image{
 					id
 					uuid
@@ -137,7 +143,9 @@ RSpec.describe 'Remove Image Attributes From Image Mutation', type: :graphql_mut
                                               }
                                             })
             expect(result['data']['removeImageAttributesFromImage']['image']).to_not be nil
-            expect(result['errors'].count).to eq 1
+            expect(result['data']['removeImageAttributesFromImage']['errors'].count).to eq 1
+            expect(result['data']['removeImageAttributesFromImage']['errors'][0]['field']).to eq 'imageAttributeIds'
+            expect(result['data']['removeImageAttributesFromImage']['errors'][0]['value']).to eq @fake_image_attribute_id
           end
           it 'removes attributes that do exist' do
             expect { ImageAttributesImage.find_by!(image_id: image.id, image_attribute_id: image_attribute_a.id) }.to_not raise_error(ActiveRecord::RecordNotFound)
@@ -168,7 +176,10 @@ RSpec.describe 'Remove Image Attributes From Image Mutation', type: :graphql_mut
                                               }
                                             })
             expect(result['data']['removeImageAttributesFromImage']['image']).to_not be nil
-            expect(result['errors'].count).to eq 1
+            expect(result['data']['removeImageAttributesFromImage']['errors']).to_not be nil
+            expect(result['data']['removeImageAttributesFromImage']['errors'].count).to eq 1
+            expect(result['data']['removeImageAttributesFromImage']['errors'][0]['field']).to eq 'imageAttributeIds'
+            expect(result['data']['removeImageAttributesFromImage']['errors'][0]['value']).to eq @not_related_attribute_id
           end
           it 'removes attributes that do exist' do
             expect { ImageAttributesImage.find_by!(image_id: image.id, image_attribute_id: image_attribute_a.id) }.to_not raise_error(ActiveRecord::RecordNotFound)

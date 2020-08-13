@@ -11,6 +11,12 @@ RSpec.describe 'Add Image Attributes To Image Mutation', type: :graphql_mutation
     <<-GRAPHQL
 		mutation($input: AddImageAttributesToImageInput!){
 			addImageAttributesToImage(input: $input){
+        errors{
+          field
+          value
+          message
+          code
+        }
 				image{
 					id
 					uuid
@@ -155,10 +161,20 @@ RSpec.describe 'Add Image Attributes To Image Mutation', type: :graphql_mutation
                                                }
                                              })
           end
-          it 'completes successfully with both data and errors' do
-            expect(@result).to include 'errors'
+          it 'completes successfully with both and image and errors' do
+            expect(@result).to_not include 'errors'
             expect(@result).to include 'data'
-            expect(@result['errors'].count).to eq 1
+            expect(@result['data']['addImageAttributesToImage']['errors']).to_not be nil
+            expect(@result['data']['addImageAttributesToImage']['image']).to_not be nil
+            expect(@result['data']['addImageAttributesToImage']['errors'].count).to eq 1
+          end
+
+          it 'provides a well-formed error object' do
+            error = @result['data']['addImageAttributesToImage']['errors'][0]
+            expect(error['code']).to eq 404
+            expect(error['field']).to eq 'imageAttributeIds'
+            expect(error['value']).to eq @attr_b_id
+            expect(error['message']).to_not be nil
           end
 
           it 'updates the record' do

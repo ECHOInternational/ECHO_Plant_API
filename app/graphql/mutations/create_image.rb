@@ -36,9 +36,7 @@ module Mutations
              required: false
 
     field :image, Types::ImageType, null: true
-    field :errors, [String], null: false
-
-    @error_messages = []
+    field :errors, [Types::MutationError], null: false
 
     def process_attributes(attributes)
       {
@@ -63,7 +61,7 @@ module Mutations
         image_attribute = PlantApiSchema.object_from_id(attribute_id, {})
         ids << image_attribute.id
       rescue ActiveRecord::RecordNotFound
-        context.add_error(GraphQL::ExecutionError.new("ImageAttribute: #{attribute_id} not found."))
+        @errors << {field: 'imageAttributeIds', value: attribute_id, code: 404, message: "imageAttribute #{attribute_id} not found."}
       end
 
       ids
@@ -75,23 +73,21 @@ module Mutations
     end
 
     def resolve(**attributes)
+      @errors = []
       image_attributes = process_attributes(attributes)
+      # TODO: If imageable can't be found it should add to the @errors array?
       image_attributes[:imageable] = PlantApiSchema.object_from_id(attributes[:object_id], {})
       image_attributes[:image_attribute_ids] = process_image_attributes(attributes[:image_attribute_ids])
 
       Mobility.with_locale(attributes[:language] || I18n.locale) do
         image = Image.new(image_attributes)
-        if image.save
-          {
-            image: image,
-            errors: []
-          }
-        else
-          {
-            image: nil,
-            errors: image.errors.full_messages
-          }
-        end
+        result = image.save
+        errors = @errors + errors_from_active_record(image.errors, { id: 'imageId', s3_bucket: 'bucket', s3_key: 'key' })
+
+        {
+          image: result ? image : nil,
+          errors: errors
+        }
       end
     end
   end
