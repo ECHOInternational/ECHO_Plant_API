@@ -1,0 +1,72 @@
+[
+    {
+        "uuid": "121c758e-834c-41d8-9e26-957c41a7659e",
+        "id": 1,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Drought"
+            }
+        ]
+    },
+    {
+        "uuid": "5e788a00-ce02-4e3c-b04c-f0a21763117f",
+        "id": 2,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Acidic Soils"
+            }
+        ]
+    },
+    {
+        "uuid": "7e8454e5-1b2d-4809-b742-4e81fbb3733a",
+        "id": 3,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Salinity"
+            }
+        ]
+    },
+    {
+        "uuid": "9bdf1719-b472-43b5-ad7e-8783bb587d18",
+        "id": 4,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Disease"
+            }
+        ]
+    },
+    {
+        "uuid": "bc4f709f-c445-4ffa-a964-9840c8207ada",
+        "id": 5,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Pest"
+            }
+        ]
+    },
+    {
+        "uuid": "541a482b-0e17-430a-9959-0839f80a712b",
+        "id": 6,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Cold"
+            }
+        ]
+    },
+    {
+        "uuid": "a7b4c27a-ec66-4f2e-956f-097fa6b3545b",
+        "id": 7,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Low Fertility Soil"
+            }
+        ]
+    }
+]

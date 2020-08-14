@@ -48,3 +48,18 @@ antinutrients.each do |antinutrient|
   end
   record.save!
 end
+
+# Tolerances
+tolerances_json = File.read('db/seeds/Tolerances.json')
+tolerances = JSON.parse(tolerances_json)
+tolerances.each do |tolerance|
+  record = Tolerance.new(
+    id: tolerance['uuid']
+  )
+  tolerance['translations'].each do |translation|
+    Mobility.with_locale(translation['locale']) do
+      record.name = translation['name']
+    end
+  end
+  record.save!
+end

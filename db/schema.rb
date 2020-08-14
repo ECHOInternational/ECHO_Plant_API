@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_08_14_173300) do
+ActiveRecord::Schema.define(version: 2020_08_14_173311) do
   # These are extensions that must be enabled in order to support this database
   enable_extension 'pgcrypto'
   enable_extension 'plpgsql'
@@ -59,6 +59,12 @@ ActiveRecord::Schema.define(version: 2020_08_14_173300) do
     t.datetime 'created_at', precision: 6, null: false
     t.datetime 'updated_at', precision: 6, null: false
     t.index ['imageable_type', 'imageable_id'], name: 'index_images_on_imageable_type_and_imageable_id'
+  end
+
+  create_table 'tolerances', id: :uuid, default: -> { 'gen_random_uuid()' }, force: :cascade do |t|
+    t.jsonb 'translations', default: {}, null: false
+    t.datetime 'created_at', precision: 6, null: false
+    t.datetime 'updated_at', precision: 6, null: false
   end
 
   create_table 'versions', force: :cascade do |t|
