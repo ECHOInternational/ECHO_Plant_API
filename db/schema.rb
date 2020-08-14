@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_08_14_173311) do
+ActiveRecord::Schema.define(version: 2020_08_14_173322) do
   # These are extensions that must be enabled in order to support this database
   enable_extension 'pgcrypto'
   enable_extension 'plpgsql'
@@ -26,6 +26,12 @@ ActiveRecord::Schema.define(version: 2020_08_14_173311) do
     t.string 'created_by', null: false
     t.string 'owned_by', null: false
     t.integer 'visibility', default: 0, null: false
+    t.datetime 'created_at', precision: 6, null: false
+    t.datetime 'updated_at', precision: 6, null: false
+  end
+
+  create_table 'growth_habits', id: :uuid, default: -> { 'gen_random_uuid()' }, force: :cascade do |t|
+    t.jsonb 'translations', default: {}, null: false
     t.datetime 'created_at', precision: 6, null: false
     t.datetime 'updated_at', precision: 6, null: false
   end

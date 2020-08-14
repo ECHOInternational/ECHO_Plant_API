@@ -1,0 +1,52 @@
+[
+    {
+        "uuid": "a1795536-1537-48b1-afe7-018abd67c1f4",
+        "id": 1,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Spreading"
+            }
+        ]
+    },
+    {
+        "uuid": "13370c88-04d2-41aa-893d-35ac25a1f118",
+        "id": 2,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Climbing"
+            }
+        ]
+    },
+    {
+        "uuid": "1f44e34f-4192-4151-b88f-6bfc2ab21420",
+        "id": 3,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Diverse"
+            }
+        ]
+    },
+    {
+        "uuid": "2c066377-9c74-45d7-a906-55203a0ac0e2",
+        "id": 4,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Semi-erect"
+            }
+        ]
+    },
+    {
+        "uuid": "d7a4ce94-d216-4e72-b4b3-57f63920dfda",
+        "id": 5,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Erect"
+            }
+        ]
+    }
+]

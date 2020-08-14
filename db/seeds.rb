@@ -63,3 +63,18 @@ tolerances.each do |tolerance|
   end
   record.save!
 end
+
+# Growth Habits
+growth_habits_json = File.read('db/seeds/GrowthHabits.json')
+growth_habits = JSON.parse(growth_habits_json)
+growth_habits.each do |growth_habit|
+  record = GrowthHabit.new(
+    id: growth_habit['uuid']
+  )
+  growth_habit['translations'].each do |translation|
+    Mobility.with_locale(translation['locale']) do
+      record.name = translation['name']
+    end
+  end
+  record.save!
+end
