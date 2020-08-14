@@ -27,6 +27,10 @@ Style/WordArray:
 Style/Documentation:
     Exclude:
         - 'db/migrate/*.rb'
+Style/FrozenStringLiteralComment:
+    Exclude:
+        - 'db/migrate/*.rb'
+        - 'db/schema.rb'
 Layout/EmptyLinesAroundAttributeAccessor:
     Enabled: true
 Layout/SpaceAroundMethodCallOperator:

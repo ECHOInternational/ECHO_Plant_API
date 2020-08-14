@@ -1,0 +1,61 @@
+☐ Create plant antinutrients model
+  Translations - Name, description
+  Relate to plants with join table
+
+☐ Create plant common names model
+  name: string
+  language: string
+  locale: string
+  primary: boolean
+  belongs to plant
+
+☐ Create plant growth habits model
+  translatable name
+
+☐ Create Plant Model without relations
+  Relation to Plant Categories - Join Table
+  Relation to Plant Common Names
+  Relation to Tolerances
+  Relation to Antinutrients
+  Relation to Growth Habits -- NOTE
+  Relation to Koppen Climate Zones -- NOTE
+
+  Scientific Name string - always italicized
+  t.string "family_names", limit: 255
+  t.text "description" -- TRANSLATE
+  t.text "origin" -- TRANSLATE
+  t.text "uses" -- TRANSLATE
+  t.text "cultivation" -- TRANSLATE
+  t.text "harvesting_and_seed_production" -- TRANSLATE
+  t.text "pests_and_diseases" -- TRANSLATE
+  t.text "cooking_and_nutrition" -- TRANSLATE
+  t.text "attribution" -- TRANSLATE
+  t.text "seeding rate" -- TRANSLATE
+  t.text "planting instructions" --TRANSLATE
+  t.text "asia regional info" --TRANSLATE
+
+  t.integer "n_accumulation_min" -- NOTE
+  t.integer "n_accumulation_max"
+  t.float "biomass_production_min" -- NOTE
+  t.float "biomass_production_max"
+  t.integer "temperature_min" -- NOTE
+  t.integer "temperature_max"
+  t.integer "rainfall_min", default: 0 -- NOTE
+  t.integer "rainfall_max"
+  t.integer "seasonality_days_min" -- NOTE
+  t.integer "seasonality_days_max"
+  t.integer "altitude_max" -- NOTE
+  t.integer "altitude_min", default: 0
+  t.float "ph_min", default: 0.0 -- NOTE
+  t.float "ph_max", default: 14.0
+
+  t.integer "life_cycle" -- NOTE
+  t.integer "early_growth_phase" -- NOTE
+
+  t.boolean "has_edible_green_leaves" -- NOTE
+
+  t.boolean "has_edible_immature_fruit" -- NOTE
+  t.boolean "has_edible_mature_fruit" -- NOTE
+  t.boolean "can_be_used_for_fodder" -- NOTE
+
+☐ Relate plant model to categories

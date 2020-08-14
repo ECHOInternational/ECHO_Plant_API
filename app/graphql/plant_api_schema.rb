@@ -57,6 +57,8 @@ class PlantApiSchema < GraphQL::Schema
       Types::ImageType
     when ImageAttribute
       Types::ImageAttributeType
+    when Antinutrient
+      Types::Antinutrient
     else
       raise("Unexpected object: #{obj}")
     end

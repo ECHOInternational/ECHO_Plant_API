@@ -33,3 +33,18 @@ image_attributes = JSON.parse(image_attributes_json)
 image_attributes.each do |image_attribute|
   ImageAttribute.create!(image_attribute)
 end
+
+# Antinutrients
+antinutrients_json = File.read('db/seeds/Antinutrients.json')
+antinutrients = JSON.parse(antinutrients_json)
+antinutrients.each do |antinutrient|
+  record = Antinutrient.new(
+    id: antinutrient['uuid']
+  )
+  antinutrient['translations'].each do |translation|
+    Mobility.with_locale(translation['locale']) do
+      record.name = translation['name']
+    end
+  end
+  record.save!
+end

@@ -61,7 +61,7 @@ module Mutations
         image_attribute = PlantApiSchema.object_from_id(attribute_id, {})
         ids << image_attribute.id
       rescue ActiveRecord::RecordNotFound
-        @errors << {field: 'imageAttributeIds', value: attribute_id, code: 404, message: "imageAttribute #{attribute_id} not found."}
+        @errors << { field: 'imageAttributeIds', value: attribute_id, code: 404, message: "imageAttribute #{attribute_id} not found." }
       end
 
       ids
