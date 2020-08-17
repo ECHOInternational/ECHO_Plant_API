@@ -1,4 +1,6 @@
-# Relation table for Images and ImageAttributes
+# frozen_string_literal: true
+
+# Relation table for Antinutrients and Plants
 class AntinutrientsPlant < ApplicationRecord
   belongs_to :antinutrient
   belongs_to :plant

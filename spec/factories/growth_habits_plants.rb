@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 FactoryBot.define do
   factory :growth_habits_plant do
     growth_habit { build(:growth_habit) }
