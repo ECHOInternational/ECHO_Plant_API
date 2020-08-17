@@ -21,4 +21,26 @@ RSpec.describe Antinutrient, type: :model do
     expect(antinutrient.translations[:en][:name]).to eq('name_en')
     expect(antinutrient.translations[:es][:name]).to eq('name_es')
   end
+
+  it 'has many plants' do
+    antinutrient = create(:antinutrient)
+    plant_a = create(:plant)
+    plant_b = create(:plant)
+    expect { antinutrient.plants << plant_a }.to change { antinutrient.plants.count }.by(1)
+    expect { antinutrient.plants << plant_b }.to change { antinutrient.plants.count }.by(1)
+  end
+  describe 'when it is destroyed' do
+    it 'destroys any related antinutrients_plant records' do
+      antinutrient = create(:antinutrient)
+      plant = create(:plant)
+      antinutrient.plants << plant
+      expect { antinutrient.destroy }.to change { AntinutrientsPlant.count }.by(-1)
+    end
+    it 'does not destory related plants' do
+      antinutrient = create(:antinutrient)
+      plant = create(:plant)
+      antinutrient.plants << plant
+      expect { antinutrient.destroy }.to_not change { Plant.count }
+    end
+  end
 end

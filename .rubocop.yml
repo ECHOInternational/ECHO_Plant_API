@@ -11,6 +11,12 @@ Metrics/BlockLength:
     Exclude:
         - 'spec/**/*.rb'
         - 'db/schema.rb'
+Metrics/MethodLength:
+    Exclude:
+        - 'db/migrate/*.rb'
+Metrics/AbcSize:
+    Exclude:
+        - 'db/migrate/*.rb'
 Layout/LineLength:
     Exclude:
         - 'spec/**/*.rb'

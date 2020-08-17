@@ -1,22 +1,24 @@
-☐ Create plant antinutrients model
-  Translations - Name, description
-  Relate to plants with join table
+✔ Tolerances @done (8/14/2020, 3:49:10 PM)
+✔ Antinutrients @done (8/14/2020, 3:51:26 PM)
+ Growth Habits
+☐ Koppen Climate Zones
 
-☐ Create plant common names model
-  name: string
-  language: string
-  locale: string
-  primary: boolean
-  belongs to plant
 
-☐ Create plant growth habits model
-  translatable name
+☐ Common Names
+  - not translatable
+  - has language field
+  - has locale field
+  - has primary boolean
+  - has name attribute
+
 
 ☐ Create Plant Model without relations
   Relation to Plant Categories - Join Table
   Relation to Plant Common Names
   Relation to Tolerances
-  Relation to Antinutrients
+  Relation to Antinutrie
+  Koppen Climate Zones
+  ts
   Relation to Growth Habits -- NOTE
   Relation to Koppen Climate Zones -- NOTE
 
@@ -58,4 +60,4 @@
   t.boolean "has_edible_mature_fruit" -- NOTE
   t.boolean "can_be_used_for_fodder" -- NOTE
 
-☐ Relate plant model to categories
+☐ Relate plant model to categories and all above

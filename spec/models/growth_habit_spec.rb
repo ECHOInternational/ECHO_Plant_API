@@ -21,4 +21,25 @@ RSpec.describe GrowthHabit, type: :model do
     expect(growth_habit.translations[:en][:name]).to eq('name_en')
     expect(growth_habit.translations[:es][:name]).to eq('name_es')
   end
+  it 'has many plants' do
+    growth_habit = create(:growth_habit)
+    plant_a = create(:plant)
+    plant_b = create(:plant)
+    expect { growth_habit.plants << plant_a }.to change { growth_habit.plants.count }.by(1)
+    expect { growth_habit.plants << plant_b }.to change { growth_habit.plants.count }.by(1)
+  end
+  describe 'when it is destroyed' do
+    it 'destroys any related growth_habits_plant records' do
+      growth_habit = create(:growth_habit)
+      plant = create(:plant)
+      growth_habit.plants << plant
+      expect { growth_habit.destroy }.to change { GrowthHabitsPlant.count }.by(-1)
+    end
+    it 'does not destory related plants' do
+      growth_habit = create(:growth_habit)
+      plant = create(:plant)
+      growth_habit.plants << plant
+      expect { growth_habit.destroy }.to_not change { Plant.count }
+    end
+  end
 end

@@ -21,4 +21,26 @@ RSpec.describe Tolerance, type: :model do
     expect(tolerance.translations[:en][:name]).to eq('name_en')
     expect(tolerance.translations[:es][:name]).to eq('name_es')
   end
+
+  it 'has many plants' do
+    tolerance = create(:tolerance)
+    plant_a = create(:plant)
+    plant_b = create(:plant)
+    expect { tolerance.plants << plant_a }.to change { tolerance.plants.count }.by(1)
+    expect { tolerance.plants << plant_b }.to change { tolerance.plants.count }.by(1)
+  end
+  describe 'when it is destroyed' do
+    it 'destroys any related tolerances_plant records' do
+      tolerance = create(:tolerance)
+      plant = create(:plant)
+      tolerance.plants << plant
+      expect { tolerance.destroy }.to change { TolerancesPlant.count }.by(-1)
+    end
+    it 'does not destroy related plants' do
+      tolerance = create(:tolerance)
+      plant = create(:plant)
+      tolerance.plants << plant
+      expect { tolerance.destroy }.to_not change { Plant.count }
+    end
+  end
 end

@@ -5,6 +5,10 @@ class GrowthHabit < ApplicationRecord
   extend Mobility
   translates :name
   validates :name, presence: true
+
+  has_many :growth_habits_plants, dependent: :destroy
+  has_many :plants, through: :growth_habits_plants
+
   def translations_array
     translations.map do |language, attributes|
       {
