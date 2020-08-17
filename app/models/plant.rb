@@ -20,6 +20,8 @@ class Plant < ApplicationRecord
   has_many :tolerances_plants, dependent: :destroy
   has_many :tolerances, through: :tolerances_plants
 
+  has_many :common_names, dependent: :destroy
+
   extend Mobility
   translates :description,
              :origin,
@@ -54,6 +56,21 @@ class Plant < ApplicationRecord
     return unless scientific_name
 
     scientific_name.split[0]
+  end
+
+  def common_names_for_locale(locale, with_primary: true)
+    if with_primary
+      common_names.where(language: locale.upcase).where(primary: false)
+    else
+      common_names.where(language: locale.upcase)
+    end
+  end
+
+  def primary_common_name_for_locale(locale)
+    requested = common_names.where(language: locale.upcase).where(primary: true).first
+    return requested if requested
+
+    common_names.where(language: 'EN').where(primary: true).first
   end
 
   def translations_array # rubocop:disable all

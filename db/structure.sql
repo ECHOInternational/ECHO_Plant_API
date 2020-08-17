@@ -115,6 +115,22 @@ CREATE TABLE public.categories_plants (
 
 
 --
+-- Name: common_names; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.common_names (
+    id uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    name character varying NOT NULL,
+    language character varying NOT NULL,
+    location character varying,
+    plant_id uuid NOT NULL,
+    "primary" boolean DEFAULT false NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
 -- Name: growth_habits; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -331,6 +347,14 @@ ALTER TABLE ONLY public.categories_plants
 
 
 --
+-- Name: common_names common_names_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.common_names
+    ADD CONSTRAINT common_names_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: growth_habits growth_habits_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -450,6 +474,13 @@ CREATE UNIQUE INDEX index_categories_plants_on_category_id_and_plant_id ON publi
 --
 
 CREATE INDEX index_categories_plants_on_plant_id ON public.categories_plants USING btree (plant_id);
+
+
+--
+-- Name: index_common_names_on_plant_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_common_names_on_plant_id ON public.common_names USING btree (plant_id);
 
 
 --
@@ -602,6 +633,14 @@ ALTER TABLE ONLY public.categories_plants
 
 
 --
+-- Name: common_names fk_rails_e1c5a1a6cd; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.common_names
+    ADD CONSTRAINT fk_rails_e1c5a1a6cd FOREIGN KEY (plant_id) REFERENCES public.plants(id);
+
+
+--
 -- Name: image_attributes_images fk_rails_e3ccc8f28f; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -630,6 +669,7 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20200817173929'),
 ('20200817180807'),
 ('20200817182822'),
-('20200817184430');
+('20200817184430'),
+('20200817193432');
 
 

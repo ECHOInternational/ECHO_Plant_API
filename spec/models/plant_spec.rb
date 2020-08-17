@@ -180,4 +180,19 @@ RSpec.describe Plant, type: :model do
       expect { plant.destroy }.to_not change { Tolerance.count }
     end
   end
+  it 'has many common names' do
+    plant = create(:plant)
+    common_name_a = create(:common_name, name: 'Plant Common Name A', language: 'en')
+    common_name_b = create(:common_name, name: 'Plant Common Name B', language: 'en')
+    expect { plant.common_names << common_name_a }.to change { plant.common_names.count }.by(1)
+    expect { plant.common_names << common_name_b }.to change { plant.common_names.count }.by(1)
+  end
+  describe 'when it is destroyed' do
+    it 'destroys any related common names records' do
+      plant = create(:plant)
+      common_name = create(:common_name)
+      plant.common_names << common_name
+      expect { plant.destroy }.to change { CommonName.count }.by(-1)
+    end
+  end
 end
