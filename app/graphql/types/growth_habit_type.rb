@@ -4,6 +4,7 @@ module Types
   # Defines fields for an GrowthHabit - categories contains a group of plant objects
   class GrowthHabitType < Types::BaseObject
     global_id_field :id
+    implements GraphQL::Types::Relay::Node
 
     description 'The shape, height, appearance, and form of growth of a plant'
 

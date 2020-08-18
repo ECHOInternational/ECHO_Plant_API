@@ -22,6 +22,8 @@ class Plant < ApplicationRecord # rubocop:disable Metrics/ClassLength
 
   has_many :common_names, dependent: :destroy
 
+  default_scope { includes(:common_names) }
+
   extend Mobility
   translates :description,
              :info_sheet_description,
@@ -74,11 +76,14 @@ class Plant < ApplicationRecord # rubocop:disable Metrics/ClassLength
     fallback = common_names.where(language: 'EN').where(primary: true).first
     return fallback.name if fallback
 
+    default = common_names.where(language: 'EN').first
+    return default.name if default
+
     nil
   end
 
   def primary_common_name
-    primary_common_name_for_locale(I18n.locale)
+    primary_common_name_for_locale(Mobility.locale)
   end
 
   def translations_array # rubocop:disable all

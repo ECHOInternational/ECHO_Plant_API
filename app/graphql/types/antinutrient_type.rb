@@ -4,6 +4,7 @@ module Types
   # Defines fields for an Antinutrient - attribute of a plant or variety
   class AntinutrientType < Types::BaseObject
     global_id_field :id
+    implements GraphQL::Types::Relay::Node
 
     description 'Antinutrients are natural or synthetic compounds that interfere with the absorption of nutrients.'
 

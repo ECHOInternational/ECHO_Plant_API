@@ -4,6 +4,7 @@ module Types
   # Defines fields for a tolerance - attribute of a plant or variety
   class ToleranceType < Types::BaseObject
     global_id_field :id
+    implements GraphQL::Types::Relay::Node
 
     description 'Tolerances indicate that a plant or variety is uniquely suited to deal with an adverse condition.'
 

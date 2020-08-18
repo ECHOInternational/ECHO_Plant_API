@@ -4,6 +4,7 @@ module Types
   # Defines fields for an Image
   class ImageType < Types::BaseObject
     global_id_field :id
+    implements GraphQL::Types::Relay::Node
 
     description 'Images can be associated with most data types in the Plant API'
 

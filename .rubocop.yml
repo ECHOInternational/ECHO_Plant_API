@@ -1,5 +1,7 @@
 inherit_from: .rubocop_todo.yml
-
+AllCops:
+    Exclude:
+        - 'db/seeds.rb'
 # Rspec doesn't support do...end so block delimiters must be allowed
 Style/BlockDelimiters:
     Exclude:

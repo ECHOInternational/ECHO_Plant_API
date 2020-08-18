@@ -4,6 +4,7 @@ module Types
   # Defines fields for an ImageAttribute - categories contains a group of plant objects
   class ImageAttributeType < Types::BaseObject
     global_id_field :id
+    implements GraphQL::Types::Relay::Node
 
     description 'An attribute of an image.'
 
