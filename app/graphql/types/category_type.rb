@@ -4,6 +4,7 @@ module Types
   # Defines fields for a category - categories contains a group of plant objects
   class CategoryType < Types::BaseObject
     global_id_field :id
+    implements GraphQL::Types::Relay::Node
 
     description 'A category contains a group of plant objects.'
 
@@ -32,7 +33,15 @@ module Types
     field :visibility, Types::VisibilityEnum,
           description: 'The visibility of the category. Can be: PUBLIC, PRIVATE, DRAFT, DELETED',
           null: false
+    field :plants, Types::PlantType::PlantConnectionWithTotalCountType,
+          description: 'The plants that belong to this category',
+          null: true,
+          connection: true
     # field :versions, Types::CategoryType::CategoryVersionConnectionWithTotalCountType, null: false, connection: true
+
+    def plants
+      Pundit.policy_scope(context[:current_user], @object.plants)
+    end
 
     def images
       Pundit.policy_scope(context[:current_user], @object.images)

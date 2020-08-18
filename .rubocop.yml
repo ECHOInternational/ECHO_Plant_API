@@ -1,5 +1,7 @@
 inherit_from: .rubocop_todo.yml
-
+AllCops:
+    Exclude:
+        - 'db/seeds.rb'
 # Rspec doesn't support do...end so block delimiters must be allowed
 Style/BlockDelimiters:
     Exclude:
@@ -11,6 +13,12 @@ Metrics/BlockLength:
     Exclude:
         - 'spec/**/*.rb'
         - 'db/schema.rb'
+Metrics/MethodLength:
+    Exclude:
+        - 'db/migrate/*.rb'
+Metrics/AbcSize:
+    Exclude:
+        - 'db/migrate/*.rb'
 Layout/LineLength:
     Exclude:
         - 'spec/**/*.rb'
@@ -27,6 +35,10 @@ Style/WordArray:
 Style/Documentation:
     Exclude:
         - 'db/migrate/*.rb'
+Style/FrozenStringLiteralComment:
+    Exclude:
+        - 'db/migrate/*.rb'
+        - 'db/schema.rb'
 Layout/EmptyLinesAroundAttributeAccessor:
     Enabled: true
 Layout/SpaceAroundMethodCallOperator:

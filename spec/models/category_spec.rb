@@ -52,6 +52,28 @@ RSpec.describe Category, type: :model do
     expect(category).to respond_to(:versions)
   end
 
+  it 'has many plants' do
+    category = create(:category)
+    plant_a = create(:plant)
+    plant_b = create(:plant)
+    expect { category.plants << plant_a }.to change { category.plants.count }.by(1)
+    expect { category.plants << plant_b }.to change { category.plants.count }.by(1)
+  end
+  describe 'when it is destroyed' do
+    it 'destroys any related plants_categories records' do
+      category = create(:category)
+      plant = create(:plant)
+      category.plants << plant
+      expect { category.destroy }.to change { CategoriesPlant.count }.by(-1)
+    end
+    it 'does not destory related plants' do
+      category = create(:category)
+      plant = create(:plant)
+      category.plants << plant
+      expect { category.destroy }.to_not change { Plant.count }
+    end
+  end
+
   # it 'can track changes', versioning: true do
   #   expect(PaperTrail).to be_enabled
   #   category = create(:category, owned_by: 'a')

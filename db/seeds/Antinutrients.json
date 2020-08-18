@@ -1,0 +1,192 @@
+[
+    {
+        "uuid": "8647e6d7-53f7-4b2e-a8f6-772fa7c96ea5",
+        "id": 1,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Phytic Acid"
+            }
+        ]
+    },
+    {
+        "uuid": "e9f992c0-a87d-49d5-9dc7-b58e2bbb256a",
+        "id": 2,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Trypsin Inhibitor Activity"
+            }
+        ]
+    },
+    {
+        "uuid": "50860bbd-fe8a-45ac-9875-38bece33ca96",
+        "id": 3,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Polyphenols"
+            }
+        ]
+    },
+    {
+        "uuid": "236f564d-5551-4f41-9180-66cfea2eae0d",
+        "id": 4,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Saponins"
+            }
+        ]
+    },
+    {
+        "uuid": "c9663f2d-d981-42ea-b443-17085614a0c4",
+        "id": 5,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Raffinose Oligosaccharide"
+            }
+        ]
+    },
+    {
+        "uuid": "2fe7b7f2-18c4-46b7-b5d1-0cf201b41813",
+        "id": 6,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Tannin"
+            }
+        ]
+    },
+    {
+        "uuid": "204d6afc-1d46-4bda-86f3-8a9ade376060",
+        "id": 7,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Hemagglutinin"
+            }
+        ]
+    },
+    {
+        "uuid": "58f48724-0077-46fe-bbfe-1ce5c0aae247",
+        "id": 9,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Pyrrolizidine Alkaloids"
+            }
+        ]
+    },
+    {
+        "uuid": "69005f5d-d81d-47a9-9a4c-3fefc54ff725",
+        "id": 11,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Hallucinogenic Tryptamines"
+            }
+        ]
+    },
+    {
+        "uuid": "34a441d1-c677-4a13-9cad-515a87fddad1",
+        "id": 12,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Concanavalin A"
+            }
+        ]
+    },
+    {
+        "uuid": "cb2b6d42-3004-41fb-a80a-7fec3b9b2779",
+        "id": 13,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Canavanine"
+            }
+        ]
+    },
+    {
+        "uuid": "66a765f8-aaa1-4177-9b87-258efd50cda0",
+        "id": 14,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Canatoxin"
+            }
+        ]
+    },
+    {
+        "uuid": "4af92ef8-29e5-4cbd-9717-bd3ca1506281",
+        "id": 15,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Protease Inhibitors"
+            }
+        ]
+    },
+    {
+        "uuid": "31cd1964-4a70-4ac3-a7e5-aba604aa0ddd",
+        "id": 16,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Amylase Inhibitors"
+            }
+        ]
+    },
+    {
+        "uuid": "8b804bb4-f124-46cb-a53c-3e1ac6532178",
+        "id": 17,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Phytolectins"
+            }
+        ]
+    },
+    {
+        "uuid": "55441f52-74ea-404b-ae8c-f56b61e3e66d",
+        "id": 18,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Oligosaccarides"
+            }
+        ]
+    },
+    {
+        "uuid": "07bc47c4-a6e4-4b2d-b469-be1b9f3f3b73",
+        "id": 10,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "L-Dopa"
+            }
+        ]
+    },
+    {
+        "uuid": "63123e4b-404e-4d7d-9153-470ef9b2a382",
+        "id": 8,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Phytates"
+            }
+        ]
+    },
+    {
+        "uuid": "9262213f-ba88-4a45-be06-4dad61437d44",
+        "id": 19,
+        "translations": [
+            {
+                "locale": "en",
+                "name": "Oxalates"
+            }
+        ]
+    }
+]
