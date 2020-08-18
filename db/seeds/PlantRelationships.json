@@ -1,0 +1,2006 @@
+{
+    "categories": [
+        {
+            "plant_id": "8f2b989d-1e4a-46cb-90a0-ee31ece652d1",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "8f2b989d-1e4a-46cb-90a0-ee31ece652d1",
+            "category_id": "1c5e5f4d-4d38-4406-a84d-3819cccaf215"
+        },
+        {
+            "plant_id": "1436d95b-0ae2-4246-9334-22a4e663d23c",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "d9f09c50-0194-41ea-9695-96fa96004706",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "d9f09c50-0194-41ea-9695-96fa96004706",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "d9f09c50-0194-41ea-9695-96fa96004706",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "1436d95b-0ae2-4246-9334-22a4e663d23c",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "1436d95b-0ae2-4246-9334-22a4e663d23c",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "8e4abb77-c12a-43b7-aeaa-58d646092f6c",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "8e4abb77-c12a-43b7-aeaa-58d646092f6c",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "2f10f5a6-ca70-48c6-954c-43bc38cbab0e",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "2f10f5a6-ca70-48c6-954c-43bc38cbab0e",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "f8778f8b-73d5-41f6-b4af-75c4644c32a6",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "1ad2329d-2019-4dd2-a3a2-2700b01b2cbe",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "808239c5-009a-49f3-8f3a-8a9790836070",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "5095c126-375a-41d4-aceb-f94b5e94495d",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "398d94f4-59aa-4500-b535-a08e67f8d78b",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "398d94f4-59aa-4500-b535-a08e67f8d78b",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "8d75d448-9c82-4e8c-926d-fbc53eef9797",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "8d75d448-9c82-4e8c-926d-fbc53eef9797",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "4e11076f-7a5e-4ca6-a9be-7e1f3db0fd39",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "4e11076f-7a5e-4ca6-a9be-7e1f3db0fd39",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "81d5fd86-74e7-41c9-af1e-a8da7a265bd2",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "81d5fd86-74e7-41c9-af1e-a8da7a265bd2",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "cc8b0e2e-b32f-472b-9154-b2e302a97c9a",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "d66f0ce7-949a-4351-927e-51a5755d1678",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "dae5df39-7634-4cc2-895f-68e1a950f0f3",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "f5f7a45b-e4d5-4e82-9a2e-6f6358ffa4f1",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "f539c72b-e881-4a5e-97cf-fb339b15b096",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "cff288d4-2cbc-4c4e-9814-ea765218d72b",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "cff288d4-2cbc-4c4e-9814-ea765218d72b",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "082f058c-b428-4be1-9231-d344e223b385",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "66ca5b74-bffa-4db8-ace8-f1e85c2c8180",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "4f8f606e-cde6-4b66-a8ad-ff91ec72bc17",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "ff67426e-bdb4-474a-b0f2-1b91be6f6ed6",
+            "category_id": "97f62354-166d-4b75-a85d-2ea493ae2e03"
+        },
+        {
+            "plant_id": "0b67cbb5-9033-4979-9060-b6549fc52426",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "486e782b-517e-4049-bb02-f00ed37682d4",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "d3831b66-112d-4c23-9dda-65ee4e60d8d0",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "6fea65bf-feaf-423f-90ad-d611630afa16",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "1f199193-c73c-4698-88c9-bf7dabc520d6",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "14ccd20e-8230-4a84-878c-571b0d544e24",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "d3831b66-112d-4c23-9dda-65ee4e60d8d0",
+            "category_id": "97f62354-166d-4b75-a85d-2ea493ae2e03"
+        },
+        {
+            "plant_id": "8f2b989d-1e4a-46cb-90a0-ee31ece652d1",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "d9f09c50-0194-41ea-9695-96fa96004706",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "1436d95b-0ae2-4246-9334-22a4e663d23c",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "f8778f8b-73d5-41f6-b4af-75c4644c32a6",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "81d5fd86-74e7-41c9-af1e-a8da7a265bd2",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "914f4d44-5259-4548-824a-98e1568385a4",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "77e385f3-c8de-4736-ae7c-20e567d9dd4e",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "0eb484e8-f77e-4820-b1b6-61e1fb73b93e",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "e54604f4-109d-4654-909c-c5a027297581",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "1cc68a0b-89b1-4989-a23e-488047811630",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "de92a959-ea1e-48c4-b20e-3ad4ed82ff02",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "b2e17a32-10b8-4049-bc2d-428fb0c70049",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "ecd5bd8b-528c-4b85-8828-f34afa66fcac",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "a0bc1bca-314e-42bc-babe-b62a2fde232a",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "fb4529f8-08d2-4ce1-86f5-0171b5d271d8",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "2971610f-e809-49dc-b26a-e5597d373176",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "2d9b5d8e-bfbb-48f2-b748-3ef7cbb8b1e7",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "b82113f8-7db0-403b-86cd-9ef68c09f498",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "e05a6eca-1836-4dd5-b9a1-2eb7deb73e69",
+            "category_id": "1cd7dfeb-d02d-4da7-b747-53f7a998f6bf"
+        },
+        {
+            "plant_id": "052f915d-f26b-46fa-8c7a-cd90a9f1fad1",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "087298d3-e4b6-444d-ad64-9466a4f7d52b",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "1328a788-38b1-4c64-a897-76a8f6368906",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "f4d66828-09f1-4870-bed5-48a23cbce990",
+            "category_id": "1cd7dfeb-d02d-4da7-b747-53f7a998f6bf"
+        },
+        {
+            "plant_id": "83897ac9-f337-46ec-9926-90abd4fba86d",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "1747831a-52fe-44da-afae-986d715d2da0",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "56491de2-dfed-4f36-a210-11caab47f7f7",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "5731e189-c1c2-4456-8314-3d3881c89040",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "30406f3d-220a-420d-98df-15acc3a02c0c",
+            "category_id": "1cd7dfeb-d02d-4da7-b747-53f7a998f6bf"
+        },
+        {
+            "plant_id": "c202c2a6-f40d-46c5-870d-c09c2750e2fa",
+            "category_id": "1cd7dfeb-d02d-4da7-b747-53f7a998f6bf"
+        },
+        {
+            "plant_id": "251002cf-4eba-4280-a557-d3fa6c0e33a4",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "f9265b9b-8217-401a-8420-87ff25283773",
+            "category_id": "1cd7dfeb-d02d-4da7-b747-53f7a998f6bf"
+        },
+        {
+            "plant_id": "0e8b5d7e-f9b5-453c-8d0a-375dd7bbc60b",
+            "category_id": "1cd7dfeb-d02d-4da7-b747-53f7a998f6bf"
+        },
+        {
+            "plant_id": "e4fd8ddc-b6d1-4501-a2a2-8547c53e834b",
+            "category_id": "1cd7dfeb-d02d-4da7-b747-53f7a998f6bf"
+        },
+        {
+            "plant_id": "74a31bb9-5d7b-4ffb-8fa0-6d8984aa2f32",
+            "category_id": "1cd7dfeb-d02d-4da7-b747-53f7a998f6bf"
+        },
+        {
+            "plant_id": "ccf4e58d-eb3d-49ef-b170-9edd58662e74",
+            "category_id": "1cd7dfeb-d02d-4da7-b747-53f7a998f6bf"
+        },
+        {
+            "plant_id": "7489473b-b97b-46fc-bec8-c85f08a92321",
+            "category_id": "1cd7dfeb-d02d-4da7-b747-53f7a998f6bf"
+        },
+        {
+            "plant_id": "8462c722-3a1d-4f56-9193-d649576712f0",
+            "category_id": "1cd7dfeb-d02d-4da7-b747-53f7a998f6bf"
+        },
+        {
+            "plant_id": "db44ccf1-6b2c-49dd-877f-f2188f57aa2c",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "c28fd084-e5f5-4d31-9b26-bc11f0388b07",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "91bd34ff-09dd-4fbe-85f3-9b63802ab3a5",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "f6ba2096-3f1e-4e3a-aaa0-b3aa64cb5219",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "55d7ffd0-8ac7-4c65-9e44-010f5de7d0eb",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "b0f5953d-8013-4d6c-ba6c-36a34c378339",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "525afb65-6eb6-4547-9c0c-613aacaa36e3",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "5fb7f83c-91d1-46db-a37b-d7aafa798f40",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "785af9dd-4837-4192-a325-976dba79b553",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "11d58bb2-3f22-498d-8781-a03970358753",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "a63a20b1-4d06-4f34-a4cc-ab2b42974564",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "72243591-437a-475c-8b9c-ef4aea8d281f",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "72243591-437a-475c-8b9c-ef4aea8d281f",
+            "category_id": "a3d5ecae-c74d-4ddf-bb06-df4ddc832619"
+        },
+        {
+            "plant_id": "bcd8f2e9-3b71-4f6d-ae4d-d51d31265f34",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "49c39043-6010-467e-a034-ee296673f112",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "3015f0ef-943c-4678-b23b-4499f0dce5d5",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "821bb516-dba3-4a44-a09f-329db023c2ab",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "4155ccc7-37ae-4857-9da9-9372e1d2d633",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "13907744-04ae-4c51-9235-b58c0417576a",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "e61e4b99-7d69-4b5d-a023-c06d7fe9dd10",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "b2d05378-1af4-4daf-b650-b2ab17e4c6a7",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "636da998-ad2a-41e6-8c39-ea550480f457",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "8c31f772-7e6c-4302-8657-f12a4d9c0793",
+            "category_id": "1cd7dfeb-d02d-4da7-b747-53f7a998f6bf"
+        },
+        {
+            "plant_id": "b7433eb9-580e-4dd9-8342-538b019a5b46",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "308030d1-678d-4317-a088-ab16cfd9059a",
+            "category_id": "6e6a7b1f-9f61-4256-a830-e6d397044599"
+        },
+        {
+            "plant_id": "2b9d1599-8b62-43c2-8f1d-e4b49fd4c540",
+            "category_id": "6e6a7b1f-9f61-4256-a830-e6d397044599"
+        },
+        {
+            "plant_id": "08a72d65-a308-4598-9369-ccb4117605b1",
+            "category_id": "6e6a7b1f-9f61-4256-a830-e6d397044599"
+        },
+        {
+            "plant_id": "16431e4e-7336-49e6-bcf5-6ac951e22d38",
+            "category_id": "6e6a7b1f-9f61-4256-a830-e6d397044599"
+        },
+        {
+            "plant_id": "83daceee-0d48-4998-af0e-fe215071cc7f",
+            "category_id": "6e6a7b1f-9f61-4256-a830-e6d397044599"
+        },
+        {
+            "plant_id": "20c72d2a-7692-4594-add8-979f8a9b27f5",
+            "category_id": "6e6a7b1f-9f61-4256-a830-e6d397044599"
+        },
+        {
+            "plant_id": "87c03b5a-e1c4-4f33-8c94-e1b2c63648bb",
+            "category_id": "6e6a7b1f-9f61-4256-a830-e6d397044599"
+        },
+        {
+            "plant_id": "049a1c65-7c43-46b1-ae8b-a9ff4c60332e",
+            "category_id": "6e6a7b1f-9f61-4256-a830-e6d397044599"
+        },
+        {
+            "plant_id": "2d355f33-33fe-46a5-befd-f5182dd8d1ee",
+            "category_id": "6e6a7b1f-9f61-4256-a830-e6d397044599"
+        },
+        {
+            "plant_id": "ac012167-5e5a-4a6f-ab13-d5128ec0bb70",
+            "category_id": "6e6a7b1f-9f61-4256-a830-e6d397044599"
+        },
+        {
+            "plant_id": "f90d2207-434c-4850-8553-937a0b49d217",
+            "category_id": "6e6a7b1f-9f61-4256-a830-e6d397044599"
+        },
+        {
+            "plant_id": "251410bc-4655-44af-837c-87a6a0697671",
+            "category_id": "6e6a7b1f-9f61-4256-a830-e6d397044599"
+        },
+        {
+            "plant_id": "ee4f352a-5902-43e1-8460-4a1d25e1a4ee",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "34c26750-26ac-4b2e-8df4-67d120eb5d58",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "d66f0ce7-949a-4351-927e-51a5755d1678",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "1124fc7e-41ce-4d9d-aacd-582db1c66abe",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "9e6b7a74-93c9-428e-928a-00b6dcb65d63",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "0647eb11-9f31-4832-b2f0-a70c9ba5bb05",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "dae5df39-7634-4cc2-895f-68e1a950f0f3",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "604d48a9-b34b-4a74-8e9f-5d44b8ea13ea",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "021d728b-e149-433a-b869-ed5b9d46511d",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "83d27654-b60b-4b95-b30e-c511241c2f73",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "ac5a031d-43ca-461c-9702-3bbb0dc01dc1",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "3e995069-d3e7-4a2b-8188-a50f2d168193",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "005f27e7-b730-4f19-90dd-3307b0ab46e5",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "0bef700a-1abc-4d33-9007-fc1992066bd6",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "1d1e91dd-12ef-4315-82be-ae97ce7cedce",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "e0dea75b-91c1-452c-aa7d-bed9fe989a07",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "e4b914ba-a4c9-426a-8e0f-f0b63671c00a",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "b7433eb9-580e-4dd9-8342-538b019a5b46",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "1895283b-3929-4a45-9e1d-3673d41311d5",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "1895283b-3929-4a45-9e1d-3673d41311d5",
+            "category_id": "535bcc7d-b207-4257-be6e-3b4ac9b5a9fd"
+        },
+        {
+            "plant_id": "3e995069-d3e7-4a2b-8188-a50f2d168193",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "3e995069-d3e7-4a2b-8188-a50f2d168193",
+            "category_id": "535bcc7d-b207-4257-be6e-3b4ac9b5a9fd"
+        },
+        {
+            "plant_id": "0bc97e0a-cb17-480e-9e48-0555e88edf15",
+            "category_id": "535bcc7d-b207-4257-be6e-3b4ac9b5a9fd"
+        },
+        {
+            "plant_id": "2d0aee9e-7b89-4cc1-9bf6-3d8658c45fc4",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "35349231-afb1-4128-bd2c-2e28d4cf2c94",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "cf4ed6cd-301f-4686-96af-349a1df81948",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "cf4ed6cd-301f-4686-96af-349a1df81948",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "70763b26-2025-4480-89fb-b273cfca4971",
+            "category_id": "535bcc7d-b207-4257-be6e-3b4ac9b5a9fd"
+        },
+        {
+            "plant_id": "ee4f352a-5902-43e1-8460-4a1d25e1a4ee",
+            "category_id": "535bcc7d-b207-4257-be6e-3b4ac9b5a9fd"
+        },
+        {
+            "plant_id": "ac5a031d-43ca-461c-9702-3bbb0dc01dc1",
+            "category_id": "a3d5ecae-c74d-4ddf-bb06-df4ddc832619"
+        },
+        {
+            "plant_id": "83d27654-b60b-4b95-b30e-c511241c2f73",
+            "category_id": "535bcc7d-b207-4257-be6e-3b4ac9b5a9fd"
+        },
+        {
+            "plant_id": "021d728b-e149-433a-b869-ed5b9d46511d",
+            "category_id": "535bcc7d-b207-4257-be6e-3b4ac9b5a9fd"
+        },
+        {
+            "plant_id": "2d551013-9f17-4855-85a0-649861f762ff",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "f8778f8b-73d5-41f6-b4af-75c4644c32a6",
+            "category_id": "535bcc7d-b207-4257-be6e-3b4ac9b5a9fd"
+        },
+        {
+            "plant_id": "1124fc7e-41ce-4d9d-aacd-582db1c66abe",
+            "category_id": "535bcc7d-b207-4257-be6e-3b4ac9b5a9fd"
+        },
+        {
+            "plant_id": "483550e6-ca0e-4f4a-a07d-03e5ff33bfa8",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "d92c29e7-9059-4b6a-a277-283ff67ba978",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "08a72d65-a308-4598-9369-ccb4117605b1",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "fe83b0ce-21bf-4dbc-a02a-4472897fe71c",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "31dab8f5-b8f6-4453-8d4d-4224638667bd",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "e4b914ba-a4c9-426a-8e0f-f0b63671c00a",
+            "category_id": "535bcc7d-b207-4257-be6e-3b4ac9b5a9fd"
+        },
+        {
+            "plant_id": "886ae184-390e-4ca4-8998-e0ec05111445",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "aefed1f2-a5b6-4ee8-b14e-5704fbcadeb4",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "7e240e9f-5c62-446b-ae0b-46364943d772",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "8b52cd0f-d585-45df-905e-a93fa631a8bf",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "8b52cd0f-d585-45df-905e-a93fa631a8bf",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "28135a18-7ee6-4257-82c1-94352e56b4d8",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "98e6b341-6ee0-46a1-a962-47b54b5a14f0",
+            "category_id": "97f62354-166d-4b75-a85d-2ea493ae2e03"
+        },
+        {
+            "plant_id": "fd9d4cbf-8a7d-4ac3-98f0-3f7dfd7f7a74",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "fc26c227-d1f0-4de9-a0b1-4b90ddc5a77e",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "fc26c227-d1f0-4de9-a0b1-4b90ddc5a77e",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "06b9bb66-b554-42d3-9b09-2e7fdbe3641c",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "f64f4cd6-cd95-47b0-b666-929b28721a3c",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "5d5a300e-d582-4485-9c0c-97a753084fc7",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "7489473b-b97b-46fc-bec8-c85f08a92321",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "398f61ce-5ee4-4dfd-b727-44be5f6ba184",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "398f61ce-5ee4-4dfd-b727-44be5f6ba184",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "2100e221-1184-4b5b-a8bc-32d429243833",
+            "category_id": "1cd7dfeb-d02d-4da7-b747-53f7a998f6bf"
+        },
+        {
+            "plant_id": "74ea84a7-7a04-4875-a1c7-753903bbf432",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "5fb7f83c-91d1-46db-a37b-d7aafa798f40",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "5fa0aca1-50ec-4aaf-87c4-77781168358c",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "c998abde-b379-4f1f-a4bc-acef1fc72507",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "de92a959-ea1e-48c4-b20e-3ad4ed82ff02",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "de92a959-ea1e-48c4-b20e-3ad4ed82ff02",
+            "category_id": "a3d5ecae-c74d-4ddf-bb06-df4ddc832619"
+        },
+        {
+            "plant_id": "1f3081fa-2e3f-4418-9a80-a6777809f461",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "3df9d596-5d8a-4304-9731-69ef47e68559",
+            "category_id": "a3d5ecae-c74d-4ddf-bb06-df4ddc832619"
+        },
+        {
+            "plant_id": "0df02d32-898f-45c1-ae57-f5b2c45c18db",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "4a64d4e1-ef1e-4575-8278-24c096a024d2",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "b0f5953d-8013-4d6c-ba6c-36a34c378339",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "b9d58134-9721-40ec-b590-15696e3dbcbe",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "b9d58134-9721-40ec-b590-15696e3dbcbe",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "d1372f60-635f-4645-962f-df1436a3cf1d",
+            "category_id": "97f62354-166d-4b75-a85d-2ea493ae2e03"
+        },
+        {
+            "plant_id": "edcbfe14-db4a-4c78-864a-1d037fe9897b",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "db44ccf1-6b2c-49dd-877f-f2188f57aa2c",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "b919c133-de65-434f-a0f9-10c398edebb8",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "7128f6c0-910b-44ab-95e1-16a7dd300f48",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "55d7ffd0-8ac7-4c65-9e44-010f5de7d0eb",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "84a708cd-2036-4064-bf75-f39fcf217c41",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "8637094e-7b2a-40a2-8583-ae097079831a",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "8c31f772-7e6c-4302-8657-f12a4d9c0793",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "d3355bf3-f61d-4f92-9077-f0bfb06beb44",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "d9f09c50-0194-41ea-9695-96fa96004706",
+            "category_id": "535bcc7d-b207-4257-be6e-3b4ac9b5a9fd"
+        },
+        {
+            "plant_id": "9950a6cc-ca99-4c8e-a3d9-d31f57a71771",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "785af9dd-4837-4192-a325-976dba79b553",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "5468663f-a355-4d43-a355-887ac67b8a99",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "91bd34ff-09dd-4fbe-85f3-9b63802ab3a5",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "40d6b689-155e-47ab-81dc-40d7edbf7f29",
+            "category_id": "97f62354-166d-4b75-a85d-2ea493ae2e03"
+        },
+        {
+            "plant_id": "0162f6ff-a8a4-4af7-86e8-b4506f3b4e47",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "4e202b4d-5a54-4abf-8fff-e4944c6f9c1d",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "4e202b4d-5a54-4abf-8fff-e4944c6f9c1d",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "83daceee-0d48-4998-af0e-fe215071cc7f",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "60c34bb7-25e1-448d-9302-02527d2a9936",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "97ee2c1e-04d3-41c5-bfb1-ba2d5ed7c2de",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "5fd1eb86-a4fa-453c-9bfb-6b4da91a027d",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "5fd1eb86-a4fa-453c-9bfb-6b4da91a027d",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "308030d1-678d-4317-a088-ab16cfd9059a",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "fa5a6e5f-cb1b-496b-9a5e-baa40537b322",
+            "category_id": "a3d5ecae-c74d-4ddf-bb06-df4ddc832619"
+        },
+        {
+            "plant_id": "cc8b0e2e-b32f-472b-9154-b2e302a97c9a",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "618540ca-204a-434e-9559-6a415cb08fc8",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "618540ca-204a-434e-9559-6a415cb08fc8",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "32387ae8-4ba5-4f69-a796-1c21973eda32",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "9ab11c5a-e13a-4ef4-af14-e7babab61eef",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "08b97851-fe36-4015-957e-8076ec99efbf",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "94055533-e724-427e-96fc-fbe24e25a886",
+            "category_id": "a3d5ecae-c74d-4ddf-bb06-df4ddc832619"
+        },
+        {
+            "plant_id": "b2d05378-1af4-4daf-b650-b2ab17e4c6a7",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "3d015440-2e32-4c46-937b-5b777d68af8e",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "1260d329-2779-4e01-a6f8-9fa9342d089e",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "d89f867b-d82e-4846-a448-6821e042afa3",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "d89f867b-d82e-4846-a448-6821e042afa3",
+            "category_id": "1c5e5f4d-4d38-4406-a84d-3819cccaf215"
+        },
+        {
+            "plant_id": "bc1d9bb1-2113-422f-aa11-db0ff99e7a26",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "f5f7a45b-e4d5-4e82-9a2e-6f6358ffa4f1",
+            "category_id": "a3d5ecae-c74d-4ddf-bb06-df4ddc832619"
+        },
+        {
+            "plant_id": "0c7d3f59-ca83-4037-a511-0b875e4ff1b6",
+            "category_id": "1c5e5f4d-4d38-4406-a84d-3819cccaf215"
+        },
+        {
+            "plant_id": "a1bdcae2-480d-46be-b381-8273ba943f72",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "a1bdcae2-480d-46be-b381-8273ba943f72",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "f6ba2096-3f1e-4e3a-aaa0-b3aa64cb5219",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "8a7a49ee-49ea-4029-90df-1dfed6b2c692",
+            "category_id": "97f62354-166d-4b75-a85d-2ea493ae2e03"
+        },
+        {
+            "plant_id": "62509e48-266a-4722-aeef-098f9d53ad32",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "ccf4e58d-eb3d-49ef-b170-9edd58662e74",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "11d58bb2-3f22-498d-8781-a03970358753",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "44960a35-b6a6-44d7-8bd9-c783dc1bb30e",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "3baeb136-3865-4be0-8006-cb398ed52bb3",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "525afb65-6eb6-4547-9c0c-613aacaa36e3",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "f0335508-caaf-4e12-858a-61f8d175e75f",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "de97d46b-4e88-42e4-a757-957d4618adc0",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "f945e050-a75e-4c03-90ef-ce6f346b0548",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "7b4ed646-e88c-4edd-a5db-fd3952cf7bb4",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "a63a20b1-4d06-4f34-a4cc-ab2b42974564",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "45737118-ab7d-43b7-ac0c-bf802b0aa422",
+            "category_id": "97f62354-166d-4b75-a85d-2ea493ae2e03"
+        },
+        {
+            "plant_id": "581fc021-55e1-422b-864f-53d69ffd6547",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "dae5df39-7634-4cc2-895f-68e1a950f0f3",
+            "category_id": "535bcc7d-b207-4257-be6e-3b4ac9b5a9fd"
+        },
+        {
+            "plant_id": "8e5f30d6-97b9-4996-bd80-d7aa2c338c8d",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "24292596-fd39-4e22-8016-6f87e5fa4326",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "df9b9cf5-2f54-4781-819d-c0e4bd927c74",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "1d1e91dd-12ef-4315-82be-ae97ce7cedce",
+            "category_id": "535bcc7d-b207-4257-be6e-3b4ac9b5a9fd"
+        },
+        {
+            "plant_id": "bcd8f2e9-3b71-4f6d-ae4d-d51d31265f34",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "31697536-4822-479a-871e-46f96cfcb688",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "16431e4e-7336-49e6-bcf5-6ac951e22d38",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "bb6435d5-629f-4e7e-b916-635cf77aa914",
+            "category_id": "a3d5ecae-c74d-4ddf-bb06-df4ddc832619"
+        },
+        {
+            "plant_id": "d12a7f90-e68d-4191-9130-304cd69e08ad",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "9fd8eb21-5f69-4e4d-99d3-c86445850308",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "015eb7c4-6e46-4ecd-8584-824290d67676",
+            "category_id": "a3d5ecae-c74d-4ddf-bb06-df4ddc832619"
+        },
+        {
+            "plant_id": "e98c88e3-2055-4e09-85af-d2b59b8b7f7c",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "3416750c-e8ed-4dc3-a1bb-0eaf8069a095",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "3416750c-e8ed-4dc3-a1bb-0eaf8069a095",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "d4162690-a1f1-4600-85a2-33cb40624bd5",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "af5eb81a-2923-4bdc-89c2-7109286354eb",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "005f27e7-b730-4f19-90dd-3307b0ab46e5",
+            "category_id": "535bcc7d-b207-4257-be6e-3b4ac9b5a9fd"
+        },
+        {
+            "plant_id": "6522bd1d-1092-46af-87d1-b4ce055c30cd",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "171a5040-bc48-48d6-aebd-0cf49e6e714e",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "f90d2207-434c-4850-8553-937a0b49d217",
+            "category_id": "1c5e5f4d-4d38-4406-a84d-3819cccaf215"
+        },
+        {
+            "plant_id": "1328a788-38b1-4c64-a897-76a8f6368906",
+            "category_id": "1c5e5f4d-4d38-4406-a84d-3819cccaf215"
+        },
+        {
+            "plant_id": "e05a6eca-1836-4dd5-b9a1-2eb7deb73e69",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "fe357809-3e41-4e7d-a31b-7c5499fd9852",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "56d7ce43-946b-419c-849a-6d71c15da9ce",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "8a6122e4-a45c-4d57-8e52-d8b1c6a4289a",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "163400f6-428e-41ab-9755-2eccb9b6d1a5",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "2d256f8c-21b0-4542-a4d7-7e3c43cad523",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "2d256f8c-21b0-4542-a4d7-7e3c43cad523",
+            "category_id": "1cd7dfeb-d02d-4da7-b747-53f7a998f6bf"
+        },
+        {
+            "plant_id": "2c8119c9-230e-49d6-acbd-a2d4586bd7bb",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "f70eb4b4-5025-462c-8acb-4f88e01ca575",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "5822deaa-e38d-47bd-a162-5d0efa379d1d",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "5822deaa-e38d-47bd-a162-5d0efa379d1d",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "0e8b5d7e-f9b5-453c-8d0a-375dd7bbc60b",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "de3f231f-9976-4b12-8734-d3c61033336a",
+            "category_id": "6e6a7b1f-9f61-4256-a830-e6d397044599"
+        },
+        {
+            "plant_id": "3738ba95-2c3f-418c-b56b-0faf262ff622",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "f9265b9b-8217-401a-8420-87ff25283773",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "66dc56cc-d33a-417e-b29e-6ebb15caf3b9",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "13907744-04ae-4c51-9235-b58c0417576a",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "052f915d-f26b-46fa-8c7a-cd90a9f1fad1",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "5b63ae05-7d90-4bbd-841d-70c1ea059866",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "64220e23-c6c7-43fd-b857-5e3a1e9ebd76",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "2d4d4cd0-e9cc-4a7a-a53e-d8b1ef97c653",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "30406f3d-220a-420d-98df-15acc3a02c0c",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "23d4c890-4e74-4dbc-ba10-67941de1f264",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "9fa3f749-8fac-4a6a-b69f-0e2e0eac43dc",
+            "category_id": "1c5e5f4d-4d38-4406-a84d-3819cccaf215"
+        },
+        {
+            "plant_id": "f539c72b-e881-4a5e-97cf-fb339b15b096",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "d6da146f-b45e-4129-9a32-2a55f87a9edf",
+            "category_id": "a3d5ecae-c74d-4ddf-bb06-df4ddc832619"
+        },
+        {
+            "plant_id": "72243591-437a-475c-8b9c-ef4aea8d281f",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "c442926f-5230-42ff-9239-8e7f5955acea",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "66870965-ca55-4184-8d40-6f1499735b01",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "e4fd8ddc-b6d1-4501-a2a2-8547c53e834b",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "f782ec30-839e-4f6f-b10f-cd66b215420d",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "f782ec30-839e-4f6f-b10f-cd66b215420d",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "865619ba-5378-41c4-8d43-7478cbc09d10",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "72681cf7-cf8b-4ad7-bc87-d0ec6822749f",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "72681cf7-cf8b-4ad7-bc87-d0ec6822749f",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "ee4f352a-5902-43e1-8460-4a1d25e1a4ee",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "38d09429-7ef9-418d-8dcf-d19d8f08d7d7",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "fc26c227-d1f0-4de9-a0b1-4b90ddc5a77e",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "4a64d4e1-ef1e-4575-8278-24c096a024d2",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "5fe4631c-26f0-40a4-961b-6af7460b776a",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "6b7f5e00-9e7b-4636-b9dd-349fb50cd028",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "65073858-12e0-421e-b04a-d5f461bf0d77",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "dbf015fb-aaaf-4b64-a827-1b19b2e6b4ae",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "48f409d5-7d42-462f-aff3-d4ecde0a5e3c",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "48f409d5-7d42-462f-aff3-d4ecde0a5e3c",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        },
+        {
+            "plant_id": "81377c03-3aab-40b9-bca3-aed420e959db",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "581fc021-55e1-422b-864f-53d69ffd6547",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "aefed1f2-a5b6-4ee8-b14e-5704fbcadeb4",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "171a5040-bc48-48d6-aebd-0cf49e6e714e",
+            "category_id": "da5818be-da49-428f-87e6-e944dbb502f8"
+        },
+        {
+            "plant_id": "6522bd1d-1092-46af-87d1-b4ce055c30cd",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "31dab8f5-b8f6-4453-8d4d-4224638667bd",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "60c34bb7-25e1-448d-9302-02527d2a9936",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "8bcd3ddc-ddfb-4a47-9796-ebf7e9472a61",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "81fbfc64-9571-47e5-87c4-3d4190151e37",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "0bc97e0a-cb17-480e-9e48-0555e88edf15",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "42ddc53f-85f6-4af2-bd1d-cec2630b0e97",
+            "category_id": "e0d72568-07e2-4922-87cd-389936b3108f"
+        },
+        {
+            "plant_id": "049a1c65-7c43-46b1-ae8b-a9ff4c60332e",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "8599dd56-a298-4c7a-b735-f97fe30e184b",
+            "category_id": "6e6a7b1f-9f61-4256-a830-e6d397044599"
+        },
+        {
+            "plant_id": "2b9d1599-8b62-43c2-8f1d-e4b49fd4c540",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "20c72d2a-7692-4594-add8-979f8a9b27f5",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "de3f231f-9976-4b12-8734-d3c61033336a",
+            "category_id": "1c5e5f4d-4d38-4406-a84d-3819cccaf215"
+        },
+        {
+            "plant_id": "87c03b5a-e1c4-4f33-8c94-e1b2c63648bb",
+            "category_id": "1c5e5f4d-4d38-4406-a84d-3819cccaf215"
+        },
+        {
+            "plant_id": "87c03b5a-e1c4-4f33-8c94-e1b2c63648bb",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "87c03b5a-e1c4-4f33-8c94-e1b2c63648bb",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "fe83b0ce-21bf-4dbc-a02a-4472897fe71c",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "66ca5b74-bffa-4db8-ace8-f1e85c2c8180",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "812b062e-c48d-4ae3-ba74-e7cd30260825",
+            "category_id": "97f62354-166d-4b75-a85d-2ea493ae2e03"
+        },
+        {
+            "plant_id": "cf340afd-6765-4c63-97e5-407cd98ccd55",
+            "category_id": "97f62354-166d-4b75-a85d-2ea493ae2e03"
+        },
+        {
+            "plant_id": "faaf5190-51e1-4f7c-9fce-179c3601ea77",
+            "category_id": "97f62354-166d-4b75-a85d-2ea493ae2e03"
+        },
+        {
+            "plant_id": "db370fe4-feb7-40fd-88cf-7c7afd9bbf9f",
+            "category_id": "97f62354-166d-4b75-a85d-2ea493ae2e03"
+        },
+        {
+            "plant_id": "580f6cc1-661d-4475-a4ba-9cc9add294a2",
+            "category_id": "97f62354-166d-4b75-a85d-2ea493ae2e03"
+        },
+        {
+            "plant_id": "35006a7a-cd32-4e7a-bc52-5a644d30eb2c",
+            "category_id": "97f62354-166d-4b75-a85d-2ea493ae2e03"
+        },
+        {
+            "plant_id": "94055533-e724-427e-96fc-fbe24e25a886",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "db246f3b-07f0-4141-b12a-c871b33caca2",
+            "category_id": "ec3e1f04-2829-487e-a679-09542813725b"
+        },
+        {
+            "plant_id": "74ea84a7-7a04-4875-a1c7-753903bbf432",
+            "category_id": "6e6a7b1f-9f61-4256-a830-e6d397044599"
+        },
+        {
+            "plant_id": "63b597c4-3bd0-4c34-84b5-b19ce9852079",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "63b597c4-3bd0-4c34-84b5-b19ce9852079",
+            "category_id": "12179f17-96c6-4dd8-b1da-de236d11a68c"
+        },
+        {
+            "plant_id": "6afb5a4d-5eb3-4c52-89a5-2d7e532e4cca",
+            "category_id": "f876505e-5efa-4127-ab85-713a3020d93d"
+        },
+        {
+            "plant_id": "76c741a3-f85c-44b2-918a-9ce50899d986",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "1b7e1d66-b1e6-4576-9839-46b1f479d112",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "cf91683e-b071-44d5-abfd-e89a9875ab3c",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "5ccef3a1-e80c-439a-836e-d3a36a5784a3",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "a67cbcca-c82a-4cf6-ba02-ad92268203c2",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "32e3bf56-4c09-4c31-b4b5-6ca574301c67",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "608072ca-faa4-4d00-b521-5fd2d4cb41e9",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "003209a4-285b-4be9-8e51-9457f798c955",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "d3309046-4054-48f1-8ad6-ade3edcafb89",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "7488b6f4-6b77-4a70-9c71-43464bdd8b1c",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "7f310932-8db4-4f48-978a-fab2798c7653",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "21bc2af5-a733-46f8-84d6-04a25d468f08",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "b3cfb647-cf84-461d-af68-d289ed58dbb0",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "0ca54d21-d075-48bf-b183-a97ecae7d8a2",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "63b10900-6d25-494f-9a59-13517638e88f",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "c45bbb65-b9c0-4781-8a4f-cd3420ab91c8",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "2f828acc-fcac-4f57-8274-cc8a64e7efee",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "8f56fce1-a09a-4148-af9c-9b90e83b23f4",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "a3abd321-07e7-4615-b10f-ece2dc420c1b",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "deed0d28-99e5-4dab-8af5-8e59e77acaba",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "54cfd9d8-761f-48cc-b257-7e4c652dbb03",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "89344a3f-dfd4-441b-929c-d7668d512634",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "08df6ce8-d0ca-40c7-ad8d-5a12136771f1",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "12cfe165-2715-444e-a77f-216cfb86d94d",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "2f1d8154-058d-44d6-8d72-85599705bd88",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "e2501469-e961-4335-a239-d1037efb0a8d",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "c09dc415-b298-4fab-a330-ec33a2c72077",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "cce020b2-7a98-436b-8bd9-7f4f66e98a7f",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "7ec75b2d-0761-447a-b32a-9aef4288c22a",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "cff42eae-b350-4d06-8037-7b8fbe36e37d",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "6933bbe3-cd21-488d-8330-439fc86405ae",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "34ab50de-15eb-4cbe-bd78-bfa4c7f484a7",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "5aa22cdf-4b4f-4856-a637-120151a61fe6",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "60b9515f-f6b2-427f-bf6c-6f86c65e2d26",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "629b6d4b-4790-4110-a02c-ccefd4744e71",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "11f63881-67f9-4531-a4d0-3c1b1569c276",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "945bf774-0422-4c1c-991e-c2258a279f71",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "68991f1c-d958-403e-ac17-043efccf3a4c",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "d6227993-d9ef-4d10-bb25-0a4afab4a0f9",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "0aeac397-fe82-4005-95f3-fc8a38ca243e",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "e22c9619-93f5-4361-ab36-6c0d489fd52e",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "140a8537-969b-4798-907f-e53d9acc9ca0",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "559e9536-e141-40e7-872d-faf2d4fc9a8c",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "e61d1289-bab8-4a17-aa4d-643460d79cfd",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "20b287ba-5d52-4520-86a5-455360aca5fb",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "e46c0d5b-a321-43d9-820d-14f2fb3fe342",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "cd945e48-4cbc-437b-a5e0-451a17c87f72",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "914fc93a-2b73-4331-8048-30d544070741",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "5931d29c-70a2-43b2-a4ba-11c6d01c5212",
+            "category_id": "aa9c55cd-6cc1-4893-be94-ed3df91d1a59"
+        },
+        {
+            "plant_id": "8ec8d255-35f5-4d62-aa5b-1642ec6f271c",
+            "category_id": "1cd7dfeb-d02d-4da7-b747-53f7a998f6bf"
+        },
+        {
+            "plant_id": "5018db66-6a23-49ca-a4f7-da2b56046886",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "57257370-5cf5-4629-a976-f24d2469f28e",
+            "category_id": "74f9c0b9-1de8-4a62-a9ea-75020ee853b6"
+        },
+        {
+            "plant_id": "bdaae15f-c558-4170-a4e0-0eb156a7370f",
+            "category_id": "6e6a7b1f-9f61-4256-a830-e6d397044599"
+        },
+        {
+            "plant_id": "bdaae15f-c558-4170-a4e0-0eb156a7370f",
+            "category_id": "265c782d-c9e0-4c7a-8ab1-af672572508c"
+        }
+    ],
+    "antinutrients": [
+        {
+            "plant_id": "1436d95b-0ae2-4246-9334-22a4e663d23c",
+            "antinutrient_id": 1
+        },
+        {
+            "plant_id": "1436d95b-0ae2-4246-9334-22a4e663d23c",
+            "antinutrient_id": 2
+        },
+        {
+            "plant_id": "1436d95b-0ae2-4246-9334-22a4e663d23c",
+            "antinutrient_id": 3
+        },
+        {
+            "plant_id": "1436d95b-0ae2-4246-9334-22a4e663d23c",
+            "antinutrient_id": 4
+        },
+        {
+            "plant_id": "d9f09c50-0194-41ea-9695-96fa96004706",
+            "antinutrient_id": 1
+        },
+        {
+            "plant_id": "d9f09c50-0194-41ea-9695-96fa96004706",
+            "antinutrient_id": 2
+        },
+        {
+            "plant_id": "d9f09c50-0194-41ea-9695-96fa96004706",
+            "antinutrient_id": 3
+        },
+        {
+            "plant_id": "d9f09c50-0194-41ea-9695-96fa96004706",
+            "antinutrient_id": 4
+        },
+        {
+            "plant_id": "8e4abb77-c12a-43b7-aeaa-58d646092f6c",
+            "antinutrient_id": 1
+        },
+        {
+            "plant_id": "8e4abb77-c12a-43b7-aeaa-58d646092f6c",
+            "antinutrient_id": 2
+        },
+        {
+            "plant_id": "8e4abb77-c12a-43b7-aeaa-58d646092f6c",
+            "antinutrient_id": 3
+        },
+        {
+            "plant_id": "8e4abb77-c12a-43b7-aeaa-58d646092f6c",
+            "antinutrient_id": 4
+        },
+        {
+            "plant_id": "2f10f5a6-ca70-48c6-954c-43bc38cbab0e",
+            "antinutrient_id": 1
+        },
+        {
+            "plant_id": "2f10f5a6-ca70-48c6-954c-43bc38cbab0e",
+            "antinutrient_id": 2
+        },
+        {
+            "plant_id": "2f10f5a6-ca70-48c6-954c-43bc38cbab0e",
+            "antinutrient_id": 3
+        },
+        {
+            "plant_id": "2f10f5a6-ca70-48c6-954c-43bc38cbab0e",
+            "antinutrient_id": 4
+        },
+        {
+            "plant_id": "f8778f8b-73d5-41f6-b4af-75c4644c32a6",
+            "antinutrient_id": 5
+        },
+        {
+            "plant_id": "f8778f8b-73d5-41f6-b4af-75c4644c32a6",
+            "antinutrient_id": 2
+        },
+        {
+            "plant_id": "f8778f8b-73d5-41f6-b4af-75c4644c32a6",
+            "antinutrient_id": 6
+        },
+        {
+            "plant_id": "f8778f8b-73d5-41f6-b4af-75c4644c32a6",
+            "antinutrient_id": 7
+        },
+        {
+            "plant_id": "f8778f8b-73d5-41f6-b4af-75c4644c32a6",
+            "antinutrient_id": 1
+        },
+        {
+            "plant_id": "1ad2329d-2019-4dd2-a3a2-2700b01b2cbe",
+            "antinutrient_id": 6
+        },
+        {
+            "plant_id": "1ad2329d-2019-4dd2-a3a2-2700b01b2cbe",
+            "antinutrient_id": 8
+        },
+        {
+            "plant_id": "1ad2329d-2019-4dd2-a3a2-2700b01b2cbe",
+            "antinutrient_id": 19
+        },
+        {
+            "plant_id": "808239c5-009a-49f3-8f3a-8a9790836070",
+            "antinutrient_id": 9
+        },
+        {
+            "plant_id": "5095c126-375a-41d4-aceb-f94b5e94495d",
+            "antinutrient_id": 10
+        },
+        {
+            "plant_id": "5095c126-375a-41d4-aceb-f94b5e94495d",
+            "antinutrient_id": 11
+        },
+        {
+            "plant_id": "5095c126-375a-41d4-aceb-f94b5e94495d",
+            "antinutrient_id": 2
+        },
+        {
+            "plant_id": "398d94f4-59aa-4500-b535-a08e67f8d78b",
+            "antinutrient_id": 10
+        },
+        {
+            "plant_id": "398d94f4-59aa-4500-b535-a08e67f8d78b",
+            "antinutrient_id": 11
+        },
+        {
+            "plant_id": "398d94f4-59aa-4500-b535-a08e67f8d78b",
+            "antinutrient_id": 2
+        },
+        {
+            "plant_id": "8d75d448-9c82-4e8c-926d-fbc53eef9797",
+            "antinutrient_id": 1
+        },
+        {
+            "plant_id": "8d75d448-9c82-4e8c-926d-fbc53eef9797",
+            "antinutrient_id": 2
+        },
+        {
+            "plant_id": "8d75d448-9c82-4e8c-926d-fbc53eef9797",
+            "antinutrient_id": 3
+        },
+        {
+            "plant_id": "8d75d448-9c82-4e8c-926d-fbc53eef9797",
+            "antinutrient_id": 4
+        },
+        {
+            "plant_id": "4e11076f-7a5e-4ca6-a9be-7e1f3db0fd39",
+            "antinutrient_id": 12
+        },
+        {
+            "plant_id": "4e11076f-7a5e-4ca6-a9be-7e1f3db0fd39",
+            "antinutrient_id": 13
+        },
+        {
+            "plant_id": "4e11076f-7a5e-4ca6-a9be-7e1f3db0fd39",
+            "antinutrient_id": 14
+        },
+        {
+            "plant_id": "81d5fd86-74e7-41c9-af1e-a8da7a265bd2",
+            "antinutrient_id": 15
+        },
+        {
+            "plant_id": "81d5fd86-74e7-41c9-af1e-a8da7a265bd2",
+            "antinutrient_id": 16
+        },
+        {
+            "plant_id": "81d5fd86-74e7-41c9-af1e-a8da7a265bd2",
+            "antinutrient_id": 17
+        },
+        {
+            "plant_id": "81d5fd86-74e7-41c9-af1e-a8da7a265bd2",
+            "antinutrient_id": 3
+        },
+        {
+            "plant_id": "81d5fd86-74e7-41c9-af1e-a8da7a265bd2",
+            "antinutrient_id": 18
+        },
+        {
+            "plant_id": "cc8b0e2e-b32f-472b-9154-b2e302a97c9a",
+            "antinutrient_id": 13
+        },
+        {
+            "plant_id": "d66f0ce7-949a-4351-927e-51a5755d1678",
+            "antinutrient_id": 1
+        },
+        {
+            "plant_id": "d66f0ce7-949a-4351-927e-51a5755d1678",
+            "antinutrient_id": 6
+        },
+        {
+            "plant_id": "d66f0ce7-949a-4351-927e-51a5755d1678",
+            "antinutrient_id": 15
+        },
+        {
+            "plant_id": "d66f0ce7-949a-4351-927e-51a5755d1678",
+            "antinutrient_id": 17
+        },
+        {
+            "plant_id": "dae5df39-7634-4cc2-895f-68e1a950f0f3",
+            "antinutrient_id": 1
+        },
+        {
+            "plant_id": "dae5df39-7634-4cc2-895f-68e1a950f0f3",
+            "antinutrient_id": 2
+        },
+        {
+            "plant_id": "dae5df39-7634-4cc2-895f-68e1a950f0f3",
+            "antinutrient_id": 3
+        },
+        {
+            "plant_id": "dae5df39-7634-4cc2-895f-68e1a950f0f3",
+            "antinutrient_id": 4
+        }
+    ],
+    "tolerances": [
+        {
+            "plant_id": "1436d95b-0ae2-4246-9334-22a4e663d23c",
+            "tolerance_id": 1
+        },
+        {
+            "plant_id": "d9f09c50-0194-41ea-9695-96fa96004706",
+            "tolerance_id": 1
+        },
+        {
+            "plant_id": "d9f09c50-0194-41ea-9695-96fa96004706",
+            "tolerance_id": 2
+        },
+        {
+            "plant_id": "8e4abb77-c12a-43b7-aeaa-58d646092f6c",
+            "tolerance_id": 1
+        },
+        {
+            "plant_id": "2f10f5a6-ca70-48c6-954c-43bc38cbab0e",
+            "tolerance_id": 3
+        },
+        {
+            "plant_id": "808239c5-009a-49f3-8f3a-8a9790836070",
+            "tolerance_id": 1
+        },
+        {
+            "plant_id": "808239c5-009a-49f3-8f3a-8a9790836070",
+            "tolerance_id": 3
+        },
+        {
+            "plant_id": "5095c126-375a-41d4-aceb-f94b5e94495d",
+            "tolerance_id": 4
+        },
+        {
+            "plant_id": "5095c126-375a-41d4-aceb-f94b5e94495d",
+            "tolerance_id": 5
+        },
+        {
+            "plant_id": "398d94f4-59aa-4500-b535-a08e67f8d78b",
+            "tolerance_id": 4
+        },
+        {
+            "plant_id": "398d94f4-59aa-4500-b535-a08e67f8d78b",
+            "tolerance_id": 5
+        },
+        {
+            "plant_id": "8d75d448-9c82-4e8c-926d-fbc53eef9797",
+            "tolerance_id": 1
+        },
+        {
+            "plant_id": "4e11076f-7a5e-4ca6-a9be-7e1f3db0fd39",
+            "tolerance_id": 6
+        },
+        {
+            "plant_id": "81d5fd86-74e7-41c9-af1e-a8da7a265bd2",
+            "tolerance_id": 1
+        },
+        {
+            "plant_id": "81d5fd86-74e7-41c9-af1e-a8da7a265bd2",
+            "tolerance_id": 7
+        },
+        {
+            "plant_id": "cc8b0e2e-b32f-472b-9154-b2e302a97c9a",
+            "tolerance_id": 6
+        },
+        {
+            "plant_id": "cc8b0e2e-b32f-472b-9154-b2e302a97c9a",
+            "tolerance_id": 7
+        },
+        {
+            "plant_id": "d66f0ce7-949a-4351-927e-51a5755d1678",
+            "tolerance_id": 6
+        },
+        {
+            "plant_id": "dae5df39-7634-4cc2-895f-68e1a950f0f3",
+            "tolerance_id": 3
+        },
+        {
+            "plant_id": "dae5df39-7634-4cc2-895f-68e1a950f0f3",
+            "tolerance_id": 6
+        },
+        {
+            "plant_id": "66ca5b74-bffa-4db8-ace8-f1e85c2c8180",
+            "tolerance_id": 1
+        },
+        {
+            "plant_id": "66ca5b74-bffa-4db8-ace8-f1e85c2c8180",
+            "tolerance_id": 3
+        },
+        {
+            "plant_id": "914f4d44-5259-4548-824a-98e1568385a4",
+            "tolerance_id": 1
+        },
+        {
+            "plant_id": "b9d58134-9721-40ec-b590-15696e3dbcbe",
+            "tolerance_id": 1
+        }
+    ],
+    "growth_habits": [
+        {
+            "plant_id": "1436d95b-0ae2-4246-9334-22a4e663d23c",
+            "growth_habit_id": 1
+        },
+        {
+            "plant_id": "1436d95b-0ae2-4246-9334-22a4e663d23c",
+            "growth_habit_id": 2
+        },
+        {
+            "plant_id": "d9f09c50-0194-41ea-9695-96fa96004706",
+            "growth_habit_id": 3
+        },
+        {
+            "plant_id": "8e4abb77-c12a-43b7-aeaa-58d646092f6c",
+            "growth_habit_id": 1
+        },
+        {
+            "plant_id": "8e4abb77-c12a-43b7-aeaa-58d646092f6c",
+            "growth_habit_id": 2
+        },
+        {
+            "plant_id": "2f10f5a6-ca70-48c6-954c-43bc38cbab0e",
+            "growth_habit_id": 4
+        },
+        {
+            "plant_id": "f8778f8b-73d5-41f6-b4af-75c4644c32a6",
+            "growth_habit_id": 5
+        },
+        {
+            "plant_id": "f8778f8b-73d5-41f6-b4af-75c4644c32a6",
+            "growth_habit_id": 2
+        },
+        {
+            "plant_id": "1ad2329d-2019-4dd2-a3a2-2700b01b2cbe",
+            "growth_habit_id": 5
+        },
+        {
+            "plant_id": "808239c5-009a-49f3-8f3a-8a9790836070",
+            "growth_habit_id": 5
+        },
+        {
+            "plant_id": "5095c126-375a-41d4-aceb-f94b5e94495d",
+            "growth_habit_id": 4
+        },
+        {
+            "plant_id": "398d94f4-59aa-4500-b535-a08e67f8d78b",
+            "growth_habit_id": 2
+        },
+        {
+            "plant_id": "8d75d448-9c82-4e8c-926d-fbc53eef9797",
+            "growth_habit_id": 4
+        },
+        {
+            "plant_id": "8d75d448-9c82-4e8c-926d-fbc53eef9797",
+            "growth_habit_id": 2
+        },
+        {
+            "plant_id": "4e11076f-7a5e-4ca6-a9be-7e1f3db0fd39",
+            "growth_habit_id": 5
+        },
+        {
+            "plant_id": "4e11076f-7a5e-4ca6-a9be-7e1f3db0fd39",
+            "growth_habit_id": 4
+        },
+        {
+            "plant_id": "81d5fd86-74e7-41c9-af1e-a8da7a265bd2",
+            "growth_habit_id": 5
+        },
+        {
+            "plant_id": "cc8b0e2e-b32f-472b-9154-b2e302a97c9a",
+            "growth_habit_id": 4
+        },
+        {
+            "plant_id": "d66f0ce7-949a-4351-927e-51a5755d1678",
+            "growth_habit_id": 5
+        },
+        {
+            "plant_id": "dae5df39-7634-4cc2-895f-68e1a950f0f3",
+            "growth_habit_id": 1
+        },
+        {
+            "plant_id": "dae5df39-7634-4cc2-895f-68e1a950f0f3",
+            "growth_habit_id": 2
+        },
+        {
+            "plant_id": "66ca5b74-bffa-4db8-ace8-f1e85c2c8180",
+            "growth_habit_id": 1
+        },
+        {
+            "plant_id": "66ca5b74-bffa-4db8-ace8-f1e85c2c8180",
+            "growth_habit_id": 4
+        },
+        {
+            "plant_id": "ac5a031d-43ca-461c-9702-3bbb0dc01dc1",
+            "growth_habit_id": 1
+        },
+        {
+            "plant_id": "ac5a031d-43ca-461c-9702-3bbb0dc01dc1",
+            "growth_habit_id": 2
+        }
+    ]
+}

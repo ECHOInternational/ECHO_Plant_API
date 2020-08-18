@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Defines the Plant object type
-class Plant < ApplicationRecord
+class Plant < ApplicationRecord # rubocop:disable Metrics/ClassLength
   enum early_growth_phase: { slow: 'slow', intermediate: 'intermediate', fast: 'fast' }
   enum life_cycle: { annual: 'annual', biennial: 'biennial', perennial: 'perennial' }
   validates :owned_by, :created_by, :visibility, presence: true
@@ -24,6 +24,7 @@ class Plant < ApplicationRecord
 
   extend Mobility
   translates :description,
+             :info_sheet_description,
              :origin,
              :uses,
              :cultivation,
@@ -68,9 +69,16 @@ class Plant < ApplicationRecord
 
   def primary_common_name_for_locale(locale)
     requested = common_names.where(language: locale.upcase).where(primary: true).first
-    return requested if requested
+    return requested.name if requested
 
-    common_names.where(language: 'EN').where(primary: true).first
+    fallback = common_names.where(language: 'EN').where(primary: true).first
+    return fallback.name if fallback
+
+    nil
+  end
+
+  def primary_common_name
+    primary_common_name_for_locale(I18n.locale)
   end
 
   def translations_array # rubocop:disable all
@@ -78,6 +86,7 @@ class Plant < ApplicationRecord
       {
         locale: language,
         description: attributes['description'],
+        info_sheet_description: attributes['info_sheet_description'],
         origin: attributes['origin'],
         uses: attributes['uses'],
         cultivation: attributes['cultivation'],
