@@ -43,4 +43,25 @@ RSpec.describe Tolerance, type: :model do
       expect { tolerance.destroy }.to_not change { Plant.count }
     end
   end
+  it 'has many varieties' do
+    tolerance = create(:tolerance)
+    variety_a = create(:variety)
+    variety_b = create(:variety)
+    expect { tolerance.varieties << variety_a }.to change { tolerance.varieties.count }.by(1)
+    expect { tolerance.varieties << variety_b }.to change { tolerance.varieties.count }.by(1)
+  end
+  describe 'when it is destroyed' do
+    it 'destroys any related tolerances_variety records' do
+      tolerance = create(:tolerance)
+      variety = create(:variety)
+      tolerance.varieties << variety
+      expect { tolerance.destroy }.to change { TolerancesVariety.count }.by(-1)
+    end
+    it 'does not destroy related varieties' do
+      tolerance = create(:tolerance)
+      variety = create(:variety)
+      tolerance.varieties << variety
+      expect { tolerance.destroy }.to_not change { Variety.count }
+    end
+  end
 end

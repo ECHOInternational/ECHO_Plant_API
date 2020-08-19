@@ -75,6 +75,19 @@ CREATE TABLE public.antinutrients_plants (
 
 
 --
+-- Name: antinutrients_varieties; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.antinutrients_varieties (
+    id uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    antinutrient_id uuid NOT NULL,
+    variety_id uuid NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
 -- Name: ar_internal_metadata; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -150,6 +163,19 @@ CREATE TABLE public.growth_habits_plants (
     id uuid DEFAULT public.gen_random_uuid() NOT NULL,
     growth_habit_id uuid NOT NULL,
     plant_id uuid NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: growth_habits_varieties; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.growth_habits_varieties (
+    id uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    growth_habit_id uuid NOT NULL,
+    variety_id uuid NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL
 );
@@ -265,6 +291,48 @@ CREATE TABLE public.tolerances_plants (
 
 
 --
+-- Name: tolerances_varieties; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.tolerances_varieties (
+    id uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    tolerance_id uuid NOT NULL,
+    variety_id uuid NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: varieties; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.varieties (
+    id uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    plant_id uuid NOT NULL,
+    translations jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_by character varying NOT NULL,
+    owned_by character varying NOT NULL,
+    visibility integer DEFAULT 0 NOT NULL,
+    n_accumulation_range int4range DEFAULT '[0,1)'::int4range,
+    biomass_production_range numrange DEFAULT '[0.0,0.0]'::numrange,
+    optimal_temperature_range int4range DEFAULT '[0,61)'::int4range,
+    optimal_rainfall_range int4range DEFAULT '[0,)'::int4range,
+    seasonality_days_range int4range,
+    optimal_altitude_range int4range DEFAULT '[0,)'::int4range,
+    ph_range numrange DEFAULT '[0.0,14.0]'::numrange,
+    has_edible_green_leaves boolean,
+    has_edible_immature_fruit boolean,
+    has_edible_mature_fruit boolean,
+    can_be_used_for_fodder boolean,
+    early_growth_phase public.early_growth_phase,
+    life_cycle public.life_cycle,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
 -- Name: versions; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -323,6 +391,14 @@ ALTER TABLE ONLY public.antinutrients_plants
 
 
 --
+-- Name: antinutrients_varieties antinutrients_varieties_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.antinutrients_varieties
+    ADD CONSTRAINT antinutrients_varieties_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: ar_internal_metadata ar_internal_metadata_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -368,6 +444,14 @@ ALTER TABLE ONLY public.growth_habits
 
 ALTER TABLE ONLY public.growth_habits_plants
     ADD CONSTRAINT growth_habits_plants_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: growth_habits_varieties growth_habits_varieties_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.growth_habits_varieties
+    ADD CONSTRAINT growth_habits_varieties_pkey PRIMARY KEY (id);
 
 
 --
@@ -427,6 +511,22 @@ ALTER TABLE ONLY public.tolerances_plants
 
 
 --
+-- Name: tolerances_varieties tolerances_varieties_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tolerances_varieties
+    ADD CONSTRAINT tolerances_varieties_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: varieties varieties_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.varieties
+    ADD CONSTRAINT varieties_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: versions versions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -453,6 +553,27 @@ CREATE UNIQUE INDEX index_antinutrients_plants_on_antinutrient_id_and_plant_id O
 --
 
 CREATE INDEX index_antinutrients_plants_on_plant_id ON public.antinutrients_plants USING btree (plant_id);
+
+
+--
+-- Name: index_antinutrients_varieties_on_antinutrient_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_antinutrients_varieties_on_antinutrient_id ON public.antinutrients_varieties USING btree (antinutrient_id);
+
+
+--
+-- Name: index_antinutrients_varieties_on_antinutrient_id_and_variety_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_antinutrients_varieties_on_antinutrient_id_and_variety_id ON public.antinutrients_varieties USING btree (antinutrient_id, variety_id);
+
+
+--
+-- Name: index_antinutrients_varieties_on_variety_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_antinutrients_varieties_on_variety_id ON public.antinutrients_varieties USING btree (variety_id);
 
 
 --
@@ -505,6 +626,27 @@ CREATE INDEX index_growth_habits_plants_on_plant_id ON public.growth_habits_plan
 
 
 --
+-- Name: index_growth_habits_varieties_on_growth_habit_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_growth_habits_varieties_on_growth_habit_id ON public.growth_habits_varieties USING btree (growth_habit_id);
+
+
+--
+-- Name: index_growth_habits_varieties_on_growth_habit_id_and_variety_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_growth_habits_varieties_on_growth_habit_id_and_variety_id ON public.growth_habits_varieties USING btree (growth_habit_id, variety_id);
+
+
+--
+-- Name: index_growth_habits_varieties_on_variety_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_growth_habits_varieties_on_variety_id ON public.growth_habits_varieties USING btree (variety_id);
+
+
+--
 -- Name: index_image_attributes_image_on_both_ids; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -554,10 +696,46 @@ CREATE UNIQUE INDEX index_tolerances_plants_on_tolerance_id_and_plant_id ON publ
 
 
 --
+-- Name: index_tolerances_varieties_on_tolerance_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_tolerances_varieties_on_tolerance_id ON public.tolerances_varieties USING btree (tolerance_id);
+
+
+--
+-- Name: index_tolerances_varieties_on_tolerance_id_and_variety_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_tolerances_varieties_on_tolerance_id_and_variety_id ON public.tolerances_varieties USING btree (tolerance_id, variety_id);
+
+
+--
+-- Name: index_tolerances_varieties_on_variety_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_tolerances_varieties_on_variety_id ON public.tolerances_varieties USING btree (variety_id);
+
+
+--
+-- Name: index_varieties_on_plant_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_varieties_on_plant_id ON public.varieties USING btree (plant_id);
+
+
+--
 -- Name: index_versions_on_item_type_and_item_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX index_versions_on_item_type_and_item_id ON public.versions USING btree (item_type, item_id);
+
+
+--
+-- Name: tolerances_varieties fk_rails_010cc18129; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tolerances_varieties
+    ADD CONSTRAINT fk_rails_010cc18129 FOREIGN KEY (variety_id) REFERENCES public.varieties(id);
 
 
 --
@@ -569,6 +747,14 @@ ALTER TABLE ONLY public.antinutrients_plants
 
 
 --
+-- Name: varieties fk_rails_143fdc3592; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.varieties
+    ADD CONSTRAINT fk_rails_143fdc3592 FOREIGN KEY (plant_id) REFERENCES public.plants(id);
+
+
+--
 -- Name: antinutrients_plants fk_rails_41db3c11c4; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -577,11 +763,27 @@ ALTER TABLE ONLY public.antinutrients_plants
 
 
 --
+-- Name: growth_habits_varieties fk_rails_5f4cf82393; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.growth_habits_varieties
+    ADD CONSTRAINT fk_rails_5f4cf82393 FOREIGN KEY (variety_id) REFERENCES public.varieties(id);
+
+
+--
 -- Name: growth_habits_plants fk_rails_60c1d5f98e; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.growth_habits_plants
     ADD CONSTRAINT fk_rails_60c1d5f98e FOREIGN KEY (plant_id) REFERENCES public.plants(id);
+
+
+--
+-- Name: antinutrients_varieties fk_rails_68c484669b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.antinutrients_varieties
+    ADD CONSTRAINT fk_rails_68c484669b FOREIGN KEY (antinutrient_id) REFERENCES public.antinutrients(id);
 
 
 --
@@ -598,6 +800,22 @@ ALTER TABLE ONLY public.tolerances_plants
 
 ALTER TABLE ONLY public.categories_plants
     ADD CONSTRAINT fk_rails_79aa045ff3 FOREIGN KEY (plant_id) REFERENCES public.plants(id);
+
+
+--
+-- Name: antinutrients_varieties fk_rails_84dac3ad75; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.antinutrients_varieties
+    ADD CONSTRAINT fk_rails_84dac3ad75 FOREIGN KEY (variety_id) REFERENCES public.varieties(id);
+
+
+--
+-- Name: growth_habits_varieties fk_rails_9086b6b920; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.growth_habits_varieties
+    ADD CONSTRAINT fk_rails_9086b6b920 FOREIGN KEY (growth_habit_id) REFERENCES public.growth_habits(id);
 
 
 --
@@ -649,6 +867,14 @@ ALTER TABLE ONLY public.image_attributes_images
 
 
 --
+-- Name: tolerances_varieties fk_rails_ecd614b85d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tolerances_varieties
+    ADD CONSTRAINT fk_rails_ecd614b85d FOREIGN KEY (tolerance_id) REFERENCES public.tolerances(id);
+
+
+--
 -- PostgreSQL database dump complete
 --
 
@@ -670,6 +896,7 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20200817180807'),
 ('20200817182822'),
 ('20200817184430'),
-('20200817193432');
+('20200817193432'),
+('20200819084701');
 
 

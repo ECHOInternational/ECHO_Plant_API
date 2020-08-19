@@ -1,33 +1,25 @@
 # frozen_string_literal: true
 
-# Defines the Plant object type
-class Plant < ApplicationRecord # rubocop:disable Metrics/ClassLength
-  enum early_growth_phase: { slow: 'slow', intermediate: 'intermediate', fast: 'fast' }
-  enum life_cycle: { annual: 'annual', biennial: 'biennial', perennial: 'perennial' }
-  validates :owned_by, :created_by, :visibility, presence: true
+# Defines the Variety object type
+class Variety < ApplicationRecord
+  validates :owned_by, :created_by, :visibility, :name, :plant, presence: true
   enum visibility: { private: 0, public: 1, draft: 2, deleted: 3 }, _prefix: :visibility
   has_many :images, as: :imageable, dependent: :destroy
 
-  has_many :antinutrients_plants, dependent: :destroy
-  has_many :antinutrients, through: :antinutrients_plants
+  has_many :antinutrients_varieties, dependent: :destroy
+  has_many :antinutrients, through: :antinutrients_varieties
 
-  has_many :categories_plants, dependent: :destroy
-  has_many :categories, through: :categories_plants
+  has_many :growth_habits_varieties, dependent: :destroy
+  has_many :growth_habits, through: :growth_habits_varieties
 
-  has_many :growth_habits_plants, dependent: :destroy
-  has_many :growth_habits, through: :growth_habits_plants
+  has_many :tolerances_varieties, dependent: :destroy
+  has_many :tolerances, through: :tolerances_varieties
 
-  has_many :tolerances_plants, dependent: :destroy
-  has_many :tolerances, through: :tolerances_plants
-
-  has_many :common_names, dependent: :destroy
-
-  has_many :varieties, dependent: :restrict_with_exception
-
-  # default_scope { includes(:common_names) }
+  belongs_to :plant
 
   extend Mobility
-  translates :description,
+  translates :name,
+             :description,
              :info_sheet_description,
              :origin,
              :uses,
@@ -56,41 +48,11 @@ class Plant < ApplicationRecord # rubocop:disable Metrics/ClassLength
              :ph_note,
              :growth_habits_note
 
-  def genus
-    return unless scientific_name
-
-    scientific_name.split[0]
-  end
-
-  def common_names_for_locale(locale, with_primary: true)
-    if with_primary
-      common_names.where(language: locale.upcase).where(primary: false)
-    else
-      common_names.where(language: locale.upcase)
-    end
-  end
-
-  def primary_common_name_for_locale(locale)
-    requested = common_names.where(language: locale.upcase).where(primary: true).first
-    return requested.name if requested
-
-    fallback = common_names.where(language: 'EN').where(primary: true).first
-    return fallback.name if fallback
-
-    default = common_names.where(language: 'EN').first
-    return default.name if default
-
-    nil
-  end
-
-  def primary_common_name
-    primary_common_name_for_locale(Mobility.locale)
-  end
-
   def translations_array # rubocop:disable all
     translations.map do |language, attributes| # rubocop:disable Metrics/BlockLength
       {
         locale: language,
+        name: attributes['name'],
         description: attributes['description'],
         info_sheet_description: attributes['info_sheet_description'],
         origin: attributes['origin'],

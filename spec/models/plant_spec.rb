@@ -195,4 +195,17 @@ RSpec.describe Plant, type: :model do
       expect { plant.destroy }.to change { CommonName.count }.by(-1)
     end
   end
+  it 'has many varieties' do
+    plant = create(:plant)
+    expect { create(:variety, plant: plant) }.to change { plant.varieties.count }.by(1)
+    expect { create(:variety, plant: plant) }.to change { plant.varieties.count }.by(1)
+    expect(plant.varieties.count).to eq 2
+  end
+  describe 'when it is destroyed' do
+    it 'fails if there are still variety records' do
+      plant = create(:plant)
+      create(:variety, plant: plant)
+      expect { plant.destroy }.to raise_error(ActiveRecord::DeleteRestrictionError)
+    end
+  end
 end

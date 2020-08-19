@@ -9,6 +9,9 @@ class Tolerance < ApplicationRecord
   has_many :tolerances_plants, dependent: :destroy
   has_many :plants, through: :tolerances_plants
 
+  has_many :tolerances_varieties, dependent: :destroy
+  has_many :varieties, through: :tolerances_varieties
+
   def translations_array
     translations.map do |language, attributes|
       {

@@ -43,4 +43,25 @@ RSpec.describe Antinutrient, type: :model do
       expect { antinutrient.destroy }.to_not change { Plant.count }
     end
   end
+  it 'has many varieties' do
+    antinutrient = create(:antinutrient)
+    variety_a = create(:variety)
+    variety_b = create(:variety)
+    expect { antinutrient.varieties << variety_a }.to change { antinutrient.varieties.count }.by(1)
+    expect { antinutrient.varieties << variety_b }.to change { antinutrient.varieties.count }.by(1)
+  end
+  describe 'when it is destroyed' do
+    it 'destroys any related antinutrients_variety records' do
+      antinutrient = create(:antinutrient)
+      variety = create(:variety)
+      antinutrient.varieties << variety
+      expect { antinutrient.destroy }.to change { AntinutrientsVariety.count }.by(-1)
+    end
+    it 'does not destory related varieties' do
+      antinutrient = create(:antinutrient)
+      variety = create(:variety)
+      antinutrient.varieties << variety
+      expect { antinutrient.destroy }.to_not change { Variety.count }
+    end
+  end
 end

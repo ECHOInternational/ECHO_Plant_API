@@ -9,6 +9,9 @@ class GrowthHabit < ApplicationRecord
   has_many :growth_habits_plants, dependent: :destroy
   has_many :plants, through: :growth_habits_plants
 
+  has_many :growth_habits_varieties, dependent: :destroy
+  has_many :varieties, through: :growth_habits_varieties
+
   def translations_array
     translations.map do |language, attributes|
       {

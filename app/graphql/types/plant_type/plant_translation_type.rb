@@ -41,7 +41,7 @@ module Types
       field :edible_green_leaves_note, String,
             description: 'Translated full text description of whther or not a plant has edible green leaves',
             null: true
-      field :edible_immature_fruit_note, String, 
+      field :edible_immature_fruit_note, String,
             description: 'Translated full text description of whether or not a plant has edible immature fruit',
             null: true
       field :edible_mature_fruit_note, String,
