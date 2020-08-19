@@ -3,12 +3,20 @@
 # Controller for all application actions
 class ApplicationController < ActionController::API
   include ActionController::HttpAuthentication::Token::ControllerMethods
+  before_action :set_locale
   before_action :require_token
   before_action :set_paper_trail_whodunnit
 
   attr_reader :current_user
 
   private
+
+  def set_locale
+    detected_locale = http_accept_language.compatible_language_from(I18n.available_locales) || I18n.default_locale
+    I18n.locale = detected_locale[0..1].downcase
+  rescue I18n::InvalidLocale
+    I18n.locale = I18n.default_locale
+  end
 
   def require_token
     # authenticate_or_request_with_http_token do |token|

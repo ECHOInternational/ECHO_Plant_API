@@ -30,6 +30,9 @@ gem 'jwt'
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin AJAX possible
 # gem 'rack-cors'
 
+# Accept-Language Header
+gem 'http_accept_language'
+
 # Features
 # Versioning
 gem 'paper_trail', '~> 10.3.1'

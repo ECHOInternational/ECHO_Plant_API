@@ -77,6 +77,7 @@ GEM
     globalid (0.4.2)
       activesupport (>= 4.2.0)
     graphql (1.11.1)
+    http_accept_language (2.1.1)
     i18n (1.8.3)
       concurrent-ruby (~> 1.0)
     jwt (2.2.1)
@@ -220,6 +221,7 @@ DEPENDENCIES
   factory_bot_rails
   faker
   graphql (~> 1.9)
+  http_accept_language
   jwt
   listen (~> 3.2)
   mobility (~> 0.8.13)
