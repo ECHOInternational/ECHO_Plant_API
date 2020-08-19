@@ -199,6 +199,10 @@ module Types
       @object.visibility.to_sym
     end
 
+    def categories
+      Pundit.policy_scope(context[:current_user], @object.categories)
+    end
+
     # def versions
     # @object.translation.versions.where(event: "update").reorder('created_at DESC')
     # end

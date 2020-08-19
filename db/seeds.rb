@@ -161,3 +161,23 @@ relationships['growth_habits'].each do |gh|
 
   GrowthHabitsPlant.create(growth_habit_id: lookup['uuid'], plant_id: gh['plant_id'])
 end
+
+# Images for Plants
+require 'csv'
+CSV.foreach('db/seeds/Images_For_Plants.csv', headers: true) do |row|
+  plant = Plant.find row['uuid']
+
+  Image.create(
+    {
+      id: SecureRandom.uuid,
+      imageable: plant,
+      name: row['FileName'],
+      owned_by: 'echo@echonet.org',
+      created_by: 'echo@echonet.org',
+      visibility: :public,
+      attribution: row['attribution'],
+      s3_key: row['s3_key'].gsub(' ', '_'),
+      s3_bucket: 'images-us-east-1.echocommunity.org'
+    }
+  )
+end

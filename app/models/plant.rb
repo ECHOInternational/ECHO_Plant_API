@@ -22,7 +22,7 @@ class Plant < ApplicationRecord # rubocop:disable Metrics/ClassLength
 
   has_many :common_names, dependent: :destroy
 
-  default_scope { includes(:common_names) }
+  # default_scope { includes(:common_names) }
 
   extend Mobility
   translates :description,

@@ -8,7 +8,7 @@ class Image < ApplicationRecord
   validates :name, :owned_by, :created_by, presence: true
   validates :id, uniqueness: true, uuid: true, presence: true
   attribute :base_url, :string
-  attr_readonly :s3_bucket, :s3_key # These should not change once the record has been created
+  # attr_readonly :s3_bucket, :s3_key # These should not change once the record has been created
   validates :s3_bucket, presence: true
   validates :s3_key, presence: true
   has_many :image_attributes_image, dependent: :destroy
