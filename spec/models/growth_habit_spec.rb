@@ -42,4 +42,25 @@ RSpec.describe GrowthHabit, type: :model do
       expect { growth_habit.destroy }.to_not change { Plant.count }
     end
   end
+  it 'has many varieties' do
+    growth_habit = create(:growth_habit)
+    variety_a = create(:variety)
+    variety_b = create(:variety)
+    expect { growth_habit.varieties << variety_a }.to change { growth_habit.varieties.count }.by(1)
+    expect { growth_habit.varieties << variety_b }.to change { growth_habit.varieties.count }.by(1)
+  end
+  describe 'when it is destroyed' do
+    it 'destroys any related growth_habits_variety records' do
+      growth_habit = create(:growth_habit)
+      variety = create(:variety)
+      growth_habit.varieties << variety
+      expect { growth_habit.destroy }.to change { GrowthHabitsVariety.count }.by(-1)
+    end
+    it 'does not destory related varieties' do
+      growth_habit = create(:growth_habit)
+      variety = create(:variety)
+      growth_habit.varieties << variety
+      expect { growth_habit.destroy }.to_not change { Variety.count }
+    end
+  end
 end
