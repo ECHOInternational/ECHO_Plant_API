@@ -17,8 +17,6 @@ class CreateVarieties < ActiveRecord::Migration[6.0] # rubocop:disable
       t.boolean :has_edible_immature_fruit
       t.boolean :has_edible_mature_fruit
       t.boolean :can_be_used_for_fodder
-      t.column :early_growth_phase, :early_growth_phase
-      t.column :life_cycle, :life_cycle
 
       t.timestamps
     end

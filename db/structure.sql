@@ -325,8 +325,6 @@ CREATE TABLE public.varieties (
     has_edible_immature_fruit boolean,
     has_edible_mature_fruit boolean,
     can_be_used_for_fodder boolean,
-    early_growth_phase public.early_growth_phase,
-    life_cycle public.life_cycle,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL
 );

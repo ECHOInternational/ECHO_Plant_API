@@ -10,7 +10,7 @@ module Resolvers
     type Types::VarietyType::VarietyConnectionWithTotalCountType, null: false
     description 'Returns a list of Plant Varieties'
 
-    scope { Pundit.policy_scope(context[:current_user], Plant).i18n }
+    scope { Pundit.policy_scope(context[:current_user], Variety).i18n }
 
     option :language,
            type: String,
@@ -59,11 +59,11 @@ module Resolvers
     end
 
     def apply_sort_direction_with_asc(scope)
-      scope.order(scientific_name: :asc)
+      scope.order(name: :asc)
     end
 
     def apply_sort_direction_with_desc(scope)
-      scope.order(scientific_name: :desc)
+      scope.order(name: :desc)
     end
 
     def apply_name_filter(scope, value)

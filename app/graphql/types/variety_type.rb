@@ -11,7 +11,7 @@ module Types
     field :name, String,
           description: 'A translated Name for a Variety',
           null: true
-    field :plant, Types::Plant,
+    field :plant, Types::PlantType,
           description: 'The plant to which this variety belongs',
           null: true
     field :tolerances, Types::ToleranceType::ToleranceConnectionWithTotalCountType,

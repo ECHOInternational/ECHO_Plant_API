@@ -181,3 +181,44 @@ CSV.foreach('db/seeds/Images_For_Plants.csv', headers: true) do |row|
     }
   )
 end
+
+# Varieties
+varieties_json = File.read('db/seeds/Varieties.json')
+varieties = JSON.parse(varieties_json)
+varieties.each do |variety|
+  next if variety['visibility'] == 'deleted'
+
+  variety['visibility'] = 'public' if variety['visibility'] == 'published'
+  variety['owned_by'] = 'echo@echonet.org'
+  variety['created_by'] = 'echo@echonet.org'
+
+  record = Variety.new(variety.except('translations'))
+  variety['translations'].each do |language, values|
+    Mobility.with_locale(language) do
+      record.name = values['name']
+      record.description = values['description'] if values['description'].present?
+      record.planting_instructions = values['planting_instructions'] if values['planting_instructions'].present?
+    end
+  end
+  record.save!
+end
+
+# Images for Varieties
+require 'csv'
+CSV.foreach('db/seeds/Images_For_Varieties.csv', headers: true) do |row|
+  variety = Variety.find row['uuid']
+
+  Image.create(
+    {
+      id: SecureRandom.uuid,
+      imageable: variety,
+      name: row['FileName'],
+      owned_by: 'echo@echonet.org',
+      created_by: 'echo@echonet.org',
+      visibility: :public,
+      attribution: row['attribution'],
+      s3_key: row['s3_key'].gsub(' ', '_'),
+      s3_bucket: 'images-us-east-1.echocommunity.org'
+    }
+  )
+end
