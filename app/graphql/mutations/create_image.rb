@@ -61,7 +61,12 @@ module Mutations
         image_attribute = PlantApiSchema.object_from_id(attribute_id, {})
         ids << image_attribute.id
       rescue ActiveRecord::RecordNotFound
-        @errors << { field: 'imageAttributeIds', value: attribute_id, code: 404, message: "imageAttribute #{attribute_id} not found." }
+        @errors << {
+          field: 'imageAttributeIds',
+          value: attribute_id,
+          code: 404,
+          message: "imageAttribute #{attribute_id} not found."
+        }
       end
 
       ids
@@ -82,7 +87,9 @@ module Mutations
       Mobility.with_locale(attributes[:language] || I18n.locale) do
         image = Image.new(image_attributes)
         result = image.save
-        errors = @errors + errors_from_active_record(image.errors, { id: 'imageId', s3_bucket: 'bucket', s3_key: 'key' })
+        errors = @errors + errors_from_active_record(
+          image.errors, { id: 'imageId', s3_bucket: 'bucket', s3_key: 'key' }
+        )
 
         {
           image: result ? image : nil,

@@ -49,10 +49,10 @@ module Types
           description: 'Describes how long a variety takes to complete their entire life cycle',
           null: true
     field :n_accumulation_range, String,
-          description: 'Describes how much nitrogren a variety can be expected to accumulate in tonnes per hectare',
+          description: 'Describes how much nitrogren a variety may accumulate in kilograms of nitrogen per hectare',
           null: true
     field :biomass_production_range, String,
-          description: 'Describes how much biomass a variety can be expected to accumulate in kilograms of nitrogen per hectare',
+          description: 'Describes how much biomass a variety may produce in kilograms per hectare',
           null: true
     field :optimal_temperature_range, String,
           description: 'Describes the optimal range of temperatures for a variety in degrees celsius',

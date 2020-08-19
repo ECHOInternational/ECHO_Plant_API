@@ -65,10 +65,10 @@ module Types
           description: 'Describes how long a plant takes to complete their entire life cycle',
           null: true
     field :n_accumulation_range, String,
-          description: 'Describes how much nitrogren a plant can be expected to accumulate in tonnes per hectare',
+          description: 'Describes how much nitrogren a plant may accumulate in tonnes per hectare',
           null: true
     field :biomass_production_range, String,
-          description: 'Describes how much biomass a plant can be expected to accumulate in kilograms of nitrogen per hectare',
+          description: 'Describes how much biomass a plant may produce in kilograms of nitrogen per hectare',
           null: true
     field :optimal_temperature_range, String,
           description: 'Describes the optimal range of temperatures for a plant in degrees celsius',
