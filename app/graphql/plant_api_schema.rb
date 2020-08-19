@@ -49,7 +49,7 @@ class PlantApiSchema < GraphQL::Schema
   end
 
   # Object Resolution
-  def self.resolve_type(_type, obj, _ctx)
+  def self.resolve_type(_type, obj, _ctx) # rubocop:disable Metrics/CyclomaticComplexity
     case obj
     when Category
       Types::CategoryType
@@ -63,6 +63,8 @@ class PlantApiSchema < GraphQL::Schema
       Types::ToleranceType
     when Plant
       Types::PlantType
+    when Variety
+      Types::Variety
     else
       raise("Unexpected object: #{obj}")
     end

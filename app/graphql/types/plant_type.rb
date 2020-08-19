@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Types
-  # Defines fields for a plant - categories contains a group of plant objects
+  # Defines fields for a plant
   class PlantType < Types::BaseObject # rubocop:disable Metrics/ClassLength
     global_id_field :id
     implements GraphQL::Types::Relay::Node
@@ -28,6 +28,9 @@ module Types
           connection: true
     field :categories, Types::CategoryType::CategoryConnectionWithTotalCountType,
           description: 'A list of categories to which a plant belongs',
+          null: true,
+          connection: true
+    field :varieties, Types::VarietyType::VarietyConnectionWithTotalCountType,
           null: true,
           connection: true
     field :uuid, ID,
@@ -201,6 +204,10 @@ module Types
 
     def categories
       Pundit.policy_scope(context[:current_user], @object.categories)
+    end
+
+    def varieties
+      Pundit.policy_scope(context[:current_user], @object.varieties)
     end
 
     # def versions
