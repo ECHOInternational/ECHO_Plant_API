@@ -27,5 +27,8 @@ module Types
     field :remove_image_attributes_from_image,
           mutation: Mutations::RemoveImageAttributesFromImage,
           description: 'Removes image attributes from an image'
+    field :create_specimen,
+          mutation: Mutations::CreateSpecimen,
+          description: 'Creates a new specimen.'
   end
 end

@@ -1,0 +1,82 @@
+## specimen fields and types
+
+√Imageable
+√name - required
+√Plant - Belongs_to, required
+√Variety - Belongs_to
+acquisition_event - has_one
+planting_event - has_one
+life_cycle_events - has many
+√terminated - boolean default false
+evaluation - has_one
+
+
+
+
+## location fields and types
+
+Imageable
+
+Name - String, required
+Latitude - float
+Longitude - float
+
+size in hectares
+
+soil_quality - Enum (poor, fair, good)
+
+slope - integer
+
+altitude - integer
+
+average_rainfall - integer
+average_temperature - integer
+
+irrigated - boolean
+notes - text
+
+# inputs
+Name
+  compost, irrigation, fertilizer, pesticide, mulch
+
+# acquisition event
+
+imageable
+specimen belongs_to
+date - Date, required
+Accession_Number - String
+recieved_in_good_condition - bool, required
+acquisition_notes - text
+
+# planting event
+specimen belongs_to
+imageable
+location - has_one
+date - Date, 
+soil preparation - Enum (no-till, planting-station, full-till)
+inputs - relation
+notes - text
+
+# life_cycle_events
+belongs_to specimen
+date
+event_type
+event_id
+
+
+# harvest event
+imageable
+date
+harvest_quantity
+harvest_quantity_unit
+harvest_quality integer between 1 and 10
+notes - text
+
+# evaluation
+date
+success - boolean
+recommended - boolean
+saved_seed - boolean
+will_share_seed - boolean
+will_plant_again - boolen
+notes

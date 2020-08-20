@@ -19,6 +19,7 @@ module Types
     field :growth_habits, resolver: Resolvers::GrowthHabitsResolver, connection: true
     field :plants, resolver: Resolvers::PlantsResolver, connection: true
     field :varieties, resolver: Resolvers::VarietiesResolver, connection: true
+    field :specimens, resolver: Resolvers::SpecimensResolver, connection: true
 
     # Object Queries
     field :plant, Types::PlantType, null: true do
@@ -66,6 +67,22 @@ module Types
       _type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
       Mobility.locale = language || I18n.locale
       Pundit.policy_scope(context[:current_user], Category).find(item_id)
+    end
+
+    field :specimen, Types::SpecimenType, null: true do
+      description 'Find a specimen by ID'
+      argument :id,
+               type: ID,
+               required: true
+      argument :language,
+               type: String,
+               required: false,
+               description: 'Request returned fields in a specific languge. Overrides ACCEPT-LANGUAGE header.'
+    end
+    def specimen(id:, language: nil)
+      _type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
+      Mobility.locale = language || I18n.locale
+      Pundit.policy_scope(context[:current_user], Specimen).find(item_id)
     end
 
     field :image_attribute, Types::ImageAttributeType, null: true do

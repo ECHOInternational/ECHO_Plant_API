@@ -17,6 +17,8 @@ class Variety < ApplicationRecord
 
   belongs_to :plant
 
+  has_many :specimens
+
   extend Mobility
   translates :name,
              :description,

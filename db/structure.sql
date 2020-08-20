@@ -266,6 +266,24 @@ CREATE TABLE public.schema_migrations (
 
 
 --
+-- Name: specimens; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.specimens (
+    id uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    name character varying NOT NULL,
+    plant_id uuid NOT NULL,
+    variety_id uuid,
+    terminated boolean DEFAULT false NOT NULL,
+    created_by character varying NOT NULL,
+    owned_by character varying NOT NULL,
+    visibility integer DEFAULT 0 NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
 -- Name: tolerances; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -493,6 +511,14 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
+-- Name: specimens specimens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.specimens
+    ADD CONSTRAINT specimens_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: tolerances tolerances_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -673,6 +699,20 @@ CREATE INDEX index_images_on_imageable_type_and_imageable_id ON public.images US
 
 
 --
+-- Name: index_specimens_on_plant_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_specimens_on_plant_id ON public.specimens USING btree (plant_id);
+
+
+--
+-- Name: index_specimens_on_variety_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_specimens_on_variety_id ON public.specimens USING btree (variety_id);
+
+
+--
 -- Name: index_tolerances_plants_on_plant_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -761,6 +801,14 @@ ALTER TABLE ONLY public.antinutrients_plants
 
 
 --
+-- Name: specimens fk_rails_526e3f1017; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.specimens
+    ADD CONSTRAINT fk_rails_526e3f1017 FOREIGN KEY (variety_id) REFERENCES public.varieties(id);
+
+
+--
 -- Name: growth_habits_varieties fk_rails_5f4cf82393; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -822,6 +870,14 @@ ALTER TABLE ONLY public.growth_habits_varieties
 
 ALTER TABLE ONLY public.image_attributes_images
     ADD CONSTRAINT fk_rails_9a12e7d877 FOREIGN KEY (image_attribute_id) REFERENCES public.image_attributes(id);
+
+
+--
+-- Name: specimens fk_rails_9a7d2b03df; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.specimens
+    ADD CONSTRAINT fk_rails_9a7d2b03df FOREIGN KEY (plant_id) REFERENCES public.plants(id);
 
 
 --
@@ -895,6 +951,7 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20200817182822'),
 ('20200817184430'),
 ('20200817193432'),
-('20200819084701');
+('20200819084701'),
+('20200819224857');
 
 

@@ -24,6 +24,8 @@ class Plant < ApplicationRecord # rubocop:disable Metrics/ClassLength
 
   has_many :varieties, dependent: :restrict_with_exception
 
+  has_many :specimens
+
   # default_scope { includes(:common_names) }
 
   extend Mobility
