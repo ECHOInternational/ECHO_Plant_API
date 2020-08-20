@@ -14,26 +14,21 @@ evaluation - has_one
 
 
 ## location fields and types
+√Imageable
+√Name - String, required
+√LatLong - point
+√size in hectares - Float
+√soil_quality - Enum (poor, fair, good)
+√slope - integer
+√altitude - integer
+√average_rainfall - integer
+√average_temperature - integer
+√irrigated - boolean
+√notes - text
 
-Imageable
 
-Name - String, required
-Latitude - float
-Longitude - float
 
-size in hectares
 
-soil_quality - Enum (poor, fair, good)
-
-slope - integer
-
-altitude - integer
-
-average_rainfall - integer
-average_temperature - integer
-
-irrigated - boolean
-notes - text
 
 # inputs
 Name

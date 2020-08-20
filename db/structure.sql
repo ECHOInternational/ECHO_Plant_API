@@ -227,6 +227,30 @@ CREATE TABLE public.images (
 
 
 --
+-- Name: locations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.locations (
+    id uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    name character varying NOT NULL,
+    created_by character varying NOT NULL,
+    owned_by character varying NOT NULL,
+    visibility integer DEFAULT 0 NOT NULL,
+    latlng point,
+    area double precision,
+    soil_quality integer DEFAULT 1 NOT NULL,
+    slope integer,
+    altitude integer,
+    average_rainfall integer,
+    average_temperature integer,
+    irrigated boolean,
+    notes text,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
 -- Name: plants; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -492,6 +516,14 @@ ALTER TABLE ONLY public.image_attributes
 
 ALTER TABLE ONLY public.images
     ADD CONSTRAINT images_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: locations locations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.locations
+    ADD CONSTRAINT locations_pkey PRIMARY KEY (id);
 
 
 --
@@ -952,6 +984,7 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20200817184430'),
 ('20200817193432'),
 ('20200819084701'),
-('20200819224857');
+('20200819224857'),
+('20200820130907');
 
 

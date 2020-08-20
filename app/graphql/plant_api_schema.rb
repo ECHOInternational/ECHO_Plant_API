@@ -64,9 +64,11 @@ class PlantApiSchema < GraphQL::Schema
     when Plant
       Types::PlantType
     when Variety
-      Types::Variety
+      Types::VarietyType
     when Specimen
-      Types::Specimen
+      Types::SpecimenType
+    when Location
+      Types::LocationType
     else
       raise("Unexpected object: #{obj}")
     end
