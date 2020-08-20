@@ -24,6 +24,17 @@ COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
 
 
 --
+-- Name: condition; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.condition AS ENUM (
+    'poor',
+    'fair',
+    'good'
+);
+
+
+--
 -- Name: early_growth_phase; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -221,6 +232,28 @@ CREATE TABLE public.images (
     visibility integer DEFAULT 0 NOT NULL,
     imageable_type character varying NOT NULL,
     imageable_id uuid NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: life_cycle_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.life_cycle_events (
+    id uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    type character varying NOT NULL,
+    specimen_id uuid NOT NULL,
+    location_id uuid,
+    datetime timestamp without time zone NOT NULL,
+    notes text,
+    quantity double precision,
+    unit character varying,
+    quality integer,
+    source character varying,
+    accession character varying,
+    condition public.condition,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL
 );
@@ -519,6 +552,14 @@ ALTER TABLE ONLY public.images
 
 
 --
+-- Name: life_cycle_events life_cycle_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.life_cycle_events
+    ADD CONSTRAINT life_cycle_events_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: locations locations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -731,6 +772,20 @@ CREATE INDEX index_images_on_imageable_type_and_imageable_id ON public.images US
 
 
 --
+-- Name: index_life_cycle_events_on_location_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_life_cycle_events_on_location_id ON public.life_cycle_events USING btree (location_id);
+
+
+--
+-- Name: index_life_cycle_events_on_specimen_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_life_cycle_events_on_specimen_id ON public.life_cycle_events USING btree (specimen_id);
+
+
+--
 -- Name: index_specimens_on_plant_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -822,6 +877,14 @@ ALTER TABLE ONLY public.antinutrients_plants
 
 ALTER TABLE ONLY public.varieties
     ADD CONSTRAINT fk_rails_143fdc3592 FOREIGN KEY (plant_id) REFERENCES public.plants(id);
+
+
+--
+-- Name: life_cycle_events fk_rails_22b3ef47ea; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.life_cycle_events
+    ADD CONSTRAINT fk_rails_22b3ef47ea FOREIGN KEY (specimen_id) REFERENCES public.specimens(id);
 
 
 --
@@ -961,6 +1024,14 @@ ALTER TABLE ONLY public.tolerances_varieties
 
 
 --
+-- Name: life_cycle_events fk_rails_fff7a9e33a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.life_cycle_events
+    ADD CONSTRAINT fk_rails_fff7a9e33a FOREIGN KEY (location_id) REFERENCES public.locations(id);
+
+
+--
 -- PostgreSQL database dump complete
 --
 
@@ -985,6 +1056,7 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20200817193432'),
 ('20200819084701'),
 ('20200819224857'),
-('20200820130907');
+('20200820130907'),
+('20200820213248');
 
 
