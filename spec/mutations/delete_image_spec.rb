@@ -10,7 +10,9 @@ RSpec.describe 'Delete Image Mutation', type: :graphql_mutation do
 		mutation($input: DeleteImageInput!){
 			deleteImage(input: $input){
 				imageId
-				errors
+				errors{
+          message
+        }
 			}
 		}
     GRAPHQL
