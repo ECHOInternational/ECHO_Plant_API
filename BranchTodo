@@ -4,28 +4,9 @@
 √name - required
 √Plant - Belongs_to, required
 √Variety - Belongs_to
-acquisition_event - has_one
-planting_event - has_one
-life_cycle_events - has many
+√life_cycle_events - has many
 √terminated - boolean default false
 evaluation - has_one
-
-
-
-
-## location fields and types
-√Imageable
-√Name - String, required
-√LatLong - point
-√size in hectares - Float
-√soil_quality - Enum (poor, fair, good)
-√slope - integer
-√altitude - integer
-√average_rainfall - integer
-√average_temperature - integer
-√irrigated - boolean
-√notes - text
-
 
 
 
@@ -34,44 +15,81 @@ evaluation - has_one
 Name
   compost, irrigation, fertilizer, pesticide, mulch
 
-# acquisition event
-
-imageable
-specimen belongs_to
-date - Date, required
-Accession_Number - String
-recieved_in_good_condition - bool, required
-acquisition_notes - text
+# soil preparation event
+preparation_type: notill, fulltill, plantingstation
 
 # planting event
 specimen belongs_to
 imageable
 location - has_one
 date - Date, 
-soil preparation - Enum (no-till, planting-station, full-till)
 inputs - relation
 notes - text
-
-# life_cycle_events
-belongs_to specimen
-date
-event_type
-event_id
-
 
 # harvest event
 imageable
 date
-harvest_quantity
-harvest_quantity_unit
-harvest_quality integer between 1 and 10
+quantity
+quantity_unit
+quality integer between 1 and 10
 notes - text
 
+
+
+
+
 # evaluation
+belongs to specimen
 date
 success - boolean
 recommended - boolean
 saved_seed - boolean
 will_share_seed - boolean
 will_plant_again - boolen
+evaluated?
 notes
+
+
+
+
+AcquireEvent source:required accession condition:required
+PlantingEvent location:required quantity unit between_row_spacing in_row_spacing
+MovementEvent location:required quantity unit between_row_spacing in_row_spacing
+HarvestEvent quantity:required unit:required quality:required
+WeatherEvent condition
+Germination percent quality
+FloweringEvent percent
+ThinningEvent
+StakingEvent
+TrellisingEvent
+DiseaseEvent
+PestEvent
+PruningEvent
+NutrientDeficiency
+WeedManagementEvent
+CultivatingEvent
+CompostingEvent
+MulchingEvent
+FertilizingEvent
+OtherEvent
+SoilPreparation soil_preparation:required
+EndOfLifeEvent
+
+
+Acquire >> Planting >> Soil Prep >> List
+
+
+Create a model, specify required fields
+Create a type, specify fields and mark required as needed
+
+Create a create mutation - required fields
+Create an update mutation - all fields don't enforce required
+Create a delete mutation - delete :)
+
+
+
+TO ADD TO TABLE
+√add unit (Count, weight)
+√Add percent (integer) percentage
+√add Between row spacing (integer) cm
+√add in row spacing (integer) cm

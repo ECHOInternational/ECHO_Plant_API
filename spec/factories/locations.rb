@@ -3,7 +3,7 @@ FactoryBot.define do
     sequence(:name) { |n| "Location #{n}" }
     latlng { ActiveRecord::Point.new(26.640629, -81.872307) }
     area { 0.25 }
-    soil_quality { 1 }
+    soil_quality { 'fair' }
     slope { rand(90) }
     altitude { rand(8848) }
     average_rainfall { rand(990) }

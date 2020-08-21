@@ -27,7 +27,7 @@ module Types
     field :visibility, Types::VisibilityEnum,
           description: 'The visibility of the location. Can be: PUBLIC, PRIVATE, DRAFT, DELETED',
           null: false
-    field :soil_quality, Types::SoilQualityEnum,
+    field :soil_quality, Types::ConditionEnum,
           description: 'The general soil quality at the location',
           null: true
     field :latitude, Float,

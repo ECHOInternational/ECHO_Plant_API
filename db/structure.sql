@@ -56,6 +56,32 @@ CREATE TYPE public.life_cycle AS ENUM (
 );
 
 
+--
+-- Name: soil_preparation; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.soil_preparation AS ENUM (
+    'greenhouse',
+    'planting_station',
+    'no_till',
+    'full_till',
+    'raised_beds',
+    'vertical_garden',
+    'container',
+    'other'
+);
+
+
+--
+-- Name: unit; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.unit AS ENUM (
+    'weight',
+    'count'
+);
+
+
 SET default_tablespace = '';
 
 SET default_with_oids = false;
@@ -249,11 +275,15 @@ CREATE TABLE public.life_cycle_events (
     datetime timestamp without time zone NOT NULL,
     notes text,
     quantity double precision,
-    unit character varying,
     quality integer,
+    percent integer,
     source character varying,
     accession character varying,
     condition public.condition,
+    unit public.unit,
+    between_row_spacing integer,
+    in_row_spacing integer,
+    soil_preparation public.soil_preparation,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL
 );
@@ -271,7 +301,7 @@ CREATE TABLE public.locations (
     visibility integer DEFAULT 0 NOT NULL,
     latlng point,
     area double precision,
-    soil_quality integer DEFAULT 1 NOT NULL,
+    soil_quality public.condition,
     slope integer,
     altitude integer,
     average_rainfall integer,

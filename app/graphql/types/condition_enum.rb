@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 module Types
-  # An enumerator for soil quality values
-  class SoilQualityEnum < Types::BaseEnum
-    graphql_name 'SoilQuality'
-    description 'Describes the quaility of soil'
+  # An enumerator for basic quality values
+  class ConditionEnum < Types::BaseEnum
+    graphql_name 'Condition'
+    description 'Describes the quality or condition of something'
     value 'POOR',
           value: 'poor'
     value 'FAIR',

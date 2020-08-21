@@ -1,0 +1,8 @@
+Description:
+    Generates LifeCycleEvent Models and supporting GraphQL Typesß
+
+Example:
+    rails generate lifecycleevent event_name field field field:required
+
+    This will create:
+        what/will/it/create

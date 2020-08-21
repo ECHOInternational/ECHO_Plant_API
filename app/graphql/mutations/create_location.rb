@@ -9,7 +9,7 @@ module Mutations
     argument :visibility, Types::VisibilityEnum,
              required: false,
              description: 'The visibility of the location'
-    argument :soil_quality, Types::SoilQualityEnum,
+    argument :soil_quality, Types::ConditionEnum,
              description: 'The general soil quality at the location',
              required: false
     argument :latitude, Float,

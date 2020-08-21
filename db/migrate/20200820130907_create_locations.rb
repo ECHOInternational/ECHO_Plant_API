@@ -1,5 +1,8 @@
 class CreateLocations < ActiveRecord::Migration[6.0]
-  def change
+  def up
+    execute <<-SQL
+      CREATE TYPE condition AS ENUM ('poor', 'fair', 'good');
+    SQL
     create_table :locations, id: :uuid do |t|
       t.string :name, null: false
       t.string :created_by, null: false
@@ -7,7 +10,7 @@ class CreateLocations < ActiveRecord::Migration[6.0]
       t.integer :visibility, null: false, default: 0
       t.point :latlng
       t.float :area
-      t.integer :soil_quality, null: false, default: 1
+      t.column :soil_quality, :condition
       t.integer :slope
       t.integer :altitude
       t.integer :average_rainfall
@@ -17,5 +20,12 @@ class CreateLocations < ActiveRecord::Migration[6.0]
 
       t.timestamps
     end
+  end
+
+  def down
+    drop_table :locations
+    execute <<-SQL
+      DROP TYPE condition;
+    SQL
   end
 end

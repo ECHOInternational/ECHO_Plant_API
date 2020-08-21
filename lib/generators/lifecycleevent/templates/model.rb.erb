@@ -1,0 +1,7 @@
+# frozen_string_literal: true
+
+# Lifecycle Event <%= @class_name%>
+class <%= @class_name %> < LifeCycleEvent
+  # Automatically inherits all methods and properties from LifeCycleEvent
+  <% if @presence_validations.length.positive? %>validates :<%= @presence_validations.join(', :')%>, presence: true<% end %>
+end
