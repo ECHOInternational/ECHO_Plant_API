@@ -1,0 +1,27 @@
+# frozen_string_literal: true
+
+require 'rails_helper'
+
+RSpec.describe <%= @class_name %>, type: :model do
+  it 'is valid with valid attributes' do
+    <%= @class_name.underscore %> = build(:<%= @class_name.underscore %>)
+    expect(<%= @class_name.underscore %>).to be_valid
+  end
+
+  it 'is not valid without a specimen' do
+    <%= @class_name.underscore %> = build(:<%= @class_name.underscore %>, specimen: nil)
+    expect(<%= @class_name.underscore %>).to_not be_valid
+  end
+
+  it 'is not valid without a datetime' do
+    <%= @class_name.underscore %> = build(:<%= @class_name.underscore %>, datetime: nil)
+    expect(<%= @class_name.underscore %>).to_not be_valid
+  end
+
+  # Specific To this type
+  <% @presence_validations.each do | field | %>
+  it 'is not valid without a source' do
+    <%= @class_name.underscore %> = build(:<%= @class_name.underscore %>, <%=field%>: nil)
+    expect(<%= @class_name.underscore %>).to_not be_valid
+  end<% end %>
+end

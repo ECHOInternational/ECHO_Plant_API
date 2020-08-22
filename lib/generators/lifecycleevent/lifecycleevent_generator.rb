@@ -44,7 +44,17 @@ class LifecycleeventGenerator < Rails::Generators::NamedBase
     template 'update_mutation.rb.erb', mutation_path
   end
 
+  def generate_factory_bot_factory
+    factory_path = "app/spec/factories/#{@class_name.underscore}.rb"
+    template 'factory.rb.erb', factory_path
+  end
+
+  def generate_model_spec
+    model_spec_path = "app/spec/models/#{@class_name.underscore}_spec.rb"
+    template 'model_spec.rb.erb', model_spec_path
+  end
+
   def post_run_notices
-    puts "Be sure to add 'when #{@class_name}: #{file_name.camelcase}' to resolve_type in plant_api_schema.rb"
+    puts "Be sure to add 'when #{@class_name}: #{file_name.camelcase}' to resolve_type in life_cycle_event interface."
   end
 end

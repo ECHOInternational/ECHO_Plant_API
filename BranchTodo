@@ -39,27 +39,27 @@ evaluated?
 notes
 
 
-AcquireEvent source:required accession condition:required
-PlantingEvent location:required quantity unit between_row_spacing in_row_spacing
-MovementEvent location:required quantity unit between_row_spacing in_row_spacing
-HarvestEvent quantity:required unit:required quality:required
-WeatherEvent condition
-Germination percent quality
-FloweringEvent percent
+AcquireEvent source:string:required accession:string condition:Types/ConditionEnum:required
+PlantingEvent location:Types/LocationType:required quantity:float unit:Types/UnitEnum between_row_spacing:integer in_row_spacing:integer
+MovementEvent location:Types/LocationType:required quantity:float unit:Types/UnitEnum between_row_spacing:integer in_row_spacing:integer
+HarvestEvent quantity:float:required unit:Types/UnitEnum:required quality:integer:required
+WeatherEvent condition:Types/ConditionEnum
+Germination percent:integer quality:integer
+FloweringEvent percent:integer
 ThinningEvent
 StakingEvent
 TrellisingEvent
 DiseaseEvent
 PestEvent
 PruningEvent
-NutrientDeficiency
+NutrientDeficiencyEvent
 WeedManagementEvent
 CultivatingEvent
 CompostingEvent
 MulchingEvent
 FertilizingEvent
 OtherEvent
-SoilPreparation soil_preparation:required
+SoilPreparation soil_preparation:Types/SoilPreparationEnum:required
 EndOfLifeEvent
 
 
@@ -69,9 +69,9 @@ Acquire >> Planting >> Soil Prep >> List
 √Create a model, specify required fields
 √Create a type, specify fields and mark required as needed
 
-Create a create mutation - required fields
-Create an update mutation - all fields don't enforce required
-Create a delete mutation - delete :)
+√Create a create mutation - required fields
+√Create an update mutation - all fields don't enforce required
+√Create a delete mutation - delete :)
 
 
 
