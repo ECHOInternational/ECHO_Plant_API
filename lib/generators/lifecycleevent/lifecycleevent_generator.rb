@@ -45,12 +45,12 @@ class LifecycleeventGenerator < Rails::Generators::NamedBase
   end
 
   def generate_factory_bot_factory
-    factory_path = "app/spec/factories/#{@class_name.underscore}.rb"
+    factory_path = "spec/factories/#{@class_name.underscore}.rb"
     template 'factory.rb.erb', factory_path
   end
 
   def generate_model_spec
-    model_spec_path = "app/spec/models/#{@class_name.underscore}_spec.rb"
+    model_spec_path = "spec/models/#{@class_name.underscore}_spec.rb"
     template 'model_spec.rb.erb', model_spec_path
   end
 

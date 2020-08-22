@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe AcquireEvent, type: :model, focus: true do
+RSpec.describe AcquireEvent, type: :model do
   it 'is valid with valid attributes' do
     acquire_event = build(:acquire_event)
     expect(acquire_event).to be_valid
@@ -19,12 +19,13 @@ RSpec.describe AcquireEvent, type: :model, focus: true do
   end
 
   # Specific To this type
-  it 'is not valid without a source' do
-    acquire_event = build(:acquire_event, source: nil)
-    expect(acquire_event).to_not be_valid
-  end
+  
   it 'is not valid without a condition' do
     acquire_event = build(:acquire_event, condition: nil)
+    expect(acquire_event).to_not be_valid
+  end
+  it 'is not valid without a source' do
+    acquire_event = build(:acquire_event, source: nil)
     expect(acquire_event).to_not be_valid
   end
 end
