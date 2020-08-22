@@ -18,7 +18,7 @@ module Mutations
       end
 
       def resolve(life_cycle_event:, **_attributes)
-        id = PlantApiSchema.id_from_object(life_cycle_event, life_cycle_event.class, {})
+        id = PlantApiSchema.id_from_object(life_cycle_event, LifeCycleEvent, {})
         life_cycle_event.destroy
         errors = errors_from_active_record life_cycle_event.errors
         {
