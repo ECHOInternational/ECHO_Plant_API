@@ -19,7 +19,7 @@ RSpec.describe AcquireEvent, type: :model do
   end
 
   # Specific To this type
-  
+
   it 'is not valid without a condition' do
     acquire_event = build(:acquire_event, condition: nil)
     expect(acquire_event).to_not be_valid

@@ -19,7 +19,7 @@ RSpec.describe <%= @class_name %>, type: :model do
   end
 
   # Specific To this type
-  <% @presence_validations.each do | field | %>
+<% @presence_validations.each do | field | %>
   it 'is not valid without a <%= field %>' do
     <%= @class_name.underscore %> = build(:<%= @class_name.underscore %>, <%=field%>: nil)
     expect(<%= @class_name.underscore %>).to_not be_valid
