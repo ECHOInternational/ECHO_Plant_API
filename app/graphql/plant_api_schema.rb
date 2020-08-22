@@ -10,6 +10,8 @@ class PlantApiSchema < GraphQL::Schema
   use GraphQL::Analysis::AST
   use GraphQL::Execution::Errors
 
+  orphan_types [Types::AcquireEventType]
+
   rescue_from(ActiveRecord::RecordNotFound) do |err, _obj, _args, _ctx, _field|
     # Raise a graphql-friendly error with a custom message
 

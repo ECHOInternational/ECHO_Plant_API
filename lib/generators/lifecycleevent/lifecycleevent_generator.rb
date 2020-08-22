@@ -4,13 +4,15 @@ class LifecycleeventGenerator < Rails::Generators::NamedBase
   argument :fields, type: :array, default: [], banner: 'fields method'
 
   def setup # rubocop:disable Metrics/AbcSize
+    @friendly_name = file_name.titleize
+    @mutation_suffix = "#{file_name.camelcase}LifeCycleEvent"
     @class_name = "#{file_name.camelcase}Event"
     @type_name = "#{@class_name}Type"
     @all_fields = {}
     fields.each do |field|
       name, type, required = field.split(':')
       @all_fields[name] = {}
-      @all_fields[name][:type] = type
+      @all_fields[name][:type] = type.gsub('/', '::')
       @all_fields[name][:required] = required == 'required'
     end
     @required_fields = @all_fields.filter { |_field, attributes| attributes[:required] }
@@ -27,16 +29,19 @@ class LifecycleeventGenerator < Rails::Generators::NamedBase
     template 'type.rb.erb', type_path
   end
 
-  # def generate_templates
-  #   policy_path = 'app/policies/life_cycle_events'
-  #   graphql_type_path = 'app/graphql/types'
-  #   graphql_mutations_path = 'app/graphql/mutations'
-  #   graphql_resolvers_path = 'app/graphql/resolvers'
+  def generate_graphql_create_mutation
+    @create_mutation_name = "Add#{@mutation_suffix}"
+    mutation_path = "app/graphql/mutations/life_cycle_events/#{@create_mutation_name.underscore}.rb"
+    template 'create_mutation.rb.erb', mutation_path
+  end
 
-  #   template "service.erb", generator_path
+  def generate_graphql_update_mutation
+    @update_mutation_name = "Update#{@mutation_suffix}"
+    mutation_path = "app/graphql/mutations/life_cycle_events/#{@update_mutation_name.underscore}.rb"
+    template 'update_mutation.rb.erb', mutation_path
+  end
 
-	# 	generator_dir_path = service_dir_path + ("/#{@module_name.underscore}" if @module_name.present?).to_s
-	# 	generator_path = generator_dir_path + "/#{file_name}.rb"
-
-  # end
+  def post_run_notices
+    puts "Be sure to add 'when #{@class_name}: #{file_name.camelcase}' to resolve_type in plant_api_schema.rb"
+  end
 end

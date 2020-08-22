@@ -1,0 +1,25 @@
+# frozen_string_literal: true
+
+module Mutations
+  module LifeCycleEvents
+    # Updates a <%= @update_mutation_name.titleize %>
+    class <%= @update_mutation_name %> < UpdateLifeCycleEventBaseMutation
+      description 'Updates a <%= @friendly_name %> Life Cycle Event'
+<% @all_fields.each do |field, attributes| %>
+      argument :<%= field%>, <%= attributes[:type].upcase_first %>,
+               description: 'DESCRIPTION NEEDED',
+               required: false
+<% end%>
+      field :<%= @class_name.underscore %>, Types::<%= @type_name %>, null: true
+
+      def resolve(life_cycle_event:, **attributes)
+        life_cycle_event.update(attributes)
+        errors = errors_from_active_record life_cycle_event.errors
+        {
+          <%= @class_name.underscore %>: life_cycle_event,
+          errors: errors
+        }
+      end
+    end
+  end
+end

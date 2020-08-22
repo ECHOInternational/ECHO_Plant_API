@@ -35,6 +35,14 @@ module Types
     field :terminated, Boolean,
           description: 'Indicates whether or not this plant is still growing',
           null: false
+    field :life_cycle_events, Types::LifeCycleEventType::LifeCycleEventConnectionWithTotalCountType,
+          description: 'A list of life cycle events for this specimen, ordered by date ascending',
+          null: true,
+          connection: true
+
+    def life_cycle_events
+      @object.life_cycle_events.order(datetime: :asc)
+    end
 
     def images
       Pundit.policy_scope(context[:current_user], @object.images)

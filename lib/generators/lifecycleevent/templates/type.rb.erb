@@ -1,39 +1,20 @@
 # frozen_string_literal: true
 
 module Types
-  # Defines fields for a <%= @class_name.humanize %>
+  # Defines fields for a <%= @class_name.underscore.humanize %>
   class <%= @type_name %> < Types::BaseObject
     global_id_field :id
     implements GraphQL::Types::Relay::Node
+    implements Types::LifeCycleEventType
 
-    description 'ENTER A DESCRIPTION HERE'
-
-    field :uuid, ID,
-          description: 'The internal database ID for a <%= @class_name.humanize %>',
-          null: false,
-          method: :id
-    field :images, Types::ImageType.connection_type,
-          description: 'A list of images related to a life cycle event',
-          null: true
-    field :notes, String,
-          description: 'Full text notes for a life cycle event',
-          null: true
-    field :specimen, Types::SpecimenType,
-          description: 'The Specimen to which this life cycle event belongs',
-          null: false
-    field :datetime, GraphQL::Types::ISO8601DateTime,
-          description: 'The date and time that the event took place',
-          null: false
+    description 'DESCRIPTION NEEDED'
 <% @all_fields.each do |field, attributes| %>
-    fields :<%= field%>, <%= attributes[:type] %>,
-           description: 'ENTER A DESCRIPTION HERE',
-           null: <%= attributes[:required]%>
+    field :<%= field%>, <%= attributes[:type].upcase_first %>,
+          description: 'DESCRIPTION NEEDED',
+          null: <%= !attributes[:required]%>
 <% end%>
-
     def images
       Pundit.policy_scope(context[:current_user], @object.images)
     end
-
-
   end
 end

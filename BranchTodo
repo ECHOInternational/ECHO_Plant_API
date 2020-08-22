@@ -11,13 +11,6 @@ evaluation - has_one
 
 
 
-# inputs
-Name
-  compost, irrigation, fertilizer, pesticide, mulch
-
-# soil preparation event
-preparation_type: notill, fulltill, plantingstation
-
 # planting event
 specimen belongs_to
 imageable
@@ -34,10 +27,6 @@ quantity_unit
 quality integer between 1 and 10
 notes - text
 
-
-
-
-
 # evaluation
 belongs to specimen
 date
@@ -48,8 +37,6 @@ will_share_seed - boolean
 will_plant_again - boolen
 evaluated?
 notes
-
-
 
 
 AcquireEvent source:required accession condition:required
@@ -79,8 +66,8 @@ EndOfLifeEvent
 Acquire >> Planting >> Soil Prep >> List
 
 
-Create a model, specify required fields
-Create a type, specify fields and mark required as needed
+√Create a model, specify required fields
+√Create a type, specify fields and mark required as needed
 
 Create a create mutation - required fields
 Create an update mutation - all fields don't enforce required
@@ -88,8 +75,3 @@ Create a delete mutation - delete :)
 
 
 
-TO ADD TO TABLE
-√add unit (Count, weight)
-√Add percent (integer) percentage
-√add Between row spacing (integer) cm
-√add in row spacing (integer) cm

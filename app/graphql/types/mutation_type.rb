@@ -45,5 +45,14 @@ module Types
     field :delete_location,
           mutation: Mutations::DeleteLocation,
           description: 'Deletes a location'
+    field :delete_life_cycle_event,
+          mutation: Mutations::LifeCycleEvents::DeleteLifeCycleEvent,
+          description: 'Deletes a life cycle event'
+    field :add_acquire_event_to_specimen,
+          mutation: Mutations::LifeCycleEvents::AddAcquireLifeCycleEvent,
+          description: 'Adds an acquire life cycle event to a specimen'
+    field :update_acquire_event,
+          mutation: Mutations::LifeCycleEvents::UpdateAcquireLifeCycleEvent,
+          description: 'Updates an acquire life cycle event'
   end
 end

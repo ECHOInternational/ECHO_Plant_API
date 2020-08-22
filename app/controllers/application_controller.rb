@@ -32,6 +32,6 @@ class ApplicationController < ActionController::API
     #     @current_user = nil
     #   end
     # end
-    @current_user = User.new({ 'uid' => 'test', 'email' => 'test@test.com', 'trust_levels' => { 'plant' => 9 } })
+    @current_user = User.new({ 'uid' => 'test', 'email' => 'test@test.com', 'trust_levels' => { 'plant' => 2 } })
   end
 end

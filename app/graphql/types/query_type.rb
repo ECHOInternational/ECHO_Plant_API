@@ -23,6 +23,16 @@ module Types
     field :locations, resolver: Resolvers::LocationsResolver, connection: true
 
     # Object Queries
+    field :life_cycle_event, Types::LifeCycleEventType, null: true do
+      description 'Find a life cycle event by ID'
+      argument :id,
+               type: ID,
+               required: true
+    end
+    def life_cycle_event(id:)
+      _type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
+      Pundit.policy_scope(context[:current_user], LifeCycleEvent).find(item_id)
+    end
     field :plant, Types::PlantType, null: true do
       description 'Find a plant by ID'
       argument :id,

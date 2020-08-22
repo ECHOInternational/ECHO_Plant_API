@@ -1,0 +1,27 @@
+# frozen_string_literal: true
+
+module Mutations
+  module LifeCycleEvents
+    # Creates a <%= @create_mutation_name.titleize %>
+    class <%= @create_mutation_name %> < CreateLifeCycleEventBaseMutation
+      description 'Creates a <%= @friendly_name %> Life Cycle Event attached to the specified specimen'
+<% @all_fields.each do |field, attributes| %>
+      argument :<%= field%>, <%= attributes[:type].upcase_first %>,
+               description: 'DESCRIPTION NEEDED',
+               required: <%= attributes[:required]%>
+<% end%>
+      field :<%= @class_name.underscore %>, Types::<%= @type_name %>, null: true
+
+      def resolve(specimen:, **attributes)
+        event = <%= @class_name %>.new(attributes)
+        event.specimen = specimen
+        result = event.save
+        errors = errors_from_active_record event.errors
+        {
+          <%= @class_name.underscore %>: result ? event : nil,
+          errors: errors
+        }
+      end
+    end
+  end
+end
