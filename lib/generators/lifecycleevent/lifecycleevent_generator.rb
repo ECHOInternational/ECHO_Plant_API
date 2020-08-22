@@ -1,3 +1,6 @@
+# frozen_string_literal: true
+
+# Generates Life Cycle Event Types
 class LifecycleeventGenerator < Rails::Generators::NamedBase
   source_root File.expand_path('templates', __dir__)
 

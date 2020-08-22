@@ -1,4 +1,7 @@
+# frozen_string_literal: true
+
 module Types
+  # Defines the Life Cycle Event Interface
   module LifeCycleEventType
     include Types::BaseInterface
 

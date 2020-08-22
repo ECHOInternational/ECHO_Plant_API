@@ -10,7 +10,7 @@ module Types
 
     field :uuid, ID,
           description: 'The internal database ID for a specimen',
-          null: false,method: :id
+          null: false, method: :id
     field :name, String,
           description: 'The user assigned name of a specimen',
           null: true

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 FactoryBot.define do
   factory :specimen do
     sequence(:name) { |n| "Specimen #{n}" }

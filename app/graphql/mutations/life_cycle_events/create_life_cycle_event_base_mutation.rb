@@ -4,7 +4,6 @@ module Mutations
   module LifeCycleEvents
     # Base Class for creating Life Cycle Events
     class CreateLifeCycleEventBaseMutation < BaseMutation
-
       argument :specimen_id, ID,
                required: true,
                description: 'The specimen to which this life cycle event should be added',

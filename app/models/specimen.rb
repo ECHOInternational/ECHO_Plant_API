@@ -1,3 +1,6 @@
+# frozen_string_literal: true
+
+# Specimens are individual (eg. tree) or groups (eg. row) of plants/vareities
 class Specimen < ApplicationRecord
   belongs_to :plant
   belongs_to :variety, optional: true
