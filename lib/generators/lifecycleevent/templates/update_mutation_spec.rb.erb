@@ -5,7 +5,7 @@ require 'rails_helper'
 RSpec.describe 'Update <%= @friendly_name %> Life Cycle Event Mutation', type: :graphql_mutation do
   let(:current_user) { build(:user, :readwrite) }
   let(:specimen) { create(:specimen, owned_by: current_user.email) }
-  let(:life_cycle_event) { create(:acquire_event, specimen: specimen) }
+  let(:life_cycle_event) { create(:<%= @class_name.underscore %>, specimen: specimen) }
   let(:query_string) {
     <<-GRAPHQL
 		mutation($input: Update<%=@name%>LifeCycleEventInput!){

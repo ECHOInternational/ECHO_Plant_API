@@ -35,6 +35,8 @@ module Types
         case object
         when AcquireEvent
           Types::AcquireEventType
+        when ThinningEvent
+          Types::ThinningEventType
         else
           raise("Unexpected object: #{obj}")
         end

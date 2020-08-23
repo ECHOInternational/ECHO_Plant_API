@@ -74,9 +74,8 @@ RSpec.describe 'Add Acquire Life Cycle Event Mutation', type: :graphql_mutation 
                                           condition: ''
                                         }
                                       })
-      error_result = result['data']['addAcquireEventToSpecimen']['errors']
-      expect(error_result[0]['field']).to eq 'condition'
-      expect(error_result[0]['code']).to eq 400
+      expect(result).to include('errors')
+      expect(result).to_not include('data')
     end
     it 'returns errors when the source is blank' do
       @specimen_id = PlantApiSchema.id_from_object(specimen, Specimen, {})

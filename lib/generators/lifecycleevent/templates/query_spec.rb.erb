@@ -14,10 +14,10 @@ RSpec.describe 'Life Cycle Event Query', type: :graphql_query do
           notes
           specimen{
             id
-          }
+          }<% if @all_fields.length.positive? %>
           ... on <%= @class_name%> {<% @all_fields.each do |field, _values|%>
             <%= field %><% end %>
-          }
+          }<% end %>
         }
       }
       GRAPHQL

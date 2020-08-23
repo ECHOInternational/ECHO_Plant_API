@@ -54,5 +54,11 @@ module Types
     field :update_acquire_event,
           mutation: Mutations::LifeCycleEvents::UpdateAcquireLifeCycleEvent,
           description: 'Updates an acquire life cycle event'
+    field :add_thinning_event_to_specimen,
+          mutation: Mutations::LifeCycleEvents::AddThinningLifeCycleEvent,
+          description: 'Adds a thinning life cycle event to a specimen'
+    field :update_thinning_event,
+          mutation: Mutations::LifeCycleEvents::UpdateThinningLifeCycleEvent,
+          description: 'Updates a thinning life cycle event'
   end
 end
