@@ -19,5 +19,4 @@ RSpec.describe EndOfLifeEvent, type: :model do
   end
 
   # Specific To this type
-
 end

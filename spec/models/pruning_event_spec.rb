@@ -19,5 +19,4 @@ RSpec.describe PruningEvent, type: :model do
   end
 
   # Specific To this type
-
 end

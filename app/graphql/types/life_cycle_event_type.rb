@@ -73,6 +73,10 @@ module Types
           Types::SoilPreparationEventType
         when HarvestEvent
           Types::HarvestEventType
+        when PlantingEvent
+          Types::PlantingEventType
+        when MovementEvent
+          Types::MovementEventType
         else
           raise("Unexpected object: #{obj}")
         end

@@ -19,5 +19,4 @@ RSpec.describe FloweringEvent, type: :model do
   end
 
   # Specific To this type
-
 end

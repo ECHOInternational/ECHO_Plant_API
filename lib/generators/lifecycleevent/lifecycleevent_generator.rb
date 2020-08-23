@@ -73,16 +73,16 @@ class LifecycleeventGenerator < Rails::Generators::NamedBase
   end
 
   def append_comment_to_life_cycle_events_interface
-    open('app/graphql/types/life_cycle_event_type.rb', 'a') { |f|
+    open('app/graphql/types/life_cycle_event_type.rb', 'a') do |f|
       f.puts <<-COMMENT
       when #{@class_name}
         Types::#{@type_name}
       COMMENT
-    }
+    end
   end
 
   def append_comment_to_mutations_type
-    open('app/graphql/types/mutation_type.rb', 'a') { |f|
+    open('app/graphql/types/mutation_type.rb', 'a') do |f|
       f.puts <<-TEXT
       field :add_#{@class_name.underscore}_to_specimen,
             mutation: Mutations::LifeCycleEvents::Add#{@name}LifeCycleEvent,
@@ -91,7 +91,7 @@ class LifecycleeventGenerator < Rails::Generators::NamedBase
             mutation: Mutations::LifeCycleEvents::Update#{@name}LifeCycleEvent,
             description: 'Updates a #{@friendly_name} life cycle event'
       TEXT
-    }
+    end
   end
 
   def post_run_notices
