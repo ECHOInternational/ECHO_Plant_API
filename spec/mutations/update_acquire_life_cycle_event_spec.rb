@@ -5,7 +5,7 @@ require 'rails_helper'
 RSpec.describe 'Update Acquire Life Cycle Event Mutation', type: :graphql_mutation do
   let(:current_user) { build(:user, :readwrite) }
   let(:specimen) { create(:specimen, owned_by: current_user.email) }
-  let(:life_cycle_event) { create(:acquire_event, specimen: specimen)}
+  let(:life_cycle_event) { create(:acquire_event, specimen: specimen) }
   let(:query_string) {
     <<-GRAPHQL
 		mutation($input: UpdateAcquireLifeCycleEventInput!){
@@ -40,9 +40,9 @@ RSpec.describe 'Update Acquire Life Cycle Event Mutation', type: :graphql_mutati
                                          input: {
                                            datetime: '2014-07-16T19:23:00Z',
                                            notes: 'newly updated record',
-                                           condition: 'FAIR',
-                                           accession: 'New Accession Value',
-                                           source: 'New Source Value',
+                                           condition: 'GOOD',
+                                           accession: 'Accession 1',
+                                           source: 'Source',
                                            lifeCycleEventId: @life_cycle_event_id
                                          }
                                        })
@@ -52,7 +52,7 @@ RSpec.describe 'Update Acquire Life Cycle Event Mutation', type: :graphql_mutati
       expect(@result).to include 'data'
     end
 
-    it 'creates a record' do
+    it 'updates a record' do
       success_result = @result['data']['updateAcquireEvent']['acquireEvent']
       expect(success_result['notes']).to eq 'newly updated record'
       expect(success_result['id']).to eq @life_cycle_event_id
@@ -69,10 +69,10 @@ RSpec.describe 'Update Acquire Life Cycle Event Mutation', type: :graphql_mutati
                                         input: {
                                           datetime: '2014-07-16T19:23:00Z',
                                           notes: 'newly updated record',
-                                          accession: 'new_accession_value',
-                                          source: 'new Source value',
-                                          condition: '',
-                                          lifeCycleEventId: @life_cycle_event_id
+                                          accession: 'Accession 1',
+                                          source: 'Source',
+                                          lifeCycleEventId: @life_cycle_event_id,
+                                          condition: ''
                                         }
                                       })
       error_result = result['data']['updateAcquireEvent']['errors']
@@ -83,12 +83,12 @@ RSpec.describe 'Update Acquire Life Cycle Event Mutation', type: :graphql_mutati
       @life_cycle_event_id = PlantApiSchema.id_from_object(life_cycle_event, AcquireEvent, {})
       result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
                                         input: {
-                                          datetime: '2013-07-16T19:23:00Z',
-                                          notes: 'newly created record',
+                                          datetime: '2014-07-16T19:23:00Z',
+                                          notes: 'newly updated record',
                                           condition: 'GOOD',
                                           accession: 'Accession 1',
-                                          source: '',
-                                          lifeCycleEventId: @life_cycle_event_id
+                                          lifeCycleEventId: @life_cycle_event_id,
+                                          source: ''
                                         }
                                       })
       error_result = result['data']['updateAcquireEvent']['errors']

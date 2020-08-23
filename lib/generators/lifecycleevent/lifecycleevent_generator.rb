@@ -68,10 +68,14 @@ class LifecycleeventGenerator < Rails::Generators::NamedBase
   end
 
   def generate_update_mutation_spec
+    update_mutation_spec_path = "spec/mutations/update_#{@name.underscore.downcase}_life_cycle_event_spec.rb"
+    template 'update_mutation_spec.rb.erb', update_mutation_spec_path
   end
 
   def post_run_notices
     puts "Be sure to add 'when #{@class_name}: #{file_name.camelcase}' to resolve_type in life_cycle_event interface."
+    puts 'Be sure to add mutation definitions to mutations type'
+    puts 'Be sure to add query definition to query type'
   end
 
   private

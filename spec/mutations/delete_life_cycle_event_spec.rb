@@ -51,7 +51,7 @@ RSpec.describe 'Delete Life Cycle Event Mutation', type: :graphql_mutation do
 
   context 'when user is not an admin' do
     let(:current_user) { build(:user, :readwrite) }
-    let(:specimen) { build(:specimen, owned_by: current_user.email)}
+    let(:specimen) { build(:specimen, owned_by: current_user.email) }
     let(:life_cycle_event) { create(:acquire_event, notes: 'some_notes', specimen: specimen) }
 
     context 'when the user does not own the record' do
