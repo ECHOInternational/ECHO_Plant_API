@@ -66,5 +66,11 @@ module Types
     field :update_nutrient_deficiency_event,
           mutation: Mutations::LifeCycleEvents::UpdateNutrientDeficiencyLifeCycleEvent,
           description: 'Updates a nutrient deficiency life cycle event'
+    field :add_staking_event_to_specimen,
+          mutation: Mutations::LifeCycleEvents::AddStakingLifeCycleEvent,
+          description: 'Adds a Staking life cycle event to a specimen'
+    field :update_staking_event,
+          mutation: Mutations::LifeCycleEvents::UpdateStakingLifeCycleEvent,
+          description: 'Updates a Staking life cycle event'
   end
 end

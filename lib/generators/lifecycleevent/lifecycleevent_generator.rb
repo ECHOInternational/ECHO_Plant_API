@@ -72,17 +72,31 @@ class LifecycleeventGenerator < Rails::Generators::NamedBase
     template 'update_mutation_spec.rb.erb', update_mutation_spec_path
   end
 
+  def append_comment_to_life_cycle_events_interface
+    open('app/graphql/types/life_cycle_event_type.rb', 'a') { |f|
+      f.puts <<-COMMENT
+      when #{@class_name}
+        Types::#{@type_name}
+      COMMENT
+    }
+  end
+
+  def append_comment_to_mutations_type
+    open('app/graphql/types/mutation_type.rb', 'a') { |f|
+      f.puts <<-TEXT
+      field :add_#{@class_name.underscore}_to_specimen,
+            mutation: Mutations::LifeCycleEvents::Add#{@name}LifeCycleEvent,
+            description: 'Adds a #{@friendly_name} life cycle event to a specimen'
+      field :update_#{@class_name.underscore},
+            mutation: Mutations::LifeCycleEvents::Update#{@name}LifeCycleEvent,
+            description: 'Updates a #{@friendly_name} life cycle event'
+      TEXT
+    }
+  end
+
   def post_run_notices
-    puts "Be sure to add 'when #{@class_name}: #{file_name.camelcase}' to resolve_type in life_cycle_event interface."
-    puts 'Be sure to add mutation definitions to mutations type:'
-    puts <<-TEXT
-    field :add_#{@class_name.underscore}_to_specimen,
-          mutation: Mutations::LifeCycleEvents::Add#{@name}LifeCycleEvent,
-          description: 'Adds a #{@friendly_name} life cycle event to a specimen'
-    field :update_nutrient_deficiency_event,
-          mutation: Mutations::LifeCycleEvents::Update#{@name}LifeCycleEvent,
-          description: 'Updates a #{@friendly_name} life cycle event'
-    TEXT
+    puts "Don't forget to add commented lines at bottom of mutatio_type and life_cycle_event_type definitions."
+    puts 'Failing tests are usually cause by forgetting the above or not implementing special types in tests'
   end
 
   private

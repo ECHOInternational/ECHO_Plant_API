@@ -39,6 +39,8 @@ module Types
           Types::ThinningEventType
         when NutrientDeficiencyEvent
           Types::NutrientDeficiencyEventType
+        when StakingEvent
+          Types::StakingEventType
         else
           raise("Unexpected object: #{obj}")
         end
