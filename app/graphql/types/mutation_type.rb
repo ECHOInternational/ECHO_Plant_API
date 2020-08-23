@@ -138,5 +138,35 @@ module Types
     field :update_end_of_life_event,
           mutation: Mutations::LifeCycleEvents::UpdateEndOfLifeLifeCycleEvent,
           description: 'Updates an End Of Life life cycle event'
+    field :add_flowering_event_to_specimen,
+          mutation: Mutations::LifeCycleEvents::AddFloweringLifeCycleEvent,
+          description: 'Adds a Flowering life cycle event to a specimen'
+    field :update_flowering_event,
+          mutation: Mutations::LifeCycleEvents::UpdateFloweringLifeCycleEvent,
+          description: 'Updates a Flowering life cycle event'
+    field :add_germination_event_to_specimen,
+          mutation: Mutations::LifeCycleEvents::AddGerminationLifeCycleEvent,
+          description: 'Adds a Germination life cycle event to a specimen'
+    field :update_germination_event,
+          mutation: Mutations::LifeCycleEvents::UpdateGerminationLifeCycleEvent,
+          description: 'Updates a Germination life cycle event'
+    field :add_weather_event_to_specimen,
+          mutation: Mutations::LifeCycleEvents::AddWeatherLifeCycleEvent,
+          description: 'Adds a Weather life cycle event to a specimen'
+    field :update_weather_event,
+          mutation: Mutations::LifeCycleEvents::UpdateWeatherLifeCycleEvent,
+          description: 'Updates a Weather life cycle event'
+    field :add_soil_preparation_event_to_specimen,
+          mutation: Mutations::LifeCycleEvents::AddSoilPreparationLifeCycleEvent,
+          description: 'Adds a Soil Preparation life cycle event to a specimen'
+    field :update_soil_preparation_event,
+          mutation: Mutations::LifeCycleEvents::UpdateSoilPreparationLifeCycleEvent,
+          description: 'Updates a Soil Preparation life cycle event'
+    field :add_harvest_event_to_specimen,
+          mutation: Mutations::LifeCycleEvents::AddHarvestLifeCycleEvent,
+          description: 'Adds a Harvest life cycle event to a specimen'
+    field :update_harvest_event,
+          mutation: Mutations::LifeCycleEvents::UpdateHarvestLifeCycleEvent,
+          description: 'Updates a Harvest life cycle event'
   end
 end

@@ -11,21 +11,21 @@ evaluation - has_one
 
 
 
-# planting event
-specimen belongs_to
-imageable
-location - has_one
-date - Date, 
-inputs - relation
-notes - text
-
-# harvest event
-imageable
-date
-quantity
-quantity_unit
-quality integer between 1 and 10
-notes - text
+√# planting event
+√specimen belongs_to
+√imageable
+√location - has_one
+√date - Date, 
+√inputs - relation
+√notes - text
+√
+√# harvest event
+√imageable
+√date
+√quantity
+√quantity_unit
+√quality integer between 1 and 10
+√notes - text
 
 # evaluation
 belongs to specimen
@@ -38,32 +38,35 @@ will_plant_again - boolen
 evaluated?
 notes
 
-AcquireEvent source:string:required accession:string condition:Types/ConditionEnum:required
-ThinningEvent
-NutrientDeficiencyEvent
-StakingEvent
+√AcquireEvent source:string:required accession:string condition:Types/ConditionEnum:required
+√ThinningEvent
+√NutrientDeficiencyEvent
+√StakingEvent
+√TrellisingEvent
+√DiseaseEvent
+√PestEvent
+√PruningEvent
+√WeedManagementEvent
+√CultivatingEvent
+√CompostingEvent
+√MulchingEvent
+√FertilizingEvent
+√OtherEvent
+√EndOfLifeEvent
+√FloweringEvent percent:integer
+√Germination percent:integer quality:integer
+√WeatherEvent condition:Types/ConditionEnum
+√SoilPreparation soil_preparation:Types/SoilPreparationEnum:required
+√HarvestEvent quantity:float:required unit:Types/UnitEnum:required quality:integer:required
 
 
 PlantingEvent location:Types/LocationType:required quantity:float unit:Types/UnitEnum between_row_spacing:integer in_row_spacing:integer
+
 MovementEvent location:Types/LocationType:required quantity:float unit:Types/UnitEnum between_row_spacing:integer in_row_spacing:integer
-HarvestEvent quantity:float:required unit:Types/UnitEnum:required quality:integer:required
-WeatherEvent condition:Types/ConditionEnum
-Germination percent:integer quality:integer
-FloweringEvent percent:integer
-SoilPreparation soil_preparation:Types/SoilPreparationEnum:required
 
 
-TrellisingEvent
-DiseaseEvent
-PestEvent
-PruningEvent
-WeedManagementEvent
-CultivatingEvent
-CompostingEvent
-MulchingEvent
-FertilizingEvent
-OtherEvent
-EndOfLifeEvent
+
+
 
 
 Acquire >> Planting >> Soil Prep >> List

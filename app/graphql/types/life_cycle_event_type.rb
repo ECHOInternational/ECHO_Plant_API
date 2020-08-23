@@ -63,6 +63,16 @@ module Types
           Types::OtherEventType
         when EndOfLifeEvent
           Types::EndOfLifeEventType
+        when FloweringEvent
+          Types::FloweringEventType
+        when GerminationEvent
+          Types::GerminationEventType
+        when WeatherEvent
+          Types::WeatherEventType
+        when SoilPreparationEvent
+          Types::SoilPreparationEventType
+        when HarvestEvent
+          Types::HarvestEventType
         else
           raise("Unexpected object: #{obj}")
         end
