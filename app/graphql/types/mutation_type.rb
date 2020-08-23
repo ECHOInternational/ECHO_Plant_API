@@ -60,5 +60,11 @@ module Types
     field :update_thinning_event,
           mutation: Mutations::LifeCycleEvents::UpdateThinningLifeCycleEvent,
           description: 'Updates a thinning life cycle event'
+    field :add_nutrient_deficiency_event_to_specimen,
+          mutation: Mutations::LifeCycleEvents::AddNutrientDeficiencyLifeCycleEvent,
+          description: 'Adds a nutrient deficiency life cycle event to a specimen'
+    field :update_nutrient_deficiency_event,
+          mutation: Mutations::LifeCycleEvents::UpdateNutrientDeficiencyLifeCycleEvent,
+          description: 'Updates a nutrient deficiency life cycle event'
   end
 end

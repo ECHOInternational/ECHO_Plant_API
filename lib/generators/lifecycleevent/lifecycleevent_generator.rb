@@ -74,8 +74,15 @@ class LifecycleeventGenerator < Rails::Generators::NamedBase
 
   def post_run_notices
     puts "Be sure to add 'when #{@class_name}: #{file_name.camelcase}' to resolve_type in life_cycle_event interface."
-    puts 'Be sure to add mutation definitions to mutations type'
-    puts 'Be sure to add query definition to query type'
+    puts 'Be sure to add mutation definitions to mutations type:'
+    puts <<-TEXT
+    field :add_#{@class_name.underscore}_to_specimen,
+          mutation: Mutations::LifeCycleEvents::Add#{@name}LifeCycleEvent,
+          description: 'Adds a #{@friendly_name} life cycle event to a specimen'
+    field :update_nutrient_deficiency_event,
+          mutation: Mutations::LifeCycleEvents::Update#{@name}LifeCycleEvent,
+          description: 'Updates a #{@friendly_name} life cycle event'
+    TEXT
   end
 
   private

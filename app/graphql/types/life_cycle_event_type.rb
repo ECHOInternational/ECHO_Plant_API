@@ -37,6 +37,8 @@ module Types
           Types::AcquireEventType
         when ThinningEvent
           Types::ThinningEventType
+        when NutrientDeficiencyEvent
+          Types::NutrientDeficiencyEventType
         else
           raise("Unexpected object: #{obj}")
         end
