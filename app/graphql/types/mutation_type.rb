@@ -2,7 +2,7 @@
 
 module Types
   # Defines the available mutations for the Plant API
-  class MutationType < Types::BaseObject
+  class MutationType < Types::BaseObject # rubocop:disable Metrics/ClassLength
     field :create_category,
           mutation: Mutations::CreateCategory,
           description: 'Creates a new plant category'
@@ -72,5 +72,71 @@ module Types
     field :update_staking_event,
           mutation: Mutations::LifeCycleEvents::UpdateStakingLifeCycleEvent,
           description: 'Updates a Staking life cycle event'
+    field :add_trellising_event_to_specimen,
+          mutation: Mutations::LifeCycleEvents::AddTrellisingLifeCycleEvent,
+          description: 'Adds a Trellising life cycle event to a specimen'
+    field :update_trellising_event,
+          mutation: Mutations::LifeCycleEvents::UpdateTrellisingLifeCycleEvent,
+          description: 'Updates a Trellising life cycle event'
+    field :add_disease_event_to_specimen,
+          mutation: Mutations::LifeCycleEvents::AddDiseaseLifeCycleEvent,
+          description: 'Adds a Disease life cycle event to a specimen'
+    field :update_disease_event,
+          mutation: Mutations::LifeCycleEvents::UpdateDiseaseLifeCycleEvent,
+          description: 'Updates a Disease life cycle event'
+    field :add_pest_event_to_specimen,
+          mutation: Mutations::LifeCycleEvents::AddPestLifeCycleEvent,
+          description: 'Adds a Pest life cycle event to a specimen'
+    field :update_pest_event,
+          mutation: Mutations::LifeCycleEvents::UpdatePestLifeCycleEvent,
+          description: 'Updates a Pest life cycle event'
+    field :add_pruning_event_to_specimen,
+          mutation: Mutations::LifeCycleEvents::AddPruningLifeCycleEvent,
+          description: 'Adds a Pruning life cycle event to a specimen'
+    field :update_pruning_event,
+          mutation: Mutations::LifeCycleEvents::UpdatePruningLifeCycleEvent,
+          description: 'Updates a Pruning life cycle event'
+    field :add_weed_management_event_to_specimen,
+          mutation: Mutations::LifeCycleEvents::AddWeedManagementLifeCycleEvent,
+          description: 'Adds a Weed Management life cycle event to a specimen'
+    field :update_weed_management_event,
+          mutation: Mutations::LifeCycleEvents::UpdateWeedManagementLifeCycleEvent,
+          description: 'Updates a Weed Management life cycle event'
+    field :add_cultivating_event_to_specimen,
+          mutation: Mutations::LifeCycleEvents::AddCultivatingLifeCycleEvent,
+          description: 'Adds a Cultivating life cycle event to a specimen'
+    field :update_cultivating_event,
+          mutation: Mutations::LifeCycleEvents::UpdateCultivatingLifeCycleEvent,
+          description: 'Updates a Cultivating life cycle event'
+    field :add_composting_event_to_specimen,
+          mutation: Mutations::LifeCycleEvents::AddCompostingLifeCycleEvent,
+          description: 'Adds a Composting life cycle event to a specimen'
+    field :update_composting_event,
+          mutation: Mutations::LifeCycleEvents::UpdateCompostingLifeCycleEvent,
+          description: 'Updates a Composting life cycle event'
+    field :add_mulching_event_to_specimen,
+          mutation: Mutations::LifeCycleEvents::AddMulchingLifeCycleEvent,
+          description: 'Adds a Mulching life cycle event to a specimen'
+    field :update_mulching_event,
+          mutation: Mutations::LifeCycleEvents::UpdateMulchingLifeCycleEvent,
+          description: 'Updates a Mulching life cycle event'
+    field :add_fertilizing_event_to_specimen,
+          mutation: Mutations::LifeCycleEvents::AddFertilizingLifeCycleEvent,
+          description: 'Adds a Fertilizing life cycle event to a specimen'
+    field :update_fertilizing_event,
+          mutation: Mutations::LifeCycleEvents::UpdateFertilizingLifeCycleEvent,
+          description: 'Updates a Fertilizing life cycle event'
+    field :add_other_event_to_specimen,
+          mutation: Mutations::LifeCycleEvents::AddOtherLifeCycleEvent,
+          description: 'Adds an Other life cycle event to a specimen'
+    field :update_other_event,
+          mutation: Mutations::LifeCycleEvents::UpdateOtherLifeCycleEvent,
+          description: 'Updates an Other life cycle event'
+    field :add_end_of_life_event_to_specimen,
+          mutation: Mutations::LifeCycleEvents::AddEndOfLifeLifeCycleEvent,
+          description: 'Adds an End Of Life life cycle event to a specimen'
+    field :update_end_of_life_event,
+          mutation: Mutations::LifeCycleEvents::UpdateEndOfLifeLifeCycleEvent,
+          description: 'Updates an End Of Life life cycle event'
   end
 end

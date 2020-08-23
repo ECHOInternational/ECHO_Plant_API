@@ -30,8 +30,8 @@ module Types
     field :datetime, GraphQL::Types::ISO8601DateTime,
           description: 'The date and time that the life cycle event took place',
           null: false
-    definition_methods do
-      def resolve_type(object, _context)
+    definition_methods do # rubocop:disable all
+      def resolve_type(object, _context) #rubocop:disable all
         case object
         when AcquireEvent
           Types::AcquireEventType
@@ -41,6 +41,28 @@ module Types
           Types::NutrientDeficiencyEventType
         when StakingEvent
           Types::StakingEventType
+        when TrellisingEvent
+          Types::TrellisingEventType
+        when DiseaseEvent
+          Types::DiseaseEventType
+        when PestEvent
+          Types::PestEventType
+        when PruningEvent
+          Types::PruningEventType
+        when WeedManagementEvent
+          Types::WeedManagementEventType
+        when CultivatingEvent
+          Types::CultivatingEventType
+        when CompostingEvent
+          Types::CompostingEventType
+        when MulchingEvent
+          Types::MulchingEventType
+        when FertilizingEvent
+          Types::FertilizingEventType
+        when OtherEvent
+          Types::OtherEventType
+        when EndOfLifeEvent
+          Types::EndOfLifeEventType
         else
           raise("Unexpected object: #{obj}")
         end
