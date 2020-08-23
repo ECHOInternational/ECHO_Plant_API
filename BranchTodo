@@ -58,16 +58,8 @@ notes
 √WeatherEvent condition:Types/ConditionEnum
 √SoilPreparation soil_preparation:Types/SoilPreparationEnum:required
 √HarvestEvent quantity:float:required unit:Types/UnitEnum:required quality:integer:required
-
-
-PlantingEvent location:Types/LocationType:required quantity:float unit:Types/UnitEnum between_row_spacing:integer in_row_spacing:integer
-
 MovementEvent location:Types/LocationType:required quantity:float unit:Types/UnitEnum between_row_spacing:integer in_row_spacing:integer
-
-
-
-
-
+PlantingEvent location:Types/LocationType:required quantity:float unit:Types/UnitEnum between_row_spacing:integer in_row_spacing:integer
 
 Acquire >> Planting >> Soil Prep >> List
 

@@ -168,5 +168,17 @@ module Types
     field :update_harvest_event,
           mutation: Mutations::LifeCycleEvents::UpdateHarvestLifeCycleEvent,
           description: 'Updates a Harvest life cycle event'
+    field :add_planting_event_to_specimen,
+          mutation: Mutations::LifeCycleEvents::AddPlantingLifeCycleEvent,
+          description: 'Adds a Planting life cycle event to a specimen'
+    field :update_planting_event,
+          mutation: Mutations::LifeCycleEvents::UpdatePlantingLifeCycleEvent,
+          description: 'Updates a Planting life cycle event'
+    field :add_movement_event_to_specimen,
+          mutation: Mutations::LifeCycleEvents::AddMovementLifeCycleEvent,
+          description: 'Adds a Movement life cycle event to a specimen'
+    field :update_movement_event,
+          mutation: Mutations::LifeCycleEvents::UpdateMovementLifeCycleEvent,
+          description: 'Updates a Movement life cycle event'
   end
 end
