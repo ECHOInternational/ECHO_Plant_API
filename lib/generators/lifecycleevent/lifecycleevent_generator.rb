@@ -8,15 +8,18 @@ class LifecycleeventGenerator < Rails::Generators::NamedBase
 
   def setup # rubocop:disable Metrics/AbcSize
     @friendly_name = file_name.titleize
-    @mutation_suffix = "#{file_name.camelcase}LifeCycleEvent"
-    @class_name = "#{file_name.camelcase}Event"
+    @name = file_name.camelcase
+    @mutation_suffix = "#{@name}LifeCycleEvent"
+    @class_name = "#{@name}Event"
     @type_name = "#{@class_name}Type"
+    @sample_values = FactoryBot.build(:life_cycle_event)
     @all_fields = {}
     fields.each do |field|
       name, type, required = field.split(':')
       @all_fields[name] = {}
       @all_fields[name][:type] = type.gsub('/', '::')
       @all_fields[name][:required] = required == 'required'
+      @all_fields[name][:sample] = sample_value_for name
     end
     @required_fields = @all_fields.filter { |_field, attributes| attributes[:required] }
   end
@@ -54,7 +57,40 @@ class LifecycleeventGenerator < Rails::Generators::NamedBase
     template 'model_spec.rb.erb', model_spec_path
   end
 
+  def generate_query_spec
+    query_spec_path = "spec/queries/#{@class_name.underscore}_query_spec.rb"
+    template 'query_spec.rb.erb', query_spec_path
+  end
+
+  def generate_create_mutation_spec
+    create_mutation_spec_path = "spec/mutations/add_#{@name.underscore.downcase}_life_cycle_event_spec.rb"
+    template 'create_mutation_spec.rb.erb', create_mutation_spec_path
+  end
+
+  def generate_update_mutation_spec
+  end
+
   def post_run_notices
     puts "Be sure to add 'when #{@class_name}: #{file_name.camelcase}' to resolve_type in life_cycle_event interface."
+  end
+
+  private
+
+  def sample_value_for(name)
+    klass = LifeCycleEvent.type_for_attribute(name)
+    value = @sample_values.send(name)
+
+    return value if value.is_a? Numeric
+
+    case klass
+    when Numeric
+      value
+    when ActiveModel::Type::String
+      "'#{value}'"
+    when ActiveRecord::Enum::EnumType
+      "'#{value.upcase}'"
+    else
+      "'TODO: Replace unsupported Value #{klass}'"
+    end
   end
 end
