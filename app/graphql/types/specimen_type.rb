@@ -35,6 +35,24 @@ module Types
     field :terminated, Boolean,
           description: 'Indicates whether or not this plant is still growing',
           null: false
+    field :successful, Boolean,
+          description: 'Indicates if the user believes this was successful',
+          null: true
+    field :recommended, Boolean,
+          description: 'Indicates if the user would recommend this to others',
+          null: true
+    field :saved_seed, Boolean,
+          description: 'Indicates if the user saved seeds collected from this specimen',
+          null: true
+    field :will_share_seed, Boolean,
+          description: 'Indicates if the user plans to share seeds collected from this specimen',
+          null: true
+    field :will_plant_again, Boolean,
+          description: 'Indicates if the user plans to plant this again',
+          null: true
+    field :notes, String,
+          description: 'User supplied notes about the experience with this specimen',
+          null: true
     field :life_cycle_events, Types::LifeCycleEventType::LifeCycleEventConnectionWithTotalCountType,
           description: 'A list of life cycle events for this specimen, ordered by date ascending',
           null: true,

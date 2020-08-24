@@ -364,6 +364,12 @@ CREATE TABLE public.specimens (
     terminated boolean DEFAULT false NOT NULL,
     created_by character varying NOT NULL,
     owned_by character varying NOT NULL,
+    successful boolean,
+    recommended boolean,
+    saved_seed boolean,
+    will_share_seed boolean,
+    will_plant_again boolean,
+    notes text,
     visibility integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL

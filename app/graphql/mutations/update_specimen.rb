@@ -20,6 +20,24 @@ module Mutations
     argument :terminated, Boolean,
              required: false,
              description: 'Indicates whether or not this plant is still growing'
+    argument :successful, Boolean,
+             description: 'Indicates if the user believes this was successful',
+             required: false
+    argument :recommended, Boolean,
+             description: 'Indicates if the user would recommend this to others',
+             required: false
+    argument :saved_seed, Boolean,
+             description: 'Indicates if the user saved seeds collected from this specimen',
+             required: false
+    argument :will_share_seed, Boolean,
+             description: 'Indicates if the user plans to share seeds collected from this specimen',
+             required: false
+    argument :will_plant_again, Boolean,
+             description: 'Indicates if the user plans to plant this again',
+             required: false
+    argument :notes, String,
+             description: 'User supplied notes about the experience with this specimen',
+             required: false
 
     field :specimen, Types::SpecimenType, null: true
     field :errors, [Types::MutationError], null: false

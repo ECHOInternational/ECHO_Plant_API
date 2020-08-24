@@ -36,6 +36,9 @@ module Types
     field :delete_specimen,
           mutation: Mutations::DeleteSpecimen,
           description: 'Deletes a specimen'
+    field :evaluate_specimen,
+          mutation: Mutations::EvaluateSpecimen,
+          description: 'Sets evaluation attributes for a specimen'
     field :create_location,
           mutation: Mutations::CreateLocation,
           description: 'Creates a new location'

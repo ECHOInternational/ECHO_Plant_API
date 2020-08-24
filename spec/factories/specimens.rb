@@ -8,6 +8,13 @@ FactoryBot.define do
     terminated { false }
     created_by { Faker::Internet.email }
     owned_by { Faker::Internet.email }
+    successful { nil }
+    recommended { nil }
+    saved_seed { nil }
+    will_share_seed { nil }
+    will_plant_again { nil }
+    notes { nil }
+
     trait :public do
       visibility { :public }
     end
