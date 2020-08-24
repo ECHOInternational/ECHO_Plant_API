@@ -7,6 +7,12 @@ class CreateSpecimens < ActiveRecord::Migration[6.0]
       t.boolean :terminated, null: false, default: false
       t.string :created_by, null: false
       t.string :owned_by, null: false
+      t.boolean :successful, null: true
+      t.boolean :recommended, null: true
+      t.boolean :saved_seed, null: true
+      t.boolean :will_share_seed, null: true
+      t.boolean :will_plant_again, null: true
+      t.text :notes, null: true
       t.integer :visibility, null: false, default: 0
 
       t.timestamps
