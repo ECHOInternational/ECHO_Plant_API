@@ -24,6 +24,17 @@ COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
 
 
 --
+-- Name: condition; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.condition AS ENUM (
+    'poor',
+    'fair',
+    'good'
+);
+
+
+--
 -- Name: early_growth_phase; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -42,6 +53,32 @@ CREATE TYPE public.life_cycle AS ENUM (
     'annual',
     'biennial',
     'perennial'
+);
+
+
+--
+-- Name: soil_preparation; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.soil_preparation AS ENUM (
+    'greenhouse',
+    'planting_station',
+    'no_till',
+    'full_till',
+    'raised_beds',
+    'vertical_garden',
+    'container',
+    'other'
+);
+
+
+--
+-- Name: unit; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.unit AS ENUM (
+    'weight',
+    'count'
 );
 
 
@@ -227,6 +264,56 @@ CREATE TABLE public.images (
 
 
 --
+-- Name: life_cycle_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.life_cycle_events (
+    id uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    type character varying NOT NULL,
+    specimen_id uuid NOT NULL,
+    location_id uuid,
+    datetime timestamp without time zone NOT NULL,
+    notes text,
+    quantity double precision,
+    quality integer,
+    percent integer,
+    source character varying,
+    accession character varying,
+    condition public.condition,
+    unit public.unit,
+    between_row_spacing integer,
+    in_row_spacing integer,
+    soil_preparation public.soil_preparation,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: locations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.locations (
+    id uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    name character varying NOT NULL,
+    created_by character varying NOT NULL,
+    owned_by character varying NOT NULL,
+    visibility integer DEFAULT 0 NOT NULL,
+    latlng point,
+    area double precision,
+    soil_quality public.condition,
+    slope integer,
+    altitude integer,
+    average_rainfall integer,
+    average_temperature integer,
+    irrigated boolean,
+    notes text,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
 -- Name: plants; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -262,6 +349,24 @@ CREATE TABLE public.plants (
 
 CREATE TABLE public.schema_migrations (
     version character varying NOT NULL
+);
+
+
+--
+-- Name: specimens; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.specimens (
+    id uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    name character varying NOT NULL,
+    plant_id uuid NOT NULL,
+    variety_id uuid,
+    terminated boolean DEFAULT false NOT NULL,
+    created_by character varying NOT NULL,
+    owned_by character varying NOT NULL,
+    visibility integer DEFAULT 0 NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
 );
 
 
@@ -477,6 +582,22 @@ ALTER TABLE ONLY public.images
 
 
 --
+-- Name: life_cycle_events life_cycle_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.life_cycle_events
+    ADD CONSTRAINT life_cycle_events_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: locations locations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.locations
+    ADD CONSTRAINT locations_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: plants plants_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -490,6 +611,14 @@ ALTER TABLE ONLY public.plants
 
 ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+
+
+--
+-- Name: specimens specimens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.specimens
+    ADD CONSTRAINT specimens_pkey PRIMARY KEY (id);
 
 
 --
@@ -673,6 +802,34 @@ CREATE INDEX index_images_on_imageable_type_and_imageable_id ON public.images US
 
 
 --
+-- Name: index_life_cycle_events_on_location_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_life_cycle_events_on_location_id ON public.life_cycle_events USING btree (location_id);
+
+
+--
+-- Name: index_life_cycle_events_on_specimen_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_life_cycle_events_on_specimen_id ON public.life_cycle_events USING btree (specimen_id);
+
+
+--
+-- Name: index_specimens_on_plant_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_specimens_on_plant_id ON public.specimens USING btree (plant_id);
+
+
+--
+-- Name: index_specimens_on_variety_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_specimens_on_variety_id ON public.specimens USING btree (variety_id);
+
+
+--
 -- Name: index_tolerances_plants_on_plant_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -753,11 +910,27 @@ ALTER TABLE ONLY public.varieties
 
 
 --
+-- Name: life_cycle_events fk_rails_22b3ef47ea; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.life_cycle_events
+    ADD CONSTRAINT fk_rails_22b3ef47ea FOREIGN KEY (specimen_id) REFERENCES public.specimens(id);
+
+
+--
 -- Name: antinutrients_plants fk_rails_41db3c11c4; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.antinutrients_plants
     ADD CONSTRAINT fk_rails_41db3c11c4 FOREIGN KEY (plant_id) REFERENCES public.plants(id);
+
+
+--
+-- Name: specimens fk_rails_526e3f1017; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.specimens
+    ADD CONSTRAINT fk_rails_526e3f1017 FOREIGN KEY (variety_id) REFERENCES public.varieties(id);
 
 
 --
@@ -825,6 +998,14 @@ ALTER TABLE ONLY public.image_attributes_images
 
 
 --
+-- Name: specimens fk_rails_9a7d2b03df; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.specimens
+    ADD CONSTRAINT fk_rails_9a7d2b03df FOREIGN KEY (plant_id) REFERENCES public.plants(id);
+
+
+--
 -- Name: tolerances_plants fk_rails_a3254e6389; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -873,6 +1054,14 @@ ALTER TABLE ONLY public.tolerances_varieties
 
 
 --
+-- Name: life_cycle_events fk_rails_fff7a9e33a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.life_cycle_events
+    ADD CONSTRAINT fk_rails_fff7a9e33a FOREIGN KEY (location_id) REFERENCES public.locations(id);
+
+
+--
 -- PostgreSQL database dump complete
 --
 
@@ -895,6 +1084,9 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20200817182822'),
 ('20200817184430'),
 ('20200817193432'),
-('20200819084701');
+('20200819084701'),
+('20200819224857'),
+('20200820130907'),
+('20200820213248');
 
 

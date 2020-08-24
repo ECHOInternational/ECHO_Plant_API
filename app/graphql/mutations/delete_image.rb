@@ -9,7 +9,7 @@ module Mutations
              loads: Types::ImageType
 
     field :image_id, ID, null: true
-    field :errors, [String], null: false
+    field :errors, [Types::MutationError], null: false
 
     def authorized?(image:, **_attributes)
       authorize image, :destroy?

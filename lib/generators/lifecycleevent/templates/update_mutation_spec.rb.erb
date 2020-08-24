@@ -1,0 +1,78 @@
+# frozen_string_literal: true
+
+require 'rails_helper'
+
+RSpec.describe 'Update <%= @friendly_name %> Life Cycle Event Mutation', type: :graphql_mutation do
+  let(:current_user) { build(:user, :readwrite) }
+  let(:specimen) { create(:specimen, owned_by: current_user.email) }
+  let(:life_cycle_event) { create(:<%= @class_name.underscore %>, specimen: specimen) }
+  let(:query_string) {
+    <<-GRAPHQL
+		mutation($input: Update<%=@name%>LifeCycleEventInput!){
+			update<%=@class_name%>(input: $input){
+        errors{
+          field
+          value
+          message
+          code
+        }
+				<%= @class_name[0].downcase + @class_name[1..-1]%>{
+          id
+          uuid
+          datetime
+          notes
+          specimen{
+            id
+          }<% @all_fields.each do |field, _values| %>
+          <%=field%><%end%>
+        }
+			}
+		}
+    GRAPHQL
+  }
+
+  context 'with valid parameters' do
+    before :each do
+      @life_cycle_event_id = PlantApiSchema.id_from_object(life_cycle_event, <%= @class_name %>, {})
+      @result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                         input: {
+                                           datetime: '2014-07-16T19:23:00Z',
+                                           notes: 'newly updated record',<% @all_fields.each do |field, values| %>
+                                           <%=field%>: <%= values[:sample]%>,<%end%>
+                                           lifeCycleEventId: @life_cycle_event_id
+                                         }
+                                       })
+    end
+    it 'completes successfully' do
+      expect(@result).to_not include 'errors'
+      expect(@result).to include 'data'
+    end
+
+    it 'updates a record' do
+      success_result = @result['data']['update<%=@class_name%>']['<%= @class_name[0].downcase + @class_name[1..-1]%>']
+      expect(success_result['notes']).to eq 'newly updated record'
+      expect(success_result['id']).to eq @life_cycle_event_id
+
+      updated_event = LifeCycleEvent.find success_result['uuid']
+      expect(updated_event).to_not be nil
+      expect(updated_event.notes).to eq 'newly updated record'
+    end
+  end
+  describe 'required parameters' do<% @required_fields.each do |field, _values| %>
+    it 'returns errors when the <%= field %> is blank' do
+      @life_cycle_event_id = PlantApiSchema.id_from_object(life_cycle_event, <%=@class_name%>, {})
+      result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                        input: {
+                                          datetime: '2014-07-16T19:23:00Z',
+                                          notes: 'newly updated record',<% @all_fields.except(field).each do |a_field, a_values| %>
+                                          <%=a_field%>: <%= a_values[:sample]%>,<%end%>
+                                          lifeCycleEventId: @life_cycle_event_id,
+                                          <%= field %>: ''
+                                        }
+                                      })
+      error_result = result['data']['update<%=@class_name%>']['errors']
+      expect(error_result[0]['field']).to eq '<%= field %>'
+      expect(error_result[0]['code']).to eq 400
+    end<% end %>
+  end
+end

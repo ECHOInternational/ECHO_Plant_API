@@ -1,0 +1,75 @@
+## specimen fields and types
+
+√Imageable
+√name - required
+√Plant - Belongs_to, required
+√Variety - Belongs_to
+√life_cycle_events - has many
+√terminated - boolean default false
+evaluation - has_one
+
+
+
+
+√# planting event
+√specimen belongs_to
+√imageable
+√location - has_one
+√date - Date, 
+√inputs - relation
+√notes - text
+√
+√# harvest event
+√imageable
+√date
+√quantity
+√quantity_unit
+√quality integer between 1 and 10
+√notes - text
+
+# evaluation
+belongs to specimen
+date
+success - boolean
+recommended - boolean
+saved_seed - boolean
+will_share_seed - boolean
+will_plant_again - boolen
+evaluated?
+notes
+
+√AcquireEvent source:string:required accession:string condition:Types/ConditionEnum:required
+√ThinningEvent
+√NutrientDeficiencyEvent
+√StakingEvent
+√TrellisingEvent
+√DiseaseEvent
+√PestEvent
+√PruningEvent
+√WeedManagementEvent
+√CultivatingEvent
+√CompostingEvent
+√MulchingEvent
+√FertilizingEvent
+√OtherEvent
+√EndOfLifeEvent
+√FloweringEvent percent:integer
+√Germination percent:integer quality:integer
+√WeatherEvent condition:Types/ConditionEnum
+√SoilPreparation soil_preparation:Types/SoilPreparationEnum:required
+√HarvestEvent quantity:float:required unit:Types/UnitEnum:required quality:integer:required
+MovementEvent location:Types/LocationType:required quantity:float unit:Types/UnitEnum between_row_spacing:integer in_row_spacing:integer
+PlantingEvent location:Types/LocationType:required quantity:float unit:Types/UnitEnum between_row_spacing:integer in_row_spacing:integer
+
+Acquire >> Planting >> Soil Prep >> List
+
+
+√Create a model, specify required fields
+√Create a type, specify fields and mark required as needed
+
+√Create a create mutation - required fields
+√Create an update mutation - all fields don't enforce required
+√Create a delete mutation - delete :)
+
+
+

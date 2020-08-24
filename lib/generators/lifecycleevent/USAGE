@@ -1,0 +1,11 @@
+Description:
+    Generates LifeCycleEvent Models and supporting GraphQL Types
+
+Example:
+    rails generate lifecycleevent event_name field:type required_field:type:required 
+
+    This will create:
+        app/models/life_cycle_events/model.rb
+        app/graphql/types/type.rb
+        app/graphql/mutations/life_cycle_events/create_mutation.rb
+        app/graphql/mutations/life_cycle_events/update_mutation.rb

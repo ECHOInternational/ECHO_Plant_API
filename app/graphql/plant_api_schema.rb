@@ -10,6 +10,8 @@ class PlantApiSchema < GraphQL::Schema
   use GraphQL::Analysis::AST
   use GraphQL::Execution::Errors
 
+  orphan_types [Types::AcquireEventType]
+
   rescue_from(ActiveRecord::RecordNotFound) do |err, _obj, _args, _ctx, _field|
     # Raise a graphql-friendly error with a custom message
 
@@ -49,7 +51,7 @@ class PlantApiSchema < GraphQL::Schema
   end
 
   # Object Resolution
-  def self.resolve_type(_type, obj, _ctx) # rubocop:disable Metrics/CyclomaticComplexity
+  def self.resolve_type(_type, obj, _ctx) # rubocop:disable all
     case obj
     when Category
       Types::CategoryType
@@ -64,7 +66,11 @@ class PlantApiSchema < GraphQL::Schema
     when Plant
       Types::PlantType
     when Variety
-      Types::Variety
+      Types::VarietyType
+    when Specimen
+      Types::SpecimenType
+    when Location
+      Types::LocationType
     else
       raise("Unexpected object: #{obj}")
     end

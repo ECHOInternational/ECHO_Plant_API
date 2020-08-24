@@ -1,0 +1,6 @@
+# frozen_string_literal: true
+
+FactoryBot.define do
+  factory :<%= @class_name.underscore %>, parent: :life_cycle_event, class: '<%= @class_name%>' do
+  end
+end

@@ -2,7 +2,7 @@
 
 FactoryBot.define do
   factory :variety do
-    sequence(:name) { |n| "category#{n}" }
+    sequence(:name) { |n| "Variety #{n}" }
     has_edible_green_leaves { false }
     has_edible_immature_fruit { false }
     has_edible_mature_fruit { false }
