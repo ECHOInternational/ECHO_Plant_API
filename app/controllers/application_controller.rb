@@ -2,6 +2,7 @@
 
 # Controller for all application actions
 class ApplicationController < ActionController::API
+  include ActionController::HttpAuthentication::Token
   include ActionController::HttpAuthentication::Token::ControllerMethods
   before_action :set_locale
   before_action :require_token
@@ -19,19 +20,37 @@ class ApplicationController < ActionController::API
   end
 
   def require_token
-    # authenticate_or_request_with_http_token do |token|
-    #   begin
-    #     jwt_payload = JWT.decode(
-    #       token,
-    #       ENV['APPLICATION_JWT_SECRET'],
-    #       true,
-    #       { algorithm: ENV['APPLICATION_JWT_ALGORITHM']}
-    #     )
-    #     @current_user = User.new(jwt_payload[0]["user"])
-    #   rescue
-    #     @current_user = nil
-    #   end
-    # end
-    @current_user = User.new({ 'uid' => 'test', 'email' => 'test@test.com', 'trust_levels' => { 'plant' => 2 } })
+    @current_user = nil
+
+    if ENV['SANDBOX'] == true
+      @current_user = User.new({ 'uid' => 'sandbox', 'email' => 'sandbox@sandbox.com', 'trust_levels' => { 'plant' => 2 } })
+      return
+    end
+
+    authenticate_with_http_token do |token, _options|
+      jwt_payload = JWT.decode(
+        token,
+        ENV['APPLICATION_JWT_SECRET'],
+        true,
+        { algorithm: ENV['APPLICATION_JWT_ALGORITHM']}
+      )
+      @current_user = User.new(jwt_payload[0]['user'])
+    rescue JWT::DecodeError => e
+      render json: JSON.pretty_generate(create_error_body(e.message, 401)), status: 401
+    end
   end
+end
+
+def create_error_body(message, code)
+  {
+    data: nil,
+    errors: [
+      {
+        message: "Token Error: #{message}",
+        extensions: {
+          code: code
+        }
+      }
+    ]
+  }
 end
