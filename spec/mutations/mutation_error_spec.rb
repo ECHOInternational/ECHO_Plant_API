@@ -163,8 +163,8 @@ RSpec.describe 'Mutation Error' do
         imageable_id = PlantApiSchema.id_from_object(imageable, Category, {})
         attr_a = create(:image_attribute)
         attr_a_id = PlantApiSchema.id_from_object(attr_a, ImageAttribute, {})
-        attr_b_id = "#{attr_a_id[0...-4]}fake"
-        attr_c_id = "#{attr_a_id[0...-4]}fike"
+        @attr_b_id = "#{attr_a_id[0...-4]}fake"
+        @attr_c_id = "#{attr_a_id[0...-4]}fike"
         @result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
                                            input: {
                                              imageId: image_id,
@@ -173,7 +173,7 @@ RSpec.describe 'Mutation Error' do
                                              key: 'a file name',
                                              name: 'newly created record',
                                              description: 'with an attached description',
-                                             imageAttributeIds: [attr_a_id, attr_b_id, attr_c_id]
+                                             imageAttributeIds: [attr_a_id, @attr_b_id, @attr_c_id]
                                            }
                                          })
         @errors = @result['data']['createImage']['errors']
@@ -182,12 +182,34 @@ RSpec.describe 'Mutation Error' do
       it 'returns multiple error objects' do
         expect(@errors.count).to eq 3
       end
-    end
-    context 'when a record is not found' do
-      it 'contains a field key that matches a graphql field name'
-      it 'contains a value key with the record id that was not found'
-      it 'contains a message key'
-      it 'contains a code key with value 404'
+      context 'when a an existing id is submitted' do
+        it 'returns an error with code 400' do
+          error_array = @errors.select { |error| error['code'] == 400 }
+          expect(error_array.count).to eq 1
+          expect(error_array[0]['field']).to eq 'imageId'
+        end
+      end
+      context 'when not-required related records are not found' do
+        before :each do
+          @error_array = @errors.select { |error| error['code'] == 404 }
+        end
+        it 'contains a field key that matches a graphql field name' do
+          expect(@error_array.count).to eq 2
+          expect(@error_array[0]['field']).to eq 'imageAttributeIds'
+          expect(@error_array[1]['field']).to eq 'imageAttributeIds'
+        end
+        it 'contains a value key with the record id that was not found' do
+          expect(@error_array.count).to eq 2
+          values = @error_array.map { |error| error['value'] }
+          expect(values).to include @attr_b_id
+          expect(values).to include @attr_c_id
+        end
+        it 'contains a message key' do
+          expect(@error_array.count).to eq 2
+          expect(@error_array[0]['message']).to_not be nil
+          expect(@error_array[1]['message']).to_not be nil
+        end
+      end
     end
   end
 end
