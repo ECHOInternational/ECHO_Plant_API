@@ -43,6 +43,7 @@ RSpec.describe 'Category Query', type: :graphql_query do
     result = PlantApiSchema.execute(query_string, variables: { id: category_id })
     expect(result['data']['category']).to be nil
     expect(result['errors'].count).to eq 1
+    expect(result['errors'][0]['extensions']['code']).to eq 404
   end
 
   context 'when user is authenticated' do

@@ -22,13 +22,15 @@ RSpec.describe 'Delete Image Mutation', type: :graphql_mutation do
     let(:current_user) { nil }
     it 'returns an error when called' do
       image_id = PlantApiSchema.id_from_object(image, Image, {})
-      expect {
-        PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
-                                 input: {
-                                   imageId: image_id
-                                 }
-                               })
-      }.to raise_error(Pundit::NotAuthorizedError)
+      result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                        input: {
+                                          imageId: image_id
+                                        }
+                                      })
+      expect(result['data']).to be_nil
+      expect(result['errors']).to_not be_nil
+      expect(result['errors'].count).to eq 1
+      expect(result['errors'][0]['extensions']['code']).to eq 401
     end
   end
 
@@ -36,13 +38,15 @@ RSpec.describe 'Delete Image Mutation', type: :graphql_mutation do
     let(:current_user) { build(:user, :readonly) }
     it 'returns an error when called' do
       image_id = PlantApiSchema.id_from_object(image, Image, {})
-      expect {
-        PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
-                                 input: {
-                                   imageId: image_id
-                                 }
-                               })
-      }.to raise_error(Pundit::NotAuthorizedError)
+      result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                        input: {
+                                          imageId: image_id
+                                        }
+                                      })
+      expect(result['data']).to be_nil
+      expect(result['errors']).to_not be_nil
+      expect(result['errors'].count).to eq 1
+      expect(result['errors'][0]['extensions']['code']).to eq 403
     end
   end
 
@@ -54,13 +58,15 @@ RSpec.describe 'Delete Image Mutation', type: :graphql_mutation do
       let(:image) { create(:image, owned_by: 'notme', created_by: 'notme', name: 'a name', description: 'a description') }
       it 'raises an error' do
         @image_id = PlantApiSchema.id_from_object(image, Image, {})
-        expect {
-          PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
-                                   input: {
-                                     imageId: @image_id
-                                   }
-                                 })
-        }.to raise_error(Pundit::NotAuthorizedError)
+        result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                          input: {
+                                            imageId: @image_id
+                                          }
+                                        })
+        expect(result['data']).to be_nil
+        expect(result['errors']).to_not be_nil
+        expect(result['errors'].count).to eq 1
+        expect(result['errors'][0]['extensions']['code']).to eq 403
       end
     end
     context 'when user owns the record' do
