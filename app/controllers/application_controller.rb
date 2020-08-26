@@ -23,7 +23,9 @@ class ApplicationController < ActionController::API
     @current_user = nil
 
     if ENV['SANDBOX'] == true
-      @current_user = User.new({ 'uid' => 'sandbox', 'email' => 'sandbox@sandbox.com', 'trust_levels' => { 'plant' => 2 } })
+      @current_user = User.new(
+        { 'uid' => 'sandbox', 'email' => 'sandbox@sandbox.com', 'trust_levels' => { 'plant' => 2 } }
+      )
       return
     end
 
@@ -32,7 +34,7 @@ class ApplicationController < ActionController::API
         token,
         ENV['APPLICATION_JWT_SECRET'],
         true,
-        { algorithm: ENV['APPLICATION_JWT_ALGORITHM']}
+        { algorithm: ENV['APPLICATION_JWT_ALGORITHM'] }
       )
       @current_user = User.new(jwt_payload[0]['user'])
     rescue JWT::DecodeError => e
