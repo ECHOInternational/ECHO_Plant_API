@@ -34,30 +34,42 @@ RSpec.describe 'Create Category Mutation', type: :graphql_mutation do
   context 'when user is not authenticated' do
     let(:current_user) { nil }
     it 'returns an error when called' do
-      expect {
-        PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
-                                 input: {
-                                   name: 'newly created record',
-                                   description: 'with an attached description',
-                                   language: 'en'
-                                 }
-                               })
-      }.to raise_error(Pundit::NotAuthorizedError)
+      result = PlantApiSchema.execute(
+        query_string,
+        context: { current_user: current_user },
+        variables: {
+          input: {
+            name: 'newly created record',
+            description: 'with an attached description',
+            language: 'en'
+          }
+        }
+      )
+      expect(result['data']).to be_nil
+      expect(result['errors']).to_not be_nil
+      expect(result['errors'].count).to eq 1
+      expect(result['errors'][0]['extensions']['code']).to eq 401
     end
   end
 
   context 'when user is read only' do
     let(:current_user) { build(:user, :readonly) }
     it 'returns an error when called' do
-      expect {
-        PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
-                                 input: {
-                                   name: 'newly created record',
-                                   description: 'with an attached description',
-                                   language: 'en'
-                                 }
-                               })
-      }.to raise_error(Pundit::NotAuthorizedError)
+      result = PlantApiSchema.execute(
+        query_string,
+        context: { current_user: current_user },
+        variables: {
+          input: {
+            name: 'newly created record',
+            description: 'with an attached description',
+            language: 'en'
+          }
+        }
+      )
+      expect(result['data']).to be_nil
+      expect(result['errors']).to_not be_nil
+      expect(result['errors'].count).to eq 1
+      expect(result['errors'][0]['extensions']['code']).to eq 403
     end
   end
 

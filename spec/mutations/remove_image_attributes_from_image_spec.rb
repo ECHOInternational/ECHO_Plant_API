@@ -51,14 +51,16 @@ RSpec.describe 'Remove Image Attributes From Image Mutation', type: :graphql_mut
     it 'returns an error when called' do
       image_id = PlantApiSchema.id_from_object(image, Image, {})
       image_attribute_a_id = PlantApiSchema.id_from_object(image_attribute_a, ImageAttribute, {})
-      expect {
-        PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
-                                 input: {
-                                   imageId: image_id,
-                                   imageAttributeIds: [image_attribute_a_id]
-                                 }
-                               })
-      }.to raise_error(Pundit::NotAuthorizedError)
+      result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                        input: {
+                                          imageId: image_id,
+                                          imageAttributeIds: [image_attribute_a_id]
+                                        }
+                                      })
+      expect(result['data']).to be_nil
+      expect(result['errors']).to_not be_nil
+      expect(result['errors'].count).to eq 1
+      expect(result['errors'][0]['extensions']['code']).to eq 401
     end
   end
 
@@ -67,14 +69,16 @@ RSpec.describe 'Remove Image Attributes From Image Mutation', type: :graphql_mut
     it 'returns an error when called' do
       image_id = PlantApiSchema.id_from_object(image, Image, {})
       image_attribute_a_id = PlantApiSchema.id_from_object(image_attribute_a, ImageAttribute, {})
-      expect {
-        PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
-                                 input: {
-                                   imageId: image_id,
-                                   imageAttributeIds: [image_attribute_a_id]
-                                 }
-                               })
-      }.to raise_error(Pundit::NotAuthorizedError)
+      result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                        input: {
+                                          imageId: image_id,
+                                          imageAttributeIds: [image_attribute_a_id]
+                                        }
+                                      })
+      expect(result['data']).to be_nil
+      expect(result['errors']).to_not be_nil
+      expect(result['errors'].count).to eq 1
+      expect(result['errors'][0]['extensions']['code']).to eq 403
     end
   end
 
@@ -86,14 +90,16 @@ RSpec.describe 'Remove Image Attributes From Image Mutation', type: :graphql_mut
       it 'raises an error' do
         image_id = PlantApiSchema.id_from_object(image, Image, {})
         image_attribute_a_id = PlantApiSchema.id_from_object(image_attribute_a, ImageAttribute, {})
-        expect {
-          PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
-                                   input: {
-                                     imageId: image_id,
-                                     imageAttributeIds: [image_attribute_a_id]
-                                   }
-                                 })
-        }.to raise_error(Pundit::NotAuthorizedError)
+        result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                          input: {
+                                            imageId: image_id,
+                                            imageAttributeIds: [image_attribute_a_id]
+                                          }
+                                        })
+        expect(result['data']).to be_nil
+        expect(result['errors']).to_not be_nil
+        expect(result['errors'].count).to eq 1
+        expect(result['errors'][0]['extensions']['code']).to eq 403
       end
     end
     context 'when user owns the record' do

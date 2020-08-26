@@ -44,7 +44,9 @@ RSpec.describe 'Add Image Attributes To Image Mutation', type: :graphql_mutation
       expect(result).to include 'data'
       expect(result).to include 'errors'
       expect(result['data']).to be nil
-      expect(result['errors'].length).to eq 1
+      expect(result['errors']).to_not be_nil
+      expect(result['errors'].count).to eq 1
+      expect(result['errors'][0]['extensions']['code']).to eq 404
     end
   end
 
@@ -54,14 +56,17 @@ RSpec.describe 'Add Image Attributes To Image Mutation', type: :graphql_mutation
       it 'returns an error when called' do
         image_id = PlantApiSchema.id_from_object(image, Image, {})
         attr_a_id = PlantApiSchema.id_from_object(attr_a, ImageAttribute, {})
-        expect {
-          PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
-                                   input: {
-                                     imageId: image_id,
-                                     imageAttributeIds: [attr_a_id]
-                                   }
-                                 })
-        }.to raise_error(Pundit::NotAuthorizedError)
+        result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                          input: {
+                                            imageId: image_id,
+                                            imageAttributeIds: [attr_a_id]
+                                          }
+                                        })
+
+        expect(result['data']).to be_nil
+        expect(result['errors']).to_not be_nil
+        expect(result['errors'].count).to eq 1
+        expect(result['errors'][0]['extensions']['code']).to eq 401
       end
     end
 
@@ -70,14 +75,17 @@ RSpec.describe 'Add Image Attributes To Image Mutation', type: :graphql_mutation
       it 'returns an error when called' do
         image_id = PlantApiSchema.id_from_object(image, Image, {})
         attr_a_id = PlantApiSchema.id_from_object(attr_a, ImageAttribute, {})
-        expect {
-          PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
-                                   input: {
-                                     imageId: image_id,
-                                     imageAttributeIds: [attr_a_id]
-                                   }
-                                 })
-        }.to raise_error(Pundit::NotAuthorizedError)
+        result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                          input: {
+                                            imageId: image_id,
+                                            imageAttributeIds: [attr_a_id]
+                                          }
+                                        })
+
+        expect(result['data']).to be_nil
+        expect(result['errors']).to_not be_nil
+        expect(result['errors'].count).to eq 1
+        expect(result['errors'][0]['extensions']['code']).to eq 403
       end
     end
 
@@ -90,14 +98,17 @@ RSpec.describe 'Add Image Attributes To Image Mutation', type: :graphql_mutation
         it 'raises an error' do
           image_id = PlantApiSchema.id_from_object(image, Image, {})
           attr_a_id = PlantApiSchema.id_from_object(attr_a, ImageAttribute, {})
-          expect {
-            PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
-                                     input: {
-                                       imageId: image_id,
-                                       imageAttributeIds: [attr_a_id]
-                                     }
-                                   })
-          }.to raise_error(Pundit::NotAuthorizedError)
+          result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                            input: {
+                                              imageId: image_id,
+                                              imageAttributeIds: [attr_a_id]
+                                            }
+                                          })
+
+          expect(result['data']).to be_nil
+          expect(result['errors']).to_not be_nil
+          expect(result['errors'].count).to eq 1
+          expect(result['errors'][0]['extensions']['code']).to eq 403
         end
       end
       context 'when user owns the record' do

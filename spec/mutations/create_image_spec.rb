@@ -41,19 +41,22 @@ RSpec.describe 'Create Image Mutation', type: :graphql_mutation do
     let(:imageable) { create(:category) }
     it 'returns an error when called' do
       imageable_id = PlantApiSchema.id_from_object(imageable, Category, {})
-      expect {
-        PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
-                                 input: {
-                                   imageId: 'da5818be-da49-428f-87e6-e944dbb502f9',
-                                   objectId: imageable_id,
-                                   bucket: 'images.us-east-1.echocommunity.org',
-                                   key: 'a file name',
-                                   name: 'newly created record',
-                                   description: 'with an attached description',
-                                   language: 'en'
-                                 }
-                               })
-      }.to raise_error(Pundit::NotAuthorizedError)
+
+      result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                        input: {
+                                          imageId: 'da5818be-da49-428f-87e6-e944dbb502f9',
+                                          objectId: imageable_id,
+                                          bucket: 'images.us-east-1.echocommunity.org',
+                                          key: 'a file name',
+                                          name: 'newly created record',
+                                          description: 'with an attached description',
+                                          language: 'en'
+                                        }
+                                      })
+      expect(result['data']).to be_nil
+      expect(result['errors']).to_not be_nil
+      expect(result['errors'].count).to eq 1
+      expect(result['errors'][0]['extensions']['code']).to eq 401
     end
   end
 
@@ -62,19 +65,21 @@ RSpec.describe 'Create Image Mutation', type: :graphql_mutation do
     let(:imageable) { create(:category) }
     it 'returns an error when called' do
       imageable_id = PlantApiSchema.id_from_object(imageable, Category, {})
-      expect {
-        PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
-                                 input: {
-                                   imageId: 'da5818be-da49-428f-87e6-e944dbb502f9',
-                                   objectId: imageable_id,
-                                   bucket: 'images.us-east-1.echocommunity.org',
-                                   key: 'a file name',
-                                   name: 'newly created record',
-                                   description: 'with an attached description',
-                                   language: 'en'
-                                 }
-                               })
-      }.to raise_error(Pundit::NotAuthorizedError)
+      result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                        input: {
+                                          imageId: 'da5818be-da49-428f-87e6-e944dbb502f9',
+                                          objectId: imageable_id,
+                                          bucket: 'images.us-east-1.echocommunity.org',
+                                          key: 'a file name',
+                                          name: 'newly created record',
+                                          description: 'with an attached description',
+                                          language: 'en'
+                                        }
+                                      })
+      expect(result['data']).to be_nil
+      expect(result['errors']).to_not be_nil
+      expect(result['errors'].count).to eq 1
+      expect(result['errors'][0]['extensions']['code']).to eq 403
     end
   end
 

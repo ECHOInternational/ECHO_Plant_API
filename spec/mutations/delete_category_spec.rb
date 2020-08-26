@@ -25,13 +25,15 @@ RSpec.describe 'Delete Category Mutation', type: :graphql_mutation do
     let(:current_user) { nil }
     it 'returns an error when called' do
       category_id = PlantApiSchema.id_from_object(category, Category, {})
-      expect {
-        PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
-                                 input: {
-                                   categoryId: category_id
-                                 }
-                               })
-      }.to raise_error(Pundit::NotAuthorizedError)
+      result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                        input: {
+                                          categoryId: category_id
+                                        }
+                                      })
+      expect(result['data']).to be_nil
+      expect(result['errors']).to_not be_nil
+      expect(result['errors'].count).to eq 1
+      expect(result['errors'][0]['extensions']['code']).to eq 401
     end
   end
 
@@ -39,13 +41,15 @@ RSpec.describe 'Delete Category Mutation', type: :graphql_mutation do
     let(:current_user) { build(:user, :readonly) }
     it 'returns an error when called' do
       category_id = PlantApiSchema.id_from_object(category, Category, {})
-      expect {
-        PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
-                                 input: {
-                                   categoryId: category_id
-                                 }
-                               })
-      }.to raise_error(Pundit::NotAuthorizedError)
+      result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                        input: {
+                                          categoryId: category_id
+                                        }
+                                      })
+      expect(result['data']).to be_nil
+      expect(result['errors']).to_not be_nil
+      expect(result['errors'].count).to eq 1
+      expect(result['errors'][0]['extensions']['code']).to eq 403
     end
   end
 
@@ -57,13 +61,15 @@ RSpec.describe 'Delete Category Mutation', type: :graphql_mutation do
       let(:category) { create(:category, owned_by: 'notme', created_by: 'notme', name: 'a name', description: 'a description') }
       it 'raises an error' do
         @category_id = PlantApiSchema.id_from_object(category, Category, {})
-        expect {
-          PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
-                                   input: {
-                                     categoryId: @category_id
-                                   }
-                                 })
-        }.to raise_error(Pundit::NotAuthorizedError)
+        result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                          input: {
+                                            categoryId: @category_id
+                                          }
+                                        })
+        expect(result['data']).to be_nil
+        expect(result['errors']).to_not be_nil
+        expect(result['errors'].count).to eq 1
+        expect(result['errors'][0]['extensions']['code']).to eq 403
       end
     end
     context 'when user owns the record' do

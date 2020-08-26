@@ -38,15 +38,17 @@ RSpec.describe 'Update Image Mutation', type: :graphql_mutation do
     let(:current_user) { nil }
     it 'returns an error when called' do
       image_id = PlantApiSchema.id_from_object(image, Image, {})
-      expect {
-        PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
-                                 input: {
-                                   imageId: image_id,
-                                   name: 'changing record',
-                                   description: 'with a description change'
-                                 }
-                               })
-      }.to raise_error(Pundit::NotAuthorizedError)
+      result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                        input: {
+                                          imageId: image_id,
+                                          name: 'changing record',
+                                          description: 'with a description change'
+                                        }
+                                      })
+      expect(result['data']).to be_nil
+      expect(result['errors']).to_not be_nil
+      expect(result['errors'].count).to eq 1
+      expect(result['errors'][0]['extensions']['code']).to eq 401
     end
   end
 
@@ -54,15 +56,17 @@ RSpec.describe 'Update Image Mutation', type: :graphql_mutation do
     let(:current_user) { build(:user, :readonly) }
     it 'returns an error when called' do
       image_id = PlantApiSchema.id_from_object(image, Image, {})
-      expect {
-        PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
-                                 input: {
-                                   imageId: image_id,
-                                   name: 'newly created record',
-                                   description: 'with an attached description'
-                                 }
-                               })
-      }.to raise_error(Pundit::NotAuthorizedError)
+      result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                        input: {
+                                          imageId: image_id,
+                                          name: 'newly created record',
+                                          description: 'with an attached description'
+                                        }
+                                      })
+      expect(result['data']).to be_nil
+      expect(result['errors']).to_not be_nil
+      expect(result['errors'].count).to eq 1
+      expect(result['errors'][0]['extensions']['code']).to eq 403
     end
   end
 
@@ -74,16 +78,18 @@ RSpec.describe 'Update Image Mutation', type: :graphql_mutation do
       let(:image) { create(:image, owned_by: 'notme', created_by: 'notme', name: 'a name', description: 'a description') }
       it 'raises an error' do
         @image_id = PlantApiSchema.id_from_object(image, Image, {})
-        expect {
-          PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
-                                   input: {
-                                     imageId: @image_id,
-                                     name: 'updated record to this',
-                                     description: 'and updated the description',
-                                     language: 'en'
-                                   }
-                                 })
-        }.to raise_error(Pundit::NotAuthorizedError)
+        result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                          input: {
+                                            imageId: @image_id,
+                                            name: 'updated record to this',
+                                            description: 'and updated the description',
+                                            language: 'en'
+                                          }
+                                        })
+        expect(result['data']).to be_nil
+        expect(result['errors']).to_not be_nil
+        expect(result['errors'].count).to eq 1
+        expect(result['errors'][0]['extensions']['code']).to eq 403
       end
     end
     context 'when user owns the record' do

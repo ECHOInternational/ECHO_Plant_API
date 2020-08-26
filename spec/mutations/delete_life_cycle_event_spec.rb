@@ -25,13 +25,15 @@ RSpec.describe 'Delete Life Cycle Event Mutation', type: :graphql_mutation do
     let(:current_user) { nil }
     it 'returns an error when called' do
       life_cycle_event_id = PlantApiSchema.id_from_object(life_cycle_event, LifeCycleEvent, {})
-      expect {
-        PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
-                                 input: {
-                                   lifeCycleEventId: life_cycle_event_id
-                                 }
-                               })
-      }.to raise_error(Pundit::NotAuthorizedError)
+      result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                        input: {
+                                          lifeCycleEventId: life_cycle_event_id
+                                        }
+                                      })
+      expect(result['data']).to be_nil
+      expect(result['errors']).to_not be_nil
+      expect(result['errors'].count).to eq 1
+      expect(result['errors'][0]['extensions']['code']).to eq 401
     end
   end
 
@@ -39,13 +41,15 @@ RSpec.describe 'Delete Life Cycle Event Mutation', type: :graphql_mutation do
     let(:current_user) { build(:user, :readonly) }
     it 'returns an error when called' do
       life_cycle_event_id = PlantApiSchema.id_from_object(life_cycle_event, LifeCycleEvent, {})
-      expect {
-        PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
-                                 input: {
-                                   lifeCycleEventId: life_cycle_event_id
-                                 }
-                               })
-      }.to raise_error(Pundit::NotAuthorizedError)
+      result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                        input: {
+                                          lifeCycleEventId: life_cycle_event_id
+                                        }
+                                      })
+      expect(result['data']).to be_nil
+      expect(result['errors']).to_not be_nil
+      expect(result['errors'].count).to eq 1
+      expect(result['errors'][0]['extensions']['code']).to eq 403
     end
   end
 
@@ -58,13 +62,15 @@ RSpec.describe 'Delete Life Cycle Event Mutation', type: :graphql_mutation do
       let(:specimen) { build(:specimen, owned_by: 'notme') }
       it 'raises an error' do
         @life_cycle_event_id = PlantApiSchema.id_from_object(life_cycle_event, LifeCycleEvent, {})
-        expect {
-          PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
-                                   input: {
-                                     lifeCycleEventId: @life_cycle_event_id
-                                   }
-                                 })
-        }.to raise_error(Pundit::NotAuthorizedError)
+        result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                          input: {
+                                            lifeCycleEventId: @life_cycle_event_id
+                                          }
+                                        })
+        expect(result['data']).to be_nil
+        expect(result['errors']).to_not be_nil
+        expect(result['errors'].count).to eq 1
+        expect(result['errors'][0]['extensions']['code']).to eq 403
       end
     end
     context 'when user owns the record' do
