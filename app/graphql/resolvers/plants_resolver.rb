@@ -24,6 +24,10 @@ module Resolvers
            type: String,
            with: :apply_scientific_name_filter,
            description: 'Performs a case-insensitive LIKE match on scientific names'
+    option :any_name,
+           type: String,
+           with: :apply_any_name_filter,
+           description: 'Performs a case-insensitive LIKE match on all name fields'
     option :visibility,
            type: Types::VisibilityEnum,
            default: :visible
@@ -83,6 +87,15 @@ module Resolvers
       return scope if value.blank?
 
       scope.where('scientific_name iLIKE ?', "%#{value}%")
+    end
+
+    def apply_any_name_filter(scope, value)
+      return scope if value.blank?
+
+      scope
+        .includes(:common_names)
+        .where('common_names.name iLIKE :search OR scientific_name iLIKE :search', { search: "%#{value}%" })
+        .references(:common_names)
     end
 
     def apply_language_filter(scope, _value)
