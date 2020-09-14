@@ -7,7 +7,7 @@ module Types
     implements GraphQL::Types::Relay::Node
     implements Types::LifeCycleEventType
 
-    description 'DESCRIPTION NEEDED'
+    description 'Actions taken to apply a protective covering on the soil to preserve moisture/fertility '
 
     def images
       Pundit.policy_scope(context[:current_user], @object.images)

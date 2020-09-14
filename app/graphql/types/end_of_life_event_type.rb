@@ -7,7 +7,7 @@ module Types
     implements GraphQL::Types::Relay::Node
     implements Types::LifeCycleEventType
 
-    description 'DESCRIPTION NEEDED'
+    description 'Actions taken when plant(s) stop producing - at least notation of such'
 
     def images
       Pundit.policy_scope(context[:current_user], @object.images)

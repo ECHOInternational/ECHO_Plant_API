@@ -7,7 +7,7 @@ module Types
     implements GraphQL::Types::Relay::Node
     implements Types::LifeCycleEventType
 
-    description 'DESCRIPTION NEEDED'
+    description 'Actions taken concerning Lifecycle Events not in the list'
 
     def images
       Pundit.policy_scope(context[:current_user], @object.images)

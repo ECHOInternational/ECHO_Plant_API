@@ -5,13 +5,13 @@ module Types
   module LifeCycleEventType
     include Types::BaseInterface
 
-    description 'DESCRIPTION NEEDED'
+    description 'Notation of Plant Lifecycle Events from planting to end-of-life'
 
     field :id, ID,
           null: false
 
     field :uuid, ID,
-          description: 'The internal database ID for al life cycle event',
+          description: 'The internal database ID for all life cycle events',
           null: false,
           method: :id
 

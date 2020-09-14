@@ -7,18 +7,18 @@ module Types
     implements GraphQL::Types::Relay::Node
     implements Types::LifeCycleEventType
 
-    description 'DESCRIPTION NEEDED'
+    description 'Creates a Acquire Life Cycle Event attached to the specified specimen'
 
     field :condition, Types::ConditionEnum,
-          description: 'DESCRIPTION NEEDED',
+          description: 'Describes the quality or condition of germplasm on receipt - good,fair,poor',
           null: false
 
     field :accession, String,
-          description: 'DESCRIPTION NEEDED',
+          description: 'Accession is a group of related plant material from a single species which is collected at one time from a specific location',
           null: true
 
     field :source, String,
-          description: 'DESCRIPTION NEEDED',
+          description: 'Where did the germplasm come from (ECHO Florida,ECHO Asia,ECHO Tanzania,Other',
           null: false
 
     def images

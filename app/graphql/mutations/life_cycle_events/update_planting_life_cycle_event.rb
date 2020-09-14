@@ -7,24 +7,24 @@ module Mutations
       description 'Updates a Planting Life Cycle Event'
 
       argument :location_id, ID,
-               description: 'DESCRIPTION NEEDED',
+               description: 'A location is an instance of a plant or a single group planting.',
                required: false,
                loads: Types::LocationType
 
       argument :quantity, Float,
-               description: 'DESCRIPTION NEEDED',
+               description: '# of plants or seeds in units',
                required: false
 
       argument :unit, Types::UnitEnum,
-               description: 'DESCRIPTION NEEDED',
+               description: 'Count or Weight(kg)',
                required: false
 
       argument :between_row_spacing, Integer,
-               description: 'DESCRIPTION NEEDED',
+               description: 'cm between rows',
                required: false
 
       argument :in_row_spacing, Integer,
-               description: 'DESCRIPTION NEEDED',
+               description: 'cm between plants',
                required: false
 
       field :planting_event, Types::PlantingEventType, null: true

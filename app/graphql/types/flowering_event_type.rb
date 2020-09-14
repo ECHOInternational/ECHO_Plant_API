@@ -7,10 +7,10 @@ module Types
     implements GraphQL::Types::Relay::Node
     implements Types::LifeCycleEventType
 
-    description 'DESCRIPTION NEEDED'
+    description 'Days to 50% Flowering'
 
     field :percent, Integer,
-          description: 'DESCRIPTION NEEDED',
+          description: 'Days to 50% flowering is determined by recording the number of days until 50% of plants in a plot had at least one open flower',
           null: true
 
     def images

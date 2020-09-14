@@ -7,7 +7,7 @@ module Mutations
       description 'Updates a Weather Life Cycle Event'
 
       argument :condition, Types::ConditionEnum,
-               description: 'DESCRIPTION NEEDED',
+               description: 'Describe unique weather conditions affecting plants or planting',
                required: false
 
       field :weather_event, Types::WeatherEventType, null: true

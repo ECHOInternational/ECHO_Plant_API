@@ -7,24 +7,24 @@ module Mutations
       description 'Creates a Movement Life Cycle Event attached to the specified specimen'
 
       argument :location_id, ID,
-               description: 'DESCRIPTION NEEDED',
+               description: 'A location is an instance of a plant or a single group planting. See ID',
                required: true,
                loads: Types::LocationType
 
       argument :quantity, Float,
-               description: 'DESCRIPTION NEEDED',
+               description: '# of plants moved (transplanted)',
                required: false
 
       argument :unit, Types::UnitEnum,
-               description: 'DESCRIPTION NEEDED',
+               description: 'Count or Weight(kg)',
                required: false
 
       argument :between_row_spacing, Integer,
-               description: 'DESCRIPTION NEEDED',
+               description: 'cm between rows',
                required: false
 
       argument :in_row_spacing, Integer,
-               description: 'DESCRIPTION NEEDED',
+               description: 'cm spacing between plants',
                required: false
 
       field :movement_event, Types::MovementEventType, null: true

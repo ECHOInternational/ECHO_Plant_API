@@ -7,15 +7,15 @@ module Mutations
       description 'Creates a Harvest Life Cycle Event attached to the specified specimen'
 
       argument :quantity, Float,
-               description: 'DESCRIPTION NEEDED',
+               description: 'Total harvest units for a single harvest event - may be multiple harvest events',
                required: true
 
       argument :unit, Types::UnitEnum,
-               description: 'DESCRIPTION NEEDED',
+               description: 'Indicates the unit of associated value (Weight in kg,Count)',
                required: true
 
       argument :quality, Integer,
-               description: 'DESCRIPTION NEEDED',
+               description: 'Rate 1-10, 10 best',
                required: true
 
       field :harvest_event, Types::HarvestEventType, null: true

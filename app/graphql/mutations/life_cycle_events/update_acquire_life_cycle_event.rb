@@ -4,18 +4,18 @@ module Mutations
   module LifeCycleEvents
     # Updates a Update Acquire Life Cycle Event
     class UpdateAcquireLifeCycleEvent < UpdateLifeCycleEventBaseMutation
-      description 'Updates a Acquire Life Cycle Event'
+      description 'Updates an Acquire Life Cycle Event'
 
       argument :condition, Types::ConditionEnum,
-               description: 'DESCRIPTION NEEDED',
+               description: 'Describes the quality or condition of germplasm on receipt - good,fair,poor',
                required: false
 
       argument :accession, String,
-               description: 'DESCRIPTION NEEDED',
+               description: 'Accession is a group of related plant material from a single species which is collected at one time from a specific location',
                required: false
 
       argument :source, String,
-               description: 'DESCRIPTION NEEDED',
+               description: 'Where did the germplasm come from (ECHO Florida,ECHO Asia,ECHO Tanzania,Other',
                required: false
 
       field :acquire_event, Types::AcquireEventType, null: true

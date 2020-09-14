@@ -7,7 +7,7 @@ module Mutations
       description 'Updates a Soil Preparation Life Cycle Event'
 
       argument :soil_preparation, Types::SoilPreparationEnum,
-               description: 'DESCRIPTION NEEDED',
+               description: 'Describes actions taken to prepare for planting',
                required: false
 
       field :soil_preparation_event, Types::SoilPreparationEventType, null: true

@@ -7,18 +7,18 @@ module Types
     implements GraphQL::Types::Relay::Node
     implements Types::LifeCycleEventType
 
-    description 'DESCRIPTION NEEDED'
+    description 'Creates a Harvest Life Cycle Event attached to the specified specimen'
 
     field :quantity, Float,
-          description: 'DESCRIPTION NEEDED',
+          description: 'Total harvest units for a single harvest event - may be multiple harvest events',
           null: false
 
     field :unit, Types::UnitEnum,
-          description: 'DESCRIPTION NEEDED',
+          description: 'Indicates the unit of associated value (Weight in kg,Count)',
           null: false
 
     field :quality, Integer,
-          description: 'DESCRIPTION NEEDED',
+          description: 'Rate 1-10, 10 best',
           null: false
 
     def images
