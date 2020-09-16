@@ -7,10 +7,10 @@ module Types
     implements GraphQL::Types::Relay::Node
     implements Types::LifeCycleEventType
 
-    description 'DESCRIPTION NEEDED'
+    description 'Notation of unique weather events affecting plants or planting'
 
     field :condition, Types::ConditionEnum,
-          description: 'DESCRIPTION NEEDED',
+          description: 'Describes the quality or condition of weather for plants or planting - good,fair,poor',
           null: true
 
     def images

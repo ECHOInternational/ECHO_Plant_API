@@ -7,26 +7,26 @@ module Types
     implements GraphQL::Types::Relay::Node
     implements Types::LifeCycleEventType
 
-    description 'DESCRIPTION NEEDED'
+    description 'Creates a Movement Life Cycle Event attached to the specified specimen'
 
     field :location, Types::LocationType,
-          description: 'DESCRIPTION NEEDED',
+          description: 'A location is an instance of a plant or a single group planting. See ID',
           null: false
 
     field :quantity, Float,
-          description: 'DESCRIPTION NEEDED',
+          description: '# of plants moved (transplanted)',
           null: true
 
     field :unit, Types::UnitEnum,
-          description: 'DESCRIPTION NEEDED',
+          description: 'Count or Weight(kg)',
           null: true
 
     field :between_row_spacing, Integer,
-          description: 'DESCRIPTION NEEDED',
+          description: 'cm between rows',
           null: true
 
     field :in_row_spacing, Integer,
-          description: 'DESCRIPTION NEEDED',
+          description: 'cm spacing between plants',
           null: true
 
     def images

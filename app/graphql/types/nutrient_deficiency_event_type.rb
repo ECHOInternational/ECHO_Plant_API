@@ -7,7 +7,7 @@ module Types
     implements GraphQL::Types::Relay::Node
     implements Types::LifeCycleEventType
 
-    description 'DESCRIPTION NEEDED'
+    description 'Actions taken when nutrient deficiencies are observed'
 
     def images
       Pundit.policy_scope(context[:current_user], @object.images)

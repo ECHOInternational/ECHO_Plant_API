@@ -7,11 +7,11 @@ module Mutations
       description 'Updates a Germination Life Cycle Event'
 
       argument :percent, Integer,
-               description: 'DESCRIPTION NEEDED',
+               description: 'Germination percentage is an estimate of the viability of a population of seeds',
                required: false
 
       argument :quality, Integer,
-               description: 'DESCRIPTION NEEDED',
+               description: 'Rate 1-10, 10 best',
                required: false
 
       field :germination_event, Types::GerminationEventType, null: true

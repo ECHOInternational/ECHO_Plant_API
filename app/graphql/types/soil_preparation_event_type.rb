@@ -7,10 +7,10 @@ module Types
     implements GraphQL::Types::Relay::Node
     implements Types::LifeCycleEventType
 
-    description 'DESCRIPTION NEEDED'
+    description 'Describes actions taken to prepare for planting'
 
     field :soil_preparation, Types::SoilPreparationEnum,
-          description: 'DESCRIPTION NEEDED',
+          description: 'Indicates a type of soil preparation',
           null: false
 
     def images

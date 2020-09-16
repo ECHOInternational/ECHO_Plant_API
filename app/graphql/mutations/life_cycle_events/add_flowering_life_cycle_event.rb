@@ -7,7 +7,7 @@ module Mutations
       description 'Creates a Flowering Life Cycle Event attached to the specified specimen'
 
       argument :percent, Integer,
-               description: 'DESCRIPTION NEEDED',
+               description: 'Days to 50% flowering is determined by recording the number of days until 50% of plants in a plot had at least one open flower',
                required: false
 
       field :flowering_event, Types::FloweringEventType, null: true

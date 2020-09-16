@@ -7,15 +7,15 @@ module Mutations
       description 'Creates a Acquire Life Cycle Event attached to the specified specimen'
 
       argument :condition, Types::ConditionEnum,
-               description: 'DESCRIPTION NEEDED',
+               description: 'Describes the quality or condition of the germplasm on receipt - good,fair,poor',
                required: true
 
       argument :accession, String,
-               description: 'DESCRIPTION NEEDED',
+               description: 'An accession is a group of related plant material from a single species which is collected at one time from a specific location',
                required: false
 
       argument :source, String,
-               description: 'DESCRIPTION NEEDED',
+               description: 'Where was the germplasm ordered from (ECHO Florida,ECHO Asia,ECHO Tanzania,Other)',
                required: true
 
       field :acquire_event, Types::AcquireEventType, null: true
