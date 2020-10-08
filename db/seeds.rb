@@ -117,6 +117,8 @@ plants.each do |plant| # rubocop:disable Metrics/BlockLength
       values.each do |key, value|
         record.send("#{key}=", value) unless value.blank?
       end
+    rescue NoMethodError
+      # Do nothing
     end
   end
   record.save!
