@@ -21,7 +21,9 @@ class ApplicationController < ActionController::API
 
   def require_token
     @current_user = nil
-    puts ENV['APPLICATION_JWT_SECRET']
+    logger.warn("Should be below")
+    logger.warn(ENV['APPLICATION_JWT_SECRET'])
+    logger.warn("Should be above")
     public_key = OpenSSL::PKey::RSA.new(ENV['APPLICATION_JWT_SECRET'].gsub('\\n', '\n'))
 
     if ENV['SANDBOX'] == true
