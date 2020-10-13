@@ -11,7 +11,7 @@ module Mutations
              description: 'The visibility of the location'
     argument :soil_quality, Types::ConditionEnum,
              description: 'The general soil quality at the location',
-             required: false
+             required: true
     argument :latitude, Float,
              description: 'The latitude of the location',
              required: false
