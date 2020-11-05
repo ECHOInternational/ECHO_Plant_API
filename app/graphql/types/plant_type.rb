@@ -39,7 +39,7 @@ module Types
           method: :id
     field :scientific_name, String,
           description: 'The scientific name for a plant (always render italicized)',
-          null: false
+          null: true
     field :family_names, String,
           description: 'The family names for a plant',
           null: true

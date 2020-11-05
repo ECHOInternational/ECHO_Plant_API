@@ -29,8 +29,7 @@ class ApplicationController < ActionController::API
 SECRET
 
     public_key = OpenSSL::PKey::RSA.new(pub_key)
-
-    if ENV['SANDBOX'] == true
+    if ENV['SANDBOX'] == "true"
       @current_user = User.new(
         { 'uid' => 'sandbox', 'email' => 'sandbox@sandbox.com', 'trust_levels' => { 'plant' => 2 } }
       )

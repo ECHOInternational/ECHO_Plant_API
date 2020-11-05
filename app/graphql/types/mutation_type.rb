@@ -3,6 +3,24 @@
 module Types
   # Defines the available mutations for the Plant API
   class MutationType < Types::BaseObject # rubocop:disable Metrics/ClassLength
+    field :create_plant,
+          mutation: Mutations::CreatePlant,
+          description: 'Creates a plant'
+    field :delete_plant,
+          mutation: Mutations::DeletePlant,
+          description: 'Deletes a plant'
+    field :update_plant,
+          mutation: Mutations::UpdatePlant,
+          description: 'Updates a plant'
+    field :create_variety,
+          mutation: Mutations::CreateVariety,
+          description: 'Creates a variety'
+    field :delete_variety,
+          mutation: Mutations::DeleteVariety,
+          description: 'Deletes a variety'
+    field :update_variety,
+          mutation: Mutations::UpdateVariety,
+          description: 'Updates a variety'
     field :create_category,
           mutation: Mutations::CreateCategory,
           description: 'Creates a new plant category'

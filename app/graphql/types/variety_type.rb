@@ -9,7 +9,7 @@ module Types
     description 'A variety represents a more precisely defined subgroup of plants with a common set of characteristics.'
 
     field :name, String,
-          description: 'A translated Name for a Variety',
+          description: 'The name of the variety',
           null: true
     field :plant, Types::PlantType,
           description: 'The plant to which this variety belongs',
