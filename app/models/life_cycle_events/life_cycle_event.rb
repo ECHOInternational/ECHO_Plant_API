@@ -20,4 +20,8 @@ class LifeCycleEvent < ApplicationRecord
 
   belongs_to :specimen
   belongs_to :location, optional: true
+
+  def self.policy_class
+    LifeCycleEventPolicy
+  end
 end
