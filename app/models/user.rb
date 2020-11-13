@@ -26,7 +26,7 @@ class User
 
   def admin?
     # Can CRUD things with restricted ownership
-    @permissions['plant'] > 7
+    @permissions['plant'] > 8
   end
 
   def can_read?
