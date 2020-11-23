@@ -30,6 +30,15 @@ module Types
     field :datetime, GraphQL::Types::ISO8601DateTime,
           description: 'The date and time that the life cycle event took place',
           null: false
+
+    field :created_at, GraphQL::Types::ISO8601DateTime,
+          description: 'The date and time that the record was created',
+          null: false
+
+    field :updated_at, GraphQL::Types::ISO8601DateTime,
+          description: 'The date and time that the record was last updated',
+          null: false
+
     definition_methods do # rubocop:disable all
       def resolve_type(object, _context) #rubocop:disable all
         case object
