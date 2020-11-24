@@ -16,11 +16,11 @@ RSpec.describe User, type: :model do
     expect(user).to respond_to('super_admin?')
   end
   it 'is super administrator when plant permissions are high enough' do
-    user = build(:user, trust_levels: { 'plant' => 9 })
+    user = build(:user, trust_levels: { 'plant' => 10 })
     expect(user.super_admin?).to be true
   end
   it 'is not super administrator when plant permissions are not high enough' do
-    user = build(:user, trust_levels: { 'plant' => 8 })
+    user = build(:user, trust_levels: { 'plant' => 9 })
     expect(user.super_admin?).to be false
   end
   it 'responds to admin?' do
@@ -28,11 +28,11 @@ RSpec.describe User, type: :model do
     expect(user).to respond_to('admin?')
   end
   it 'is administrator when plant permissions are high enough' do
-    user = build(:user, trust_levels: { 'plant' => 8 })
+    user = build(:user, trust_levels: { 'plant' => 9 })
     expect(user.admin?).to be true
   end
   it 'is not administrator when plant permissions are not high enough' do
-    user = build(:user, trust_levels: { 'plant' => 7 })
+    user = build(:user, trust_levels: { 'plant' => 8 })
     expect(user.admin?).to be false
   end
   it 'responds to can_read?' do

@@ -172,6 +172,12 @@ module Types
     field :growth_habits_note, String,
           description: 'Translated full text description of the growth habits for a variety',
           null: true
+    field :created_at, GraphQL::Types::ISO8601DateTime,
+          description: 'The date and time that the record was created',
+          null: false
+    field :updated_at, GraphQL::Types::ISO8601DateTime,
+          description: 'The date and time that the record was last updated',
+          null: false
     # field :versions, Types::VarietyType::VarietyVersionConnectionWithTotalCountType, null: false, connection: true
 
     def images

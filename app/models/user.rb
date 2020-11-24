@@ -21,7 +21,7 @@ class User
   # 9 Can delete public records
 
   def super_admin?
-    @permissions['plant'] > 8
+    @permissions['plant'] > 9
   end
 
   def admin?

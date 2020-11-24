@@ -13,10 +13,10 @@ FactoryBot.define do
       trust_levels { { 'plant' => 2 } }
     end
     trait :admin do
-      trust_levels { { 'plant' => 8 } }
+      trust_levels { { 'plant' => 9 } }
     end
     trait :superadmin do
-      trust_levels { { 'plant' => 9 } }
+      trust_levels { { 'plant' => 10 } }
     end
   end
 end
