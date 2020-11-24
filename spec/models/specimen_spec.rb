@@ -28,6 +28,13 @@ RSpec.describe Specimen, type: :model do
     expect(specimen).to be_valid
     expect(specimen.visibility).to eq('private')
   end
+
+  it 'has a default evaluated_at of nil' do
+    specimen = build(:specimen)
+    expect(specimen).to be_valid
+    expect(specimen.evaluated_at).to be nil
+  end
+
   it 'can set visibility' do
     specimen = build(:specimen, :public)
     expect(specimen).to be_valid

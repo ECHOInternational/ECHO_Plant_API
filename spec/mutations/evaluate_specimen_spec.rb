@@ -24,6 +24,7 @@ RSpec.describe 'Evaluate Specimen Mutation', type: :graphql_mutation do
           willShareSeed
           willPlantAgain
           notes
+          evaluatedAt
         }
 			}
 		}
@@ -58,6 +59,7 @@ RSpec.describe 'Evaluate Specimen Mutation', type: :graphql_mutation do
       expect(success_result['savedSeed']).to eq true
       expect(success_result['willShareSeed']).to eq false
       expect(success_result['willPlantAgain']).to eq true
+      expect(success_result['evaluatedAt']).to be_a(String)
       expect(success_result['id']).to eq @specimen_id
 
       updated_event = Specimen.find success_result['uuid']
@@ -68,6 +70,7 @@ RSpec.describe 'Evaluate Specimen Mutation', type: :graphql_mutation do
       expect(updated_event.saved_seed?).to eq true
       expect(updated_event.will_share_seed?).to eq false
       expect(updated_event.will_plant_again?).to eq true
+      expect(updated_event.evaluated_at).to be_a(ActiveSupport::TimeWithZone)
     end
   end
   describe 'required parameters' do

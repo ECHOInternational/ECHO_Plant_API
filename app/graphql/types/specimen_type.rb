@@ -57,6 +57,9 @@ module Types
           description: 'A list of life cycle events for this specimen, ordered by date ascending',
           null: true,
           connection: true
+    field :evaluated_at, GraphQL::Types::ISO8601DateTime,
+          description: 'The date and time that the specimen was last evaluated',
+          null: true
 
     def life_cycle_events
       @object.life_cycle_events.order(datetime: :asc)
