@@ -372,7 +372,8 @@ CREATE TABLE public.specimens (
     notes text,
     visibility integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    evaluated_at timestamp without time zone
 );
 
 
@@ -1093,6 +1094,7 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20200819084701'),
 ('20200819224857'),
 ('20200820130907'),
-('20200820213248');
+('20200820213248'),
+('20201124141213');
 
 

@@ -32,6 +32,7 @@ module Mutations
     end
 
     def resolve(specimen:, **attributes)
+      attributes['evaluated_at'] = DateTime.now
       specimen.update(attributes)
       errors = errors_from_active_record(specimen.errors)
       {
