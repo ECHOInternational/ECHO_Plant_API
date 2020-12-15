@@ -21,6 +21,7 @@ RSpec.describe 'Update Composting Life Cycle Event Mutation', type: :graphql_mut
           uuid
           datetime
           notes
+          deleted
           specimen{
             id
           }
@@ -37,7 +38,8 @@ RSpec.describe 'Update Composting Life Cycle Event Mutation', type: :graphql_mut
                                          input: {
                                            datetime: '2014-07-16T19:23:00Z',
                                            notes: 'newly updated record',
-                                           lifeCycleEventId: @life_cycle_event_id
+                                           lifeCycleEventId: @life_cycle_event_id,
+                                           deleted: true
                                          }
                                        })
     end
@@ -50,12 +52,12 @@ RSpec.describe 'Update Composting Life Cycle Event Mutation', type: :graphql_mut
       success_result = @result['data']['updateCompostingEvent']['compostingEvent']
       expect(success_result['notes']).to eq 'newly updated record'
       expect(success_result['id']).to eq @life_cycle_event_id
+      expect(success_result['deleted']).to eq true
 
       updated_event = LifeCycleEvent.find success_result['uuid']
       expect(updated_event).to_not be nil
       expect(updated_event.notes).to eq 'newly updated record'
+      expect(updated_event.deleted).to be true
     end
-  end
-  describe 'required parameters' do
   end
 end

@@ -14,7 +14,9 @@ module Mutations
       argument :notes, String,
                description: 'Full text notes for a life cycle event',
                required: false
-
+      argument :deleted, Boolean,
+               description: 'Sets whether the life cycle event has been soft deleted',
+               required: false
       field :errors, [Types::MutationError], null: false
 
       def authorized?(life_cycle_event:, **_attributes)

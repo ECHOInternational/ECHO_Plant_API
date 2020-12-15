@@ -12,6 +12,7 @@ RSpec.describe 'Life Cycle Event Query', type: :graphql_query do
           id
           datetime
           notes
+          deleted
           specimen{
             id
           }
@@ -29,6 +30,7 @@ RSpec.describe 'Life Cycle Event Query', type: :graphql_query do
       expect(life_cycle_event_result['id']).to eq composting_event_id
       expect(life_cycle_event_result['notes']).to eq 'loaded by id'
       expect(life_cycle_event_result['__typename']).to eq 'CompostingEvent'
+      expect(life_cycle_event_result['deleted']).to be false
     end
   end
 end

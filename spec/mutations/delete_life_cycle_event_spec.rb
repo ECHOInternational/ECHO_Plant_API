@@ -79,7 +79,10 @@ RSpec.describe 'Delete Life Cycle Event Mutation', type: :graphql_mutation do
       end
       it 'deletes the record' do
         record_id = life_cycle_event.id
-        expect { LifeCycleEvent.find record_id }.to_not raise_error(ActiveRecord::RecordNotFound)
+        record = LifeCycleEvent.find record_id
+        expect(record).to_not be_nil
+        expect(record.deleted).to be false
+        # expect { LifeCycleEvent.find record_id }.to_not raise_error(ActiveRecord::RecordNotFound)
         result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
                                           input: {
                                             lifeCycleEventId: @life_cycle_event_id
@@ -89,7 +92,8 @@ RSpec.describe 'Delete Life Cycle Event Mutation', type: :graphql_mutation do
         expect(result).to include 'data'
         expect(result['data']['deleteLifeCycleEvent']).to include 'lifeCycleEventId'
         expect(result['data']['deleteLifeCycleEvent']['lifeCycleEventId']).to eq @life_cycle_event_id
-        expect { LifeCycleEvent.find record_id }.to raise_error(ActiveRecord::RecordNotFound)
+        record.reload
+        expect(record.deleted).to be true
       end
     end
   end
