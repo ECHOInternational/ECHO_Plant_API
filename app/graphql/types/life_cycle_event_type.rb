@@ -31,6 +31,10 @@ module Types
           description: 'The date and time that the life cycle event took place',
           null: false
 
+    field :deleted, Boolean,
+          description: 'Indicates if the lifecycle event has been soft-deleted.',
+          null: false
+
     field :created_at, GraphQL::Types::ISO8601DateTime,
           description: 'The date and time that the record was created',
           null: false

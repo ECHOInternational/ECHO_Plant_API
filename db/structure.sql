@@ -285,7 +285,8 @@ CREATE TABLE public.life_cycle_events (
     in_row_spacing integer,
     soil_preparation public.soil_preparation,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    deleted boolean DEFAULT false
 );
 
 
@@ -1095,6 +1096,7 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20200819224857'),
 ('20200820130907'),
 ('20200820213248'),
-('20201124141213');
+('20201124141213'),
+('20201215144824');
 
 

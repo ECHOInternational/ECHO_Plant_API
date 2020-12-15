@@ -2,7 +2,7 @@
 
 module Mutations
   module LifeCycleEvents
-    # Deletes a life cycle event
+    # Marks a lifecycle event as deleted
     class DeleteLifeCycleEvent < BaseMutation
       argument :life_cycle_event_id, ID,
                description: 'The life cycle event to be deleted',
@@ -19,10 +19,10 @@ module Mutations
 
       def resolve(life_cycle_event:, **_attributes)
         id = PlantApiSchema.id_from_object(life_cycle_event, LifeCycleEvent, {})
-        life_cycle_event.destroy
+        life_cycle_event.update_attribute(:deleted, true)
         errors = errors_from_active_record life_cycle_event.errors
         {
-          life_cycle_event_id: life_cycle_event.destroyed? ? id : nil,
+          life_cycle_event_id: life_cycle_event.deleted ? id : nil,
           errors: errors
         }
       end
