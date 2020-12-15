@@ -60,6 +60,12 @@ module Types
     field :evaluated_at, GraphQL::Types::ISO8601DateTime,
           description: 'The date and time that the specimen was last evaluated',
           null: true
+    field :created_at, GraphQL::Types::ISO8601DateTime,
+          description: 'The date and time that the record was created',
+          null: false
+    field :updated_at, GraphQL::Types::ISO8601DateTime,
+          description: 'The date and time that the record was last updated',
+          null: false
 
     def life_cycle_events
       @object.life_cycle_events.order(datetime: :asc)
