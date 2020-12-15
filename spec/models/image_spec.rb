@@ -29,6 +29,12 @@ RSpec.describe Image, type: :model do
     expect(image).to_not be_valid
   end
 
+  it 'touches the imageable object' do
+    category = create(:category)
+    image = build(:image, imageable: category)
+    expect { image.save }.to change { category.updated_at }
+  end
+
   it 'is not valid if the ID is already taken' do
     image = create(:image)
     expect { create(:image, id: image.id) }.to raise_error(ActiveRecord::RecordInvalid)

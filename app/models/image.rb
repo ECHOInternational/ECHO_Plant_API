@@ -13,7 +13,7 @@ class Image < ApplicationRecord
   validates :s3_key, presence: true
   has_many :image_attributes_image, dependent: :destroy
   has_many :image_attributes, through: :image_attributes_image
-  belongs_to :imageable, polymorphic: true, optional: false
+  belongs_to :imageable, polymorphic: true, optional: false, touch: true
   enum visibility: { private: 0, public: 1, draft: 2, deleted: 3 }, _prefix: :visibility
 
   # Raise an error when trying to update readonly fields
