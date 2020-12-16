@@ -24,7 +24,7 @@ RSpec.describe 'Delete Life Cycle Event Mutation', type: :graphql_mutation do
   context 'when user is not authenticated' do
     let(:current_user) { nil }
     it 'returns an error when called' do
-      life_cycle_event_id = PlantApiSchema.id_from_object(life_cycle_event, LifeCycleEvent, {})
+      life_cycle_event_id = PlantApiSchema.id_from_object(life_cycle_event, life_cycle_event.class, {})
       result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
                                         input: {
                                           lifeCycleEventId: life_cycle_event_id
@@ -40,7 +40,7 @@ RSpec.describe 'Delete Life Cycle Event Mutation', type: :graphql_mutation do
   context 'when user is read only' do
     let(:current_user) { build(:user, :readonly) }
     it 'returns an error when called' do
-      life_cycle_event_id = PlantApiSchema.id_from_object(life_cycle_event, LifeCycleEvent, {})
+      life_cycle_event_id = PlantApiSchema.id_from_object(life_cycle_event, life_cycle_event.class, {})
       result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
                                         input: {
                                           lifeCycleEventId: life_cycle_event_id
@@ -61,7 +61,7 @@ RSpec.describe 'Delete Life Cycle Event Mutation', type: :graphql_mutation do
     context 'when the user does not own the record' do
       let(:specimen) { build(:specimen, owned_by: 'notme') }
       it 'raises an error' do
-        @life_cycle_event_id = PlantApiSchema.id_from_object(life_cycle_event, LifeCycleEvent, {})
+        @life_cycle_event_id = PlantApiSchema.id_from_object(life_cycle_event, life_cycle_event.class, {})
         result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
                                           input: {
                                             lifeCycleEventId: @life_cycle_event_id
@@ -75,7 +75,7 @@ RSpec.describe 'Delete Life Cycle Event Mutation', type: :graphql_mutation do
     end
     context 'when user owns the record' do
       before :each do
-        @life_cycle_event_id = PlantApiSchema.id_from_object(life_cycle_event, LifeCycleEvent, {})
+        @life_cycle_event_id = PlantApiSchema.id_from_object(life_cycle_event, life_cycle_event.class, {})
       end
       it 'deletes the record' do
         record_id = life_cycle_event.id

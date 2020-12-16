@@ -18,7 +18,7 @@ module Mutations
       end
 
       def resolve(life_cycle_event:, **_attributes)
-        id = PlantApiSchema.id_from_object(life_cycle_event, LifeCycleEvent, {})
+        id = PlantApiSchema.id_from_object(life_cycle_event, life_cycle_event.class, {})
         life_cycle_event.update_attribute(:deleted, true)
         errors = errors_from_active_record life_cycle_event.errors
         {
