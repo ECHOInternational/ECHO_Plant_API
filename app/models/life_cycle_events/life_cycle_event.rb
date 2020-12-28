@@ -19,6 +19,8 @@ class LifeCycleEvent < ApplicationRecord
   has_many :images, as: :imageable, dependent: :destroy
 
   belongs_to :specimen
+  delegate :owned_by, to: :specimen
+  delegate :visibility, to: :specimen
   belongs_to :location, optional: true
 
   def self.policy_class
