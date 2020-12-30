@@ -50,15 +50,19 @@ class PlantApiSchema < GraphQL::Schema
 
   # Given a string UUID, find the object
   def self.object_from_id(id, _query_ctx)
-    # For example, to decode the UUIDs generated abovcone:
-    type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
-    #
-    # Then, based on `type_name` and `id`
-    # find an object in your application
     begin
+      type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
       klass = type_name.constantize
     rescue NameError
-      raise GraphQL::ExecutionError.new("Not Found: #{id} not found.", extensions: { 'code' => 404 })
+      raise GraphQL::ExecutionError.new(
+        "Not Found: #{id} not found.",
+        extensions: { 'code' => 404 }
+      )
+    rescue ArgumentError
+      raise GraphQL::ExecutionError.new(
+        "Not Found: #{id} not found. The provided ID is in an invalid format.",
+        extensions: { 'code' => 404 }
+      )
     end
     klass.find item_id
   end

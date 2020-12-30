@@ -50,6 +50,20 @@ RSpec.describe 'Delete Image Mutation', type: :graphql_mutation do
     end
   end
 
+  context 'when the id is invalid' do
+    it 'raises an error' do
+      result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                        input: {
+                                          imageId: 'abc123'
+                                        }
+                                      })
+      expect(result['data']).to be_nil
+      expect(result['errors']).to_not be_nil
+      expect(result['errors'].count).to eq 1
+      expect(result['errors'][0]['extensions']['code']).to eq 404
+    end
+  end
+
   context 'when user is not an admin' do
     let(:current_user) { build(:user, :readwrite) }
     let(:specimen) { create(:specimen, owned_by: current_user.email, created_by: current_user.email) }
