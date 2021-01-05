@@ -20,7 +20,7 @@ module Mutations
       result = variety.destroy
       errors = errors_from_active_record variety.errors
       {
-        variety_id: result.destroyed? ? id : nil,
+        variety_id: result ? id : nil,
         errors: errors
       }
     end

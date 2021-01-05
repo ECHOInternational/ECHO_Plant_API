@@ -20,7 +20,7 @@ module Mutations
       result = specimen.destroy
       errors = errors_from_active_record specimen.errors
       {
-        specimen_id: result.destroyed? ? id : nil,
+        specimen_id: result ? id : nil,
         errors: errors
       }
     end

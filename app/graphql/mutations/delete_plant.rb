@@ -20,7 +20,7 @@ module Mutations
       result = plant.destroy
       errors = errors_from_active_record plant.errors
       {
-        plant_id: result.destroyed? ? id : nil,
+        plant_id: result ? id : nil,
         errors: errors
       }
     end

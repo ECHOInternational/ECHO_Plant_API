@@ -22,9 +22,9 @@ class Plant < ApplicationRecord # rubocop:disable Metrics/ClassLength
 
   has_many :common_names, dependent: :destroy
 
-  has_many :varieties, dependent: :restrict_with_exception
+  has_many :varieties, dependent: :restrict_with_error
 
-  has_many :specimens
+  has_many :specimens, dependent: :restrict_with_error
 
   # default_scope { includes(:common_names) }
 

@@ -7,7 +7,7 @@ class Location < ApplicationRecord
   enum soil_quality: { poor: 'poor', fair: 'fair', good: 'good' }, _prefix: :soil_quality
 
   has_many :images, as: :imageable, dependent: :destroy
-  has_many :life_cycle_events
+  has_many :life_cycle_events, dependent: :restrict_with_error
 
   def latitude=(latitude)
     if latlng.class == ActiveRecord::Point

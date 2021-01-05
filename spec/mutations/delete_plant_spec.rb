@@ -73,22 +73,60 @@ RSpec.describe 'Delete Plant Mutation', type: :graphql_mutation do
       end
     end
     context 'when user owns the record' do
-      before :each do
-        @plant_id = PlantApiSchema.id_from_object(plant, Plant, {})
-      end
       it 'deletes the record' do
+        plant_id = PlantApiSchema.id_from_object(plant, Plant, {})
         record_id = plant.id
         expect { Plant.find record_id }.to_not raise_error(ActiveRecord::RecordNotFound)
         result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
                                           input: {
-                                            plantId: @plant_id
+                                            plantId: plant_id
                                           }
                                         })
         expect(result).to_not include 'errors'
         expect(result).to include 'data'
         expect(result['data']['deletePlant']).to include 'plantId'
-        expect(result['data']['deletePlant']['plantId']).to eq @plant_id
+        expect(result['data']['deletePlant']['plantId']).to eq plant_id
         expect { Plant.find record_id }.to raise_error(ActiveRecord::RecordNotFound)
+      end
+      context 'when there is a related variety' do
+        let(:variety) { create(:variety, owned_by: current_user.email, created_by: current_user.email, description: 'a description', plant: plant) }
+        it 'returns an error' do
+          plant_id = PlantApiSchema.id_from_object(plant, Plant, {})
+          record_id = plant.id
+          expect { Plant.find record_id }.to_not raise_error(ActiveRecord::RecordNotFound)
+          expect(variety.plant_id).to eq plant.id
+          result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                            input: {
+                                              plantId: plant_id
+                                            }
+                                          })
+          expect(result).to include 'data'
+          expect(result['data']['deletePlant']).to include 'plantId'
+          expect(result['data']['deletePlant']['plantId']).to be_nil
+          expect(result['data']['deletePlant']['errors'][0]).to include 'code'
+          expect(result['data']['deletePlant']['errors'][0]['code']).to eq 400
+          expect { Plant.find record_id }.to_not raise_error(ActiveRecord::RecordNotFound)
+        end
+      end
+      context 'when there is a related specimen' do
+        let(:specimen) { create(:specimen, plant: plant) }
+        it 'returns an error' do
+          plant_id = PlantApiSchema.id_from_object(plant, Plant, {})
+          record_id = plant.id
+          expect { Plant.find record_id }.to_not raise_error(ActiveRecord::RecordNotFound)
+          expect(specimen.plant_id).to eq plant.id
+          result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                            input: {
+                                              plantId: plant_id
+                                            }
+                                          })
+          expect(result).to include 'data'
+          expect(result['data']['deletePlant']).to include 'plantId'
+          expect(result['data']['deletePlant']['plantId']).to be_nil
+          expect(result['data']['deletePlant']['errors'][0]).to include 'code'
+          expect(result['data']['deletePlant']['errors'][0]['code']).to eq 400
+          expect { Plant.find record_id }.to_not raise_error(ActiveRecord::RecordNotFound)
+        end
       end
     end
   end

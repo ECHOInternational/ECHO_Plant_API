@@ -20,7 +20,7 @@ module Mutations
       result = image.destroy
       errors = errors_from_active_record image.errors
       {
-        image_id: result.destroyed? ? id : nil,
+        image_id: result ? id : nil,
         errors: errors
       }
     end

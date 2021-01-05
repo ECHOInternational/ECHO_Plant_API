@@ -20,7 +20,7 @@ module Mutations
       result = location.destroy
       errors = errors_from_active_record location.errors
       {
-        location_id: result.destroyed? ? id : nil,
+        location_id: result ? id : nil,
         errors: errors
       }
     end

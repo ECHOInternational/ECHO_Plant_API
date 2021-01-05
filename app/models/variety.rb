@@ -17,7 +17,7 @@ class Variety < ApplicationRecord
 
   belongs_to :plant
 
-  has_many :specimens
+  has_many :specimens, dependent: :restrict_with_error
 
   extend Mobility
   translates :name,
