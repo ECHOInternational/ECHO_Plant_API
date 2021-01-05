@@ -205,7 +205,16 @@ RSpec.describe Plant, type: :model do
     it 'fails if there are still variety records' do
       plant = create(:plant)
       create(:variety, plant: plant)
-      expect { plant.destroy }.to raise_error(ActiveRecord::DeleteRestrictionError)
+      expect(plant.destroy).to be false
+      expect(plant.destroyed?).to be false
+      expect(plant.errors.count).to eq 1
+    end
+    it 'fails if there are still specimen records' do
+      plant = create(:plant)
+      create(:specimen, plant: plant)
+      expect(plant.destroy).to be false
+      expect(plant.destroyed?).to be false
+      expect(plant.errors.count).to eq 1
     end
   end
 end

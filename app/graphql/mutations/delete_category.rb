@@ -20,7 +20,7 @@ module Mutations
       result = category.destroy
       errors = errors_from_active_record category.errors
       {
-        category_id: result.destroyed? ? id : nil,
+        category_id: result ? id : nil,
         errors: errors
       }
     end
