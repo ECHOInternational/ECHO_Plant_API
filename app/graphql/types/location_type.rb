@@ -57,6 +57,12 @@ module Types
     field :notes, String,
           description: 'Description and notes about the location',
           null: true
+    field :created_at, GraphQL::Types::ISO8601DateTime,
+          description: 'The date and time that the record was created',
+          null: false
+    field :updated_at, GraphQL::Types::ISO8601DateTime,
+          description: 'The date and time that the record was last updated',
+          null: false
 
     def images
       Pundit.policy_scope(context[:current_user], @object.images)

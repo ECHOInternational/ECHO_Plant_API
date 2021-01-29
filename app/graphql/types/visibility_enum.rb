@@ -16,7 +16,7 @@ module Types
           description: 'Request only records that are drafts'
     value 'DELETED',
           value: :deleted,
-          description: 'Requesst only records that have been soft-deleted'
+          description: 'Request only records that have been soft-deleted'
     value 'VISIBLE',
           value: :visible,
           description: 'Request public and private records'
