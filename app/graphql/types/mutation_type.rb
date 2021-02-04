@@ -9,6 +9,9 @@ module Types
     field :delete_plant,
           mutation: Mutations::DeletePlant,
           description: 'Deletes a plant'
+    field :soft_delete_plant,
+          mutation: Mutations::SoftDeletePlant,
+          description: 'Soft Deletes a Plant. This mutation will return an error if any dependent relationships exist which have not also been soft deleted. This behavior can be overridden with the force parameter'
     field :update_plant,
           mutation: Mutations::UpdatePlant,
           description: 'Updates a plant'
@@ -18,6 +21,9 @@ module Types
     field :delete_variety,
           mutation: Mutations::DeleteVariety,
           description: 'Deletes a variety'
+    field :soft_delete_variety,
+          mutation: Mutations::SoftDeleteVariety,
+          description: 'Soft Deletes a Variety. This mutation will return an error if any dependent relationships exist which have not also been soft deleted. This behavior can be overridden with the force parameter'
     field :update_variety,
           mutation: Mutations::UpdateVariety,
           description: 'Updates a variety'
@@ -66,6 +72,9 @@ module Types
     field :delete_location,
           mutation: Mutations::DeleteLocation,
           description: 'Deletes a location'
+    field :soft_delete_location,
+          mutation: Mutations::SoftDeleteLocation,
+          description: 'Soft Deletes a location. This mutation will return an error if any dependent relationships exist which have not also been soft deleted. This behavior can be overridden with the force parameter'
     field :delete_life_cycle_event,
           mutation: Mutations::LifeCycleEvents::DeleteLifeCycleEvent,
           description: 'Deletes a life cycle event'
