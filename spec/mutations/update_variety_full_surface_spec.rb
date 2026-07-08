@@ -32,6 +32,29 @@ RSpec.describe 'Update Variety full field surface', type: :graphql_mutation do
     Mobility.with_locale(:es) { expect(variety.uses).to eq 'Producción en espaldera' }
   end
 
+  it 'round-trips plantingInstructions via translations' do
+    query = <<-GRAPHQL
+      mutation($input: UpdateVarietyInput!) {
+        updateVariety(input: $input) {
+          errors { field message code }
+          variety { translations { locale plantingInstructions } }
+        }
+      }
+    GRAPHQL
+    result = PlantApiSchema.execute(query,
+                                    context: { current_user: current_user },
+                                    variables: {
+                                      input: {
+                                        varietyId: variety_gid,
+                                        plantingInstructions: 'Sow after last frost',
+                                        language: 'en'
+                                      }
+                                    })
+    translations = result['data']['updateVariety']['variety']['translations']
+    en_translation = translations.find { |t| t['locale'] == 'en' }
+    expect(en_translation['plantingInstructions']).to eq 'Sow after last frost'
+  end
+
   it 'updates booleans and ranges' do
     result = execute(canBeUsedForFodder: true, optimalAltitudeRange: '[0,1500]')
     variety_result = result['data']['updateVariety']['variety']
