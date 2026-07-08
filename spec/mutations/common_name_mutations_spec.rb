@@ -48,6 +48,22 @@ RSpec.describe 'Common name mutations', type: :graphql_mutation do
       result = execute(query, { plantId: plant_gid, name: '', language: 'en' })
       expect(result['data']['addCommonName']['errors'][0]['field']).to eq 'name'
     end
+
+    it 'preserves existing primary when adding a new primary with invalid name fails' do
+      # Create an existing primary for this language
+      existing_primary = create(:common_name, plant: plant, language: 'EN', primary: true, name: 'Original')
+
+      # Try to add a primary with blank name (invalid)
+      result = execute(query, { plantId: plant_gid, name: '', language: 'en', primary: true })
+
+      # Should have errors and no common_name returned
+      expect(result['data']['addCommonName']['errors'][0]['field']).to eq 'name'
+      expect(result['data']['addCommonName']['commonName']).to be nil
+
+      # Existing primary should still be primary (demotion rolled back)
+      expect(existing_primary.reload.primary).to be true
+      expect(plant.common_names.where(language: 'EN', primary: true).count).to eq 1
+    end
   end
 
   describe 'updateCommonName / deleteCommonName / setPrimaryCommonName' do

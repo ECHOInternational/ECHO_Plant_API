@@ -10,7 +10,7 @@ module Mutations
         optimal_rainfall_range seasonality_days_range optimal_altitude_range ph_range
       ].freeze
 
-      RANGE_LITERAL = /\A[\[(]\s*-?\d*\.?\d*\s*,\s*-?\d*\.?\d*\s*[\])]\z/.freeze
+      RANGE_LITERAL = /\A[\[(]\s*(-?(\d+\.?\d*|\.\d+))?\s*,\s*(-?(\d+\.?\d*|\.\d+))?\s*[\])]\z/.freeze
 
       def validate_range_literals(attributes)
         RANGE_FIELDS.filter_map do |field|

@@ -22,7 +22,7 @@ module Mutations
         common_name = plant.common_names.build(name: name, language: language, location: location, primary: primary)
         CommonName.transaction do
           plant.common_names.where(language: language, primary: true).update_all(primary: false) if primary
-          common_name.save
+          raise ActiveRecord::Rollback unless common_name.save
         end
         {
           common_name: common_name.persisted? ? common_name : nil,
