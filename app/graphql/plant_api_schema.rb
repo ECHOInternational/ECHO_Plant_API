@@ -78,6 +78,8 @@ class PlantApiSchema < GraphQL::Schema
       Types::ImageAttributeType
     when Antinutrient
       Types::AntinutrientType
+    when GrowthHabit
+      Types::GrowthHabitType
     when Tolerance
       Types::ToleranceType
     when Plant
