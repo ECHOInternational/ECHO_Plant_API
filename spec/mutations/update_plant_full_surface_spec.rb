@@ -45,9 +45,7 @@ RSpec.describe 'Update Plant full field surface', type: :graphql_mutation do
   end
 
   it 'round-trips range literals' do
-    result = execute(optimalTemperatureRange: '[12,30]', phRange: '[5.5,7.5]')
-    plant_result = result['data']['updatePlant']['plant']
-    expect(plant_result['errors']).to be_nil if plant_result.key?('errors')
+    execute(optimalTemperatureRange: '[12,30]', phRange: '[5.5,7.5]')
     expect(plant.reload.optimal_temperature_range).to include 20
     expect(plant.optimal_temperature_range).to_not include 40
     expect(plant.ph_range).to include 6.0

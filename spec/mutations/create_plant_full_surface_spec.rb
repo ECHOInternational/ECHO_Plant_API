@@ -36,9 +36,12 @@ RSpec.describe 'Create Plant full field surface', type: :graphql_mutation do
 
   it 'returns a payload error for malformed range literals' do
     query = 'mutation($input: CreatePlantInput!){ createPlant(input: $input){ errors { field code } plant { uuid } } }'
-    result = PlantApiSchema.execute(query, context: { current_user: current_user }, variables: {
-                                      input: { primaryCommonName: 'X', phRange: 'acidic' }
-                                    })
+    result = nil
+    expect {
+      result = PlantApiSchema.execute(query, context: { current_user: current_user }, variables: {
+                                        input: { primaryCommonName: 'X', phRange: 'acidic' }
+                                      })
+    }.not_to change(Plant, :count)
     errors = result['data']['createPlant']['errors']
     expect(errors[0]['field']).to eq 'phRange'
     expect(errors[0]['code']).to eq 400

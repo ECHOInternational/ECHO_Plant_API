@@ -17,9 +17,10 @@ module Mutations
           value = attributes[field]
           next if value.nil? || value.match?(RANGE_LITERAL)
 
+          camelized = field.to_s.camelize(:lower)
           {
-            field: field.to_s.camelize(:lower),
-            message: "#{field} is not a valid range literal (expected e.g. \"[0,10]\")",
+            field: camelized,
+            message: "#{camelized} is not a valid range literal (expected e.g. \"[0,10]\")",
             code: 400
           }
         end
