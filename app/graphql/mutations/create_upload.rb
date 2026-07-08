@@ -42,7 +42,9 @@ module Mutations
     # Strip any leading path components so filenames like "../evil/../a b.jpg"
     # cannot escape the uploads/<uuid>/ prefix.
     def sanitize_filename(filename)
-      File.basename(filename)
+      name = File.basename(filename.to_s)
+      name = 'upload' if name.blank?
+      name
     end
 
     def presigned_put_url(bucket, key, content_type)

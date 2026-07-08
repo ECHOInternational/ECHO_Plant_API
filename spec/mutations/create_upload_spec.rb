@@ -170,5 +170,33 @@ RSpec.describe 'Create Upload Mutation', type: :graphql_mutation do
         variables: { input: { filename: 'photo.jpg', contentType: 'image/jpeg' } }
       )
     end
+
+    it 'passes expires_in to the presigner' do
+      allow(presigner_double).to receive(:presigned_url) do |_method, **opts|
+        expect(opts[:expires_in]).to eq(900)
+        canned_url
+      end
+
+      PlantApiSchema.execute(
+        query_string,
+        context: { current_user: current_user },
+        variables: { input: { filename: 'photo.jpg', contentType: 'image/jpeg' } }
+      )
+    end
+  end
+
+  context 'empty filename edge case' do
+    let(:current_user) { build(:user, :readwrite) }
+
+    it 'uses "upload" as default filename when filename is empty' do
+      result = PlantApiSchema.execute(
+        query_string,
+        context: { current_user: current_user },
+        variables: { input: { filename: '', contentType: 'image/jpeg' } }
+      )
+      upload = result['data']['createUpload']['upload']
+      # key is uploads/<uuid>/<safe-name>. With empty filename, basename should be 'upload'.
+      expect(upload['key']).to end_with('/upload')
+    end
   end
 end
