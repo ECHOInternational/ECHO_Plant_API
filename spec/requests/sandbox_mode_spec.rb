@@ -6,6 +6,7 @@ RSpec.describe 'Sandbox mode', type: :request do
   before :each do
     allow(ENV).to receive(:[]).and_call_original
     allow(ENV).to receive(:[]).with('SANDBOX').and_return('true')
+    allow(ENV).to receive(:[]).with('SANDBOX_TRUST_LEVEL').and_return(nil)
   end
 
   it 'authenticates tokenless requests as the sandbox user' do
