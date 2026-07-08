@@ -267,5 +267,17 @@ module Types
     field :update_variety_antinutrients,
           mutation: Mutations::Relations::UpdateVarietyAntinutrients,
           description: "Replaces a variety's set of antinutrients"
+    field :add_common_name,
+          mutation: Mutations::CommonNames::AddCommonName,
+          description: 'Adds a common name to a plant'
+    field :update_common_name,
+          mutation: Mutations::CommonNames::UpdateCommonName,
+          description: 'Updates a common name'
+    field :delete_common_name,
+          mutation: Mutations::CommonNames::DeleteCommonName,
+          description: 'Deletes a common name'
+    field :set_primary_common_name,
+          mutation: Mutations::CommonNames::SetPrimaryCommonName,
+          description: 'Makes a common name the primary for its plant and language'
   end
 end

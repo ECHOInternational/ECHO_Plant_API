@@ -82,6 +82,8 @@ class PlantApiSchema < GraphQL::Schema
       Types::GrowthHabitType
     when Tolerance
       Types::ToleranceType
+    when CommonName
+      Types::CommonNameType
     when Plant
       Types::PlantType
     when Variety
