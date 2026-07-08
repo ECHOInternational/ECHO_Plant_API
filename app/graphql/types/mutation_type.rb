@@ -246,5 +246,17 @@ module Types
     field :update_movement_event,
           mutation: Mutations::LifeCycleEvents::UpdateMovementLifeCycleEvent,
           description: 'Updates a Movement life cycle event'
+    field :update_plant_categories,
+          mutation: Mutations::Relations::UpdatePlantCategories,
+          description: "Replaces a plant's set of categories"
+    field :update_plant_tolerances,
+          mutation: Mutations::Relations::UpdatePlantTolerances,
+          description: "Replaces a plant's set of tolerances"
+    field :update_plant_growth_habits,
+          mutation: Mutations::Relations::UpdatePlantGrowthHabits,
+          description: "Replaces a plant's set of growth habits"
+    field :update_plant_antinutrients,
+          mutation: Mutations::Relations::UpdatePlantAntinutrients,
+          description: "Replaces a plant's set of antinutrients"
   end
 end
