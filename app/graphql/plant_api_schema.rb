@@ -92,6 +92,8 @@ class PlantApiSchema < GraphQL::Schema
       Types::SpecimenType
     when Location
       Types::LocationType
+    when LifeCycleEvent
+      Types::LifeCycleEventType.resolve_type(obj, _ctx)
     else
       raise("Not Implemented: #{obj}")
     end
