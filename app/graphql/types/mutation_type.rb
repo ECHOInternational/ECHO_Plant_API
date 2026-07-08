@@ -258,5 +258,14 @@ module Types
     field :update_plant_antinutrients,
           mutation: Mutations::Relations::UpdatePlantAntinutrients,
           description: "Replaces a plant's set of antinutrients"
+    field :update_variety_tolerances,
+          mutation: Mutations::Relations::UpdateVarietyTolerances,
+          description: "Replaces a variety's set of tolerances"
+    field :update_variety_growth_habits,
+          mutation: Mutations::Relations::UpdateVarietyGrowthHabits,
+          description: "Replaces a variety's set of growth habits"
+    field :update_variety_antinutrients,
+          mutation: Mutations::Relations::UpdateVarietyAntinutrients,
+          description: "Replaces a variety's set of antinutrients"
   end
 end
