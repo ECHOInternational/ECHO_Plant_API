@@ -36,6 +36,15 @@ module Types
     field :delete_category,
           mutation: Mutations::DeleteCategory,
           description: 'Deletes a plant category'
+    field :create_tolerance,
+          mutation: Mutations::Lookups::CreateTolerance,
+          description: 'Creates a tolerance'
+    field :update_tolerance,
+          mutation: Mutations::Lookups::UpdateTolerance,
+          description: 'Updates a tolerance'
+    field :delete_tolerance,
+          mutation: Mutations::Lookups::DeleteTolerance,
+          description: 'Deletes a tolerance'
     field :create_image,
           mutation: Mutations::CreateImage,
           description: 'Creates an image for a given API object'
