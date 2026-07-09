@@ -246,5 +246,38 @@ module Types
     field :update_movement_event,
           mutation: Mutations::LifeCycleEvents::UpdateMovementLifeCycleEvent,
           description: 'Updates a Movement life cycle event'
+    field :update_plant_categories,
+          mutation: Mutations::Relations::UpdatePlantCategories,
+          description: "Replaces a plant's set of categories"
+    field :update_plant_tolerances,
+          mutation: Mutations::Relations::UpdatePlantTolerances,
+          description: "Replaces a plant's set of tolerances"
+    field :update_plant_growth_habits,
+          mutation: Mutations::Relations::UpdatePlantGrowthHabits,
+          description: "Replaces a plant's set of growth habits"
+    field :update_plant_antinutrients,
+          mutation: Mutations::Relations::UpdatePlantAntinutrients,
+          description: "Replaces a plant's set of antinutrients"
+    field :update_variety_tolerances,
+          mutation: Mutations::Relations::UpdateVarietyTolerances,
+          description: "Replaces a variety's set of tolerances"
+    field :update_variety_growth_habits,
+          mutation: Mutations::Relations::UpdateVarietyGrowthHabits,
+          description: "Replaces a variety's set of growth habits"
+    field :update_variety_antinutrients,
+          mutation: Mutations::Relations::UpdateVarietyAntinutrients,
+          description: "Replaces a variety's set of antinutrients"
+    field :add_common_name,
+          mutation: Mutations::CommonNames::AddCommonName,
+          description: 'Adds a common name to a plant'
+    field :update_common_name,
+          mutation: Mutations::CommonNames::UpdateCommonName,
+          description: 'Updates a common name'
+    field :delete_common_name,
+          mutation: Mutations::CommonNames::DeleteCommonName,
+          description: 'Deletes a common name'
+    field :set_primary_common_name,
+          mutation: Mutations::CommonNames::SetPrimaryCommonName,
+          description: 'Makes a common name the primary for its plant and language'
   end
 end
