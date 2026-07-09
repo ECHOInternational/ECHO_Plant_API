@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative '../../lib/cors_origins'
+
 # Be sure to restart your server when you modify this file.
 
 # Avoid CORS issues when API is called from the frontend app.
