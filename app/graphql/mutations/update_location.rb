@@ -50,12 +50,35 @@ module Mutations
     end
 
     def resolve(location:, **attributes)
+      coord_errors = apply_coordinates(location, attributes)
+      return { location: location, errors: coord_errors } if coord_errors
+
       location.update(attributes)
-      errors = errors_from_active_record location.errors
-      {
-        location: location,
-        errors: errors
-      }
+      { location: location, errors: errors_from_active_record(location.errors) }
+    end
+
+    private
+
+    def explicit_nil?(attributes, key)
+      attributes.key?(key) && attributes[key].nil?
+    end
+
+    def apply_coordinates(location, attributes)
+      lat_nil = explicit_nil?(attributes, :latitude)
+      lng_nil = explicit_nil?(attributes, :longitude)
+      return unless lat_nil || lng_nil
+
+      return clear_coordinates(location, attributes) if lat_nil && lng_nil
+
+      nil_field = lat_nil ? 'latitude' : 'longitude'
+      [{ field: nil_field, message: 'latitude and longitude must be provided together', code: 400 }]
+    end
+
+    def clear_coordinates(location, attributes)
+      attributes.delete(:latitude)
+      attributes.delete(:longitude)
+      location.latlng = nil
+      nil
     end
   end
 end
