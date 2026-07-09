@@ -21,20 +21,15 @@ class ApplicationController < ActionController::API
 
   def require_token
     @current_user = nil
+    return if set_sandbox_user
 
-    pub_key = <<-SECRET
------BEGIN PUBLIC KEY-----
-#{ENV['APPLICATION_JWT_SECRET']}
------END PUBLIC KEY-----
-SECRET
+    pub_key = <<~SECRET
+      -----BEGIN PUBLIC KEY-----
+      #{ENV['APPLICATION_JWT_SECRET']}
+      -----END PUBLIC KEY-----
+    SECRET
 
     public_key = OpenSSL::PKey::RSA.new(pub_key)
-    if ENV['SANDBOX'] == "true"
-      @current_user = User.new(
-        { 'uid' => 'sandbox', 'email' => 'sandbox@sandbox.com', 'trust_levels' => { 'plant' => 2 } }
-      )
-      return
-    end
 
     authenticate_with_http_token do |token, _options|
       jwt_payload = JWT.decode(
@@ -47,6 +42,17 @@ SECRET
     rescue JWT::DecodeError => e
       render json: JSON.pretty_generate(create_error_body(e.message, 401)), status: 401
     end
+  end
+
+  def set_sandbox_user
+    return false unless ENV['SANDBOX'] == 'true'
+
+    sandbox_trust_level = (ENV['SANDBOX_TRUST_LEVEL'] || '2').to_i
+    @current_user = User.new(
+      { 'uid' => 'sandbox', 'email' => 'sandbox@sandbox.com',
+        'trust_levels' => { 'plant' => sandbox_trust_level } }
+    )
+    true
   end
 end
 

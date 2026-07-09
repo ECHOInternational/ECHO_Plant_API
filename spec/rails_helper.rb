@@ -12,6 +12,7 @@ require 'rspec/rails'
 require 'paper_trail/frameworks/rspec'
 require 'pundit/rspec'
 require 'support/shared_contexts/policy'
+require 'support/shared_examples/lookup_mutations'
 
 # Add additional requires below this line. Rails is not loaded until this point!
 

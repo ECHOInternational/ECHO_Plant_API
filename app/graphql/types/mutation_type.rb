@@ -36,6 +36,42 @@ module Types
     field :delete_category,
           mutation: Mutations::DeleteCategory,
           description: 'Deletes a plant category'
+    field :create_tolerance,
+          mutation: Mutations::Lookups::CreateTolerance,
+          description: 'Creates a tolerance'
+    field :update_tolerance,
+          mutation: Mutations::Lookups::UpdateTolerance,
+          description: 'Updates a tolerance'
+    field :delete_tolerance,
+          mutation: Mutations::Lookups::DeleteTolerance,
+          description: 'Deletes a tolerance'
+    field :create_growth_habit,
+          mutation: Mutations::Lookups::CreateGrowthHabit,
+          description: 'Creates a growth habit'
+    field :update_growth_habit,
+          mutation: Mutations::Lookups::UpdateGrowthHabit,
+          description: 'Updates a growth habit'
+    field :delete_growth_habit,
+          mutation: Mutations::Lookups::DeleteGrowthHabit,
+          description: 'Deletes a growth habit'
+    field :create_antinutrient,
+          mutation: Mutations::Lookups::CreateAntinutrient,
+          description: 'Creates an antinutrient'
+    field :update_antinutrient,
+          mutation: Mutations::Lookups::UpdateAntinutrient,
+          description: 'Updates an antinutrient'
+    field :delete_antinutrient,
+          mutation: Mutations::Lookups::DeleteAntinutrient,
+          description: 'Deletes an antinutrient'
+    field :create_image_attribute,
+          mutation: Mutations::Lookups::CreateImageAttribute,
+          description: 'Creates an image attribute'
+    field :update_image_attribute,
+          mutation: Mutations::Lookups::UpdateImageAttribute,
+          description: 'Updates an image attribute'
+    field :delete_image_attribute,
+          mutation: Mutations::Lookups::DeleteImageAttribute,
+          description: 'Deletes an image attribute'
     field :create_image,
           mutation: Mutations::CreateImage,
           description: 'Creates an image for a given API object'
