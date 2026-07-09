@@ -44,6 +44,9 @@ gem 'search_object_graphql'
 # Authorization Policies
 gem 'pundit'
 
+# S3 presigned URL generation for direct image uploads
+gem 'aws-sdk-s3', '~> 1'
+
 # Health Checks
 gem 'rails-healthcheck'
 

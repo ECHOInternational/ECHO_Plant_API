@@ -57,6 +57,27 @@ GEM
       tzinfo (~> 1.1)
       zeitwerk (~> 2.2, >= 2.2.2)
     ast (2.4.1)
+    aws-eventstream (1.4.0)
+    aws-partitions (1.1267.0)
+    aws-sdk-core (3.252.0)
+      aws-eventstream (~> 1, >= 1.3.0)
+      aws-partitions (~> 1, >= 1.992.0)
+      aws-sigv4 (~> 1.9)
+      base64
+      bigdecimal
+      jmespath (~> 1, >= 1.6.1)
+      logger
+    aws-sdk-kms (1.129.0)
+      aws-sdk-core (~> 3, >= 3.248.0)
+      aws-sigv4 (~> 1.5)
+    aws-sdk-s3 (1.226.0)
+      aws-sdk-core (~> 3, >= 3.248.0)
+      aws-sdk-kms (~> 1)
+      aws-sigv4 (~> 1.5)
+    aws-sigv4 (1.12.1)
+      aws-eventstream (~> 1, >= 1.0.2)
+    base64 (0.3.0)
+    bigdecimal (4.1.2)
     bootsnap (1.4.8)
       msgpack (~> 1.0)
     builder (3.2.4)
@@ -80,10 +101,12 @@ GEM
     http_accept_language (2.1.1)
     i18n (1.8.10)
       concurrent-ruby (~> 1.0)
+    jmespath (1.6.2)
     jwt (2.2.2)
     listen (3.2.1)
       rb-fsevent (~> 0.10, >= 0.10.3)
       rb-inotify (~> 0.9, >= 0.9.10)
+    logger (1.7.0)
     loofah (2.10.0)
       crass (~> 1.0.2)
       nokogiri (>= 1.5.9)
@@ -220,6 +243,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  aws-sdk-s3 (~> 1)
   bootsnap (>= 1.4.2)
   byebug
   factory_bot_rails

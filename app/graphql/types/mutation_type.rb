@@ -72,6 +72,9 @@ module Types
     field :delete_image_attribute,
           mutation: Mutations::Lookups::DeleteImageAttribute,
           description: 'Deletes an image attribute'
+    field :create_upload,
+          mutation: Mutations::CreateUpload,
+          description: 'Returns a presigned S3 PUT URL so a client can upload an image file directly'
     field :create_image,
           mutation: Mutations::CreateImage,
           description: 'Creates an image for a given API object'

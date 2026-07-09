@@ -67,4 +67,59 @@ RSpec.describe 'Update Plant full field surface', type: :graphql_mutation do
                                            variables: { input: { plantId: plant_gid, uses: 'x' } })
     expect(result['errors'][0]['extensions']['code']).to eq 403
   end
+
+  describe 'range literal validation' do
+    it 'rejects degenerate range literals: [.,.]' do
+      original = plant.optimal_temperature_range
+      result = execute(optimalTemperatureRange: '[.,.]')
+      errors = result['data']['updatePlant']['errors']
+      expect(errors[0]['field']).to eq 'optimalTemperatureRange'
+      expect(errors[0]['code']).to eq 400
+      expect(plant.reload.optimal_temperature_range).to eq original
+    end
+
+    it 'rejects degenerate range literals: [-,-]' do
+      original = plant.optimal_temperature_range
+      result = execute(optimalTemperatureRange: '[-,-]')
+      errors = result['data']['updatePlant']['errors']
+      expect(errors[0]['field']).to eq 'optimalTemperatureRange'
+      expect(errors[0]['code']).to eq 400
+      expect(plant.reload.optimal_temperature_range).to eq original
+    end
+
+    it 'rejects degenerate range literals: [-.,-.] ' do
+      original = plant.optimal_temperature_range
+      result = execute(optimalTemperatureRange: '[-.,-.]')
+      errors = result['data']['updatePlant']['errors']
+      expect(errors[0]['field']).to eq 'optimalTemperatureRange'
+      expect(errors[0]['code']).to eq 400
+      expect(plant.reload.optimal_temperature_range).to eq original
+    end
+
+    it 'accepts valid range with empty lower bound [,10]' do
+      result = execute(optimalTemperatureRange: '[,10]')
+      expect(result['data']['updatePlant']['errors']).to be_empty
+      # Postgres [,10] means exclusive lower bound; just verify it was accepted and saved
+      expect(plant.reload.optimal_temperature_range).not_to be_nil
+    end
+
+    it 'accepts valid range with empty upper bound [5,]' do
+      result = execute(optimalTemperatureRange: '[5,]')
+      expect(result['data']['updatePlant']['errors']).to be_empty
+      # Postgres [5,] means exclusive upper bound; just verify it was accepted and saved
+      expect(plant.reload.optimal_temperature_range).not_to be_nil
+    end
+
+    it 'accepts valid range with decimals [1.5,2]' do
+      result = execute(optimalTemperatureRange: '[1.5,2]')
+      expect(result['data']['updatePlant']['errors']).to be_empty
+      expect(plant.reload.optimal_temperature_range).to include 1.8
+    end
+
+    it 'accepts valid range with negative [-3,4]' do
+      result = execute(optimalTemperatureRange: '[-3,4]')
+      expect(result['data']['updatePlant']['errors']).to be_empty
+      expect(plant.reload.optimal_temperature_range).to include 0
+    end
+  end
 end
