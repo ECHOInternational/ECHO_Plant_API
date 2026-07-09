@@ -10,3 +10,8 @@ storage/*
 infra/
 node_modules
 .superpowers/
+*.md
+.ruby-version
+.rubocop*
+Procfile
+.github/

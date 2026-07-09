@@ -40,24 +40,30 @@ RUN apt-get update -qq \
       libjemalloc2 \
  && rm -rf /var/lib/apt/lists/*
 
-ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2 \
+# Arch-safe jemalloc preload: create a stable symlink at a fixed path
+# so LD_PRELOAD works on both x86_64 and arm64.
+RUN ln -s "/usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2" /usr/local/lib/libjemalloc.so.2
+
+ENV LD_PRELOAD=/usr/local/lib/libjemalloc.so.2 \
     RAILS_ENV=production \
     RAILS_LOG_TO_STDOUT=true \
     BUNDLE_WITHOUT="development:test"
 
+# Create the app user/group BEFORE copying files so COPY --chown works
+# without a separate chown layer (avoids duplicating content across layers).
+RUN groupadd --gid 1000 app \
+ && useradd --uid 1000 --gid app --shell /bin/bash --create-home app
+
 WORKDIR /app
 
-# Copy installed gems and app from build stage
-COPY --from=build /usr/local/bundle /usr/local/bundle
-COPY --from=build /app /app
-
-# Create a non-root user and give it ownership of tmp/ only
-RUN groupadd --gid 1000 app \
- && useradd --uid 1000 --gid app --shell /bin/bash --create-home app \
- && mkdir -p tmp/pids \
- && chown -R app:app tmp
+# Copy installed gems and app from build stage, already owned by app:app
+COPY --chown=app:app --from=build /usr/local/bundle /usr/local/bundle
+COPY --chown=app:app --from=build /app /app
 
 USER app
+
+# Ensure the pids directory exists and is writable by the app user
+RUN mkdir -p tmp/pids
 
 EXPOSE 3000
 
