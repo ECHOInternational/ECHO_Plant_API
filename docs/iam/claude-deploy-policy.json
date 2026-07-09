@@ -152,6 +152,24 @@
       "Resource": "arn:aws:logs:us-east-1:382724554857:log-group:/ecs/plant-api-*"
     },
     {
+      "Sid": "Ec2DescribeForTerraform",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeSecurityGroupRules",
+        "ec2:DescribeVpcs",
+        "ec2:DescribeVpcAttribute",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DescribeTags",
+        "ec2:DescribeAvailabilityZones"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": { "aws:RequestedRegion": "us-east-1" }
+      }
+    },
+    {
       "Sid": "SecurityGroupsCreateAndTag",
       "Effect": "Allow",
       "Action": [

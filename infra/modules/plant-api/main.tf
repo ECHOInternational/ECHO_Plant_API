@@ -32,9 +32,7 @@ locals {
     { name = "DATABASE_PORT", value = tostring(var.database_port) },
   ]
 
-  # Override env vars merged on top of base
-  merged_env_map        = merge({ for e in local.base_env : e.name => e.value }, var.container_env_overrides)
-  container_environment = [for k, v in local.merged_env_map : { name = k, value = v }]
+  container_environment = local.base_env
 
   # -------------------------------------------------------------------------
   # Secrets Manager ARNs for the task secrets block.
@@ -48,10 +46,20 @@ locals {
   # APPLICATION_JWT_SECRET is a dedicated per-env plain-string secret
   # (plant-api-<env>/application-jwt-secret).  It is referenced as a
   # whole-value (no JSON key selector).
+  #
+  # SECRET_KEY_BASE is a dedicated per-env plain-string secret
+  # (plant-api-<env>/secret-key-base).  Rails requires it to boot — the app
+  # will crash immediately without it.  The TF resource creates a placeholder;
+  # seed the real value before first deploy (see infra/README.md §Secrets).
+  # For staging: generate with `openssl rand -hex 64`.
+  # For production: reuse the value from the current EB SECRET_KEY_BASE env var
+  # if sessions or encrypted cookies must survive the cutover; for an API-only
+  # app with no cookies a freshly generated value is safe.
   # -------------------------------------------------------------------------
 
-  db_secret_arn  = var.db_secret_arn
-  jwt_secret_arn = aws_secretsmanager_secret.jwt.arn
+  db_secret_arn       = var.db_secret_arn
+  jwt_secret_arn      = aws_secretsmanager_secret.jwt.arn
+  secret_key_base_arn = aws_secretsmanager_secret.secret_key_base.arn
 
   task_secrets = [
     {
@@ -66,12 +74,17 @@ locals {
       name      = "APPLICATION_JWT_SECRET"
       valueFrom = local.jwt_secret_arn
     },
+    {
+      name      = "SECRET_KEY_BASE"
+      valueFrom = local.secret_key_base_arn
+    },
   ]
 
-  # Execution role needs GetSecretValue on both secrets.
+  # Execution role needs GetSecretValue on all three managed secrets.
   execution_secret_arns = [
     local.db_secret_arn,
     local.jwt_secret_arn,
+    local.secret_key_base_arn,
   ]
 }
 
@@ -147,6 +160,44 @@ resource "aws_secretsmanager_secret" "jwt" {
 
 resource "aws_secretsmanager_secret_version" "jwt_placeholder" {
   secret_id     = aws_secretsmanager_secret.jwt.id
+  secret_string = "PLACEHOLDER_CHANGE_ME"
+
+  lifecycle {
+    ignore_changes = [secret_string]
+  }
+}
+
+# ============================================================================
+# Secrets Manager — SECRET_KEY_BASE (per-env, per-app copy)
+#
+# Rails requires SECRET_KEY_BASE to boot; containers crash immediately without
+# it.  Terraform creates the secret shell with a placeholder value.
+# Seed the real value out-of-band before the first deploy
+# (see infra/README.md §Secrets).
+#
+# For staging:    generate a fresh value:  openssl rand -hex 64
+# For production: reuse the current EB SECRET_KEY_BASE env var value to avoid
+#                 any impact on encrypted cookies/sessions during cutover.
+#                 This API uses no cookies so a freshly generated value is also
+#                 safe — note both options in your runbook and choose one.
+#
+# lifecycle.ignore_changes ensures Terraform never overwrites the real value
+# after seeding.
+# ============================================================================
+
+resource "aws_secretsmanager_secret" "secret_key_base" {
+  name        = "plant-api-${var.env}/secret-key-base"
+  description = "Rails SECRET_KEY_BASE for plant-api (${var.env})"
+
+  tags = {
+    Project   = "plant-api"
+    Env       = var.env
+    ManagedBy = "terraform"
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "secret_key_base_placeholder" {
+  secret_id     = aws_secretsmanager_secret.secret_key_base.id
   secret_string = "PLACEHOLDER_CHANGE_ME"
 
   lifecycle {

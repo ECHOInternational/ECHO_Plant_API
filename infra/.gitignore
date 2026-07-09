@@ -1,7 +1,6 @@
 # Terraform working directories and downloaded plugins
 **/.terraform/
-# Terraform provider binaries inside lock dirs
-**/.terraform.lock.hcl
+# .terraform.lock.hcl files ARE committed (provider version pins)
 # Local state files (bootstrap uses local state — gitignore to avoid accidental commits)
 # Comment out the line below if you want to track bootstrap state in git
 **/terraform.tfstate

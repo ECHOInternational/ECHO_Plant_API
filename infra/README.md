@@ -114,17 +114,17 @@ Edit `infra/envs/staging/terraform.tfvars` and replace the placeholder
 `arn:aws:secretsmanager:...:rds/echocommunity-production/plantapi-staging-app-XXXXXX`
 with the real ARN.
 
-### Step 5 — Seed APPLICATION_JWT_SECRET
+### Step 5 — Seed secrets (APPLICATION_JWT_SECRET and SECRET_KEY_BASE)
 
-Terraform creates the `plant-api-<env>/application-jwt-secret` Secrets Manager
-secret with a placeholder value and then ignores future changes.  Seed the real
-RSA public key before the first deploy.
+Terraform creates two per-env Secrets Manager secrets with placeholder values
+and then ignores future changes:
+- `plant-api-<env>/application-jwt-secret` — RSA public key for JWT verification
+- `plant-api-<env>/secret-key-base` — Rails SECRET_KEY_BASE (**required to boot**)
 
-**Important:** The value is the RSA **public key PEM body** used to verify JWTs
-issued by `www.echocommunity.org`. It is the same key currently in the EB
-environment variable `APPLICATION_JWT_SECRET` (retrieve it before decommissioning EB).
+Seed both secrets before the first deploy.  The ECS task definition injects them
+as `APPLICATION_JWT_SECRET` and `SECRET_KEY_BASE` respectively.
 
-#### Production JWT secret
+#### Production APPLICATION_JWT_SECRET
 
 Retrieve the current value from EB and store it in the new secret:
 
@@ -137,7 +137,7 @@ aws secretsmanager put-secret-value \
   --profile <your-write-profile>
 ```
 
-#### Staging JWT secret
+#### Staging APPLICATION_JWT_SECRET
 
 The staging RSA public key is the same as production (same IdP); copy it from
 the sibling `echo-seeds-staging/application-jwt-secret` secret without printing
@@ -158,6 +158,51 @@ aws secretsmanager get-secret-value \
   --profile <your-write-profile>
 ```
 
+#### SECRET_KEY_BASE — staging
+
+Generate a fresh random value (this is an API-only app with no cookies or
+encrypted session data, so there is no continuity requirement):
+
+```bash
+SECRET=$(openssl rand -hex 64)
+aws secretsmanager put-secret-value \
+  --region us-east-1 \
+  --secret-id "plant-api-staging/secret-key-base" \
+  --secret-string "$SECRET" \
+  --profile <your-write-profile>
+unset SECRET
+```
+
+#### SECRET_KEY_BASE — production
+
+**Option A (recommended if you want zero cutover risk):** Reuse the current EB
+`SECRET_KEY_BASE` value.  This preserves any encrypted cookies or session tokens
+in flight during the cutover window.  Retrieve it from the EB console before
+decommissioning EB, then seed it:
+
+```bash
+# Replace <REDACTED> with the EB env var value
+aws secretsmanager put-secret-value \
+  --region us-east-1 \
+  --secret-id "plant-api-production/secret-key-base" \
+  --secret-string "<REDACTED>" \
+  --profile <your-write-profile>
+```
+
+**Option B (acceptable for this API):** Generate a fresh value.  Because this
+app is API-only with JWT authentication and no browser cookies, rotating
+SECRET_KEY_BASE has no user-visible impact (no sessions to invalidate):
+
+```bash
+SECRET=$(openssl rand -hex 64)
+aws secretsmanager put-secret-value \
+  --region us-east-1 \
+  --secret-id "plant-api-production/secret-key-base" \
+  --secret-string "$SECRET" \
+  --profile <your-write-profile>
+unset SECRET
+```
+
 ### Step 6 — Staging apply
 
 ```bash
@@ -165,6 +210,53 @@ cd infra/envs/staging
 terraform init
 terraform apply
 ```
+
+`terraform apply` creates the ECS service immediately. **The service will
+crash-loop until (a) the container image exists in ECR and (b) the migration
+task has run.**  Follow the staging first-boot sequence below before expecting
+the service to stabilise.
+
+#### Staging first-boot sequence (after `terraform apply`)
+
+1. **Push the container image** to ECR so the task definition can pull it:
+   ```bash
+   # From the repo root — adjust the tag as needed
+   aws ecr get-login-password --region us-east-1 | \
+     docker login --username AWS --password-stdin \
+     382724554857.dkr.ecr.us-east-1.amazonaws.com
+   docker build -t plant-api:staging .
+   docker tag plant-api:staging \
+     382724554857.dkr.ecr.us-east-1.amazonaws.com/plant-api:staging
+   docker push 382724554857.dkr.ecr.us-east-1.amazonaws.com/plant-api:staging
+   ```
+
+2. **Run the migration task once** (the web tasks will fail `/health` while
+   pending migrations exist — the healthcheck blocks traffic until migrations
+   complete):
+   ```bash
+   # Retrieve the tasks security group ID from Terraform output first:
+   TASKS_SG="$(cd infra/envs/staging && terraform output -raw tasks_security_group_id)"
+   aws ecs run-task \
+     --cluster plant-api-staging \
+     --task-definition plant-api-staging-migrate \
+     --launch-type FARGATE \
+     --network-configuration "awsvpcConfiguration={subnets=[subnet-7d57a227],securityGroups=[$TASKS_SG],assignPublicIp=DISABLED}" \
+     --region us-east-1
+   # Wait for the task to exit (exit code 0 = success):
+   aws ecs wait tasks-stopped \
+     --cluster plant-api-staging \
+     --tasks "<task-arn-from-run-task-output>" \
+     --region us-east-1
+   ```
+
+3. **The ECS service's next task launch** will pull the image, connect to the
+   migrated database, and pass `/health`.  The deployment circuit breaker will
+   stop crash-looping once a healthy task is running.
+
+> **Note:** An alternative to step 2 is setting `desired_count = 0` in
+> `terraform.tfvars` before the first `terraform apply`, then running the
+> migration task, then bumping `desired_count` back to 1.  The run-task
+> approach above requires no tfvars edits and is preferred.
 
 ### Step 7 — Production apply (creates ECS stack; does NOT route live traffic)
 
@@ -193,6 +285,8 @@ already established in the account (`rds/echocommunity-production/` prefix).
 | `rds/echocommunity-production/plantapi-staging-app` | JSON (`username`/`password`) | `bootstrap-staging-db.sh` | ARN variable (no data source; must exist before apply) |
 | `plant-api-production/application-jwt-secret` | Plain string (PEM) | Terraform (placeholder) | `resource` with `lifecycle { ignore_changes = [secret_string] }` |
 | `plant-api-staging/application-jwt-secret` | Plain string (PEM) | Terraform (placeholder) | `resource` with `lifecycle { ignore_changes = [secret_string] }` |
+| `plant-api-production/secret-key-base` | Plain string (hex) | Terraform (placeholder) | `resource` with `lifecycle { ignore_changes = [secret_string] }` |
+| `plant-api-staging/secret-key-base` | Plain string (hex) | Terraform (placeholder) | `resource` with `lifecycle { ignore_changes = [secret_string] }` |
 
 ### JSON key names — VERIFY BEFORE FIRST APPLY
 
@@ -264,6 +358,7 @@ service exist at priority 19 with a placeholder host. To cut over production tra
 
 - [ ] `rds/echocommunity-production/plantapi-app` JSON key names confirmed (`username`/`password`)
 - [ ] `plant-api-production/application-jwt-secret` seeded with the real RSA public key PEM
+- [ ] `plant-api-production/secret-key-base` seeded (see §Secrets — choose Option A or B)
 - [ ] Staging has been running successfully for at least 24 hours
 - [ ] `rails db:migrate` run against the production database via the migration task:
   ```bash
@@ -360,3 +455,21 @@ for at least 48 hours after cutover.
   per `RAILS_ENV` (`Plant_API_production` and `Plant_API_staging`). The task definition
   sets `RAILS_ENV` correctly (production or staging) and omits `DATABASE_NAME` to avoid
   redundancy and potential misconfiguration.
+
+- **Application Auto Scaling service-linked role**: The ECS auto-scaling
+  (`aws_appautoscaling_target`) requires the
+  `AWSServiceRoleForApplicationAutoScaling_ECSService` service-linked role.  This
+  role **already exists in account 382724554857** (verified via
+  `iam:GetRole AWSServiceRoleForApplicationAutoScaling_ECSService`).  No manual
+  creation or Terraform import is needed.
+
+- **RDS master-secret KMS key**: The RDS master secret
+  (`rds!db-65c1ca5f-392b-47ef-b6f1-e71c13c5b512`) is encrypted with customer-managed
+  KMS key **`2dd2633c-5b82-4526-9c58-80d154ba3821`** (verified live via
+  `describe-db-instances` on `echocommunity-production`).  The deploy policy
+  (`docs/iam/claude-deploy-policy.json`) includes a `KmsDecryptForRdsMasterSecret`
+  statement granting `kms:Decrypt` on that key, conditioned on
+  `kms:ViaService: secretsmanager.us-east-1.amazonaws.com`.  The ECS execution role
+  does **not** need this key — the execution role only reads the scoped app-role secret
+  (`plantapi-app` / `plantapi-staging-app`), which uses the AWS-managed default key
+  (`KmsKeyId: null`, verified via `DescribeSecret`).

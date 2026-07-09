@@ -182,12 +182,6 @@ variable "cors_origins" {
   type        = string
 }
 
-variable "container_env_overrides" {
-  description = "Additional environment variables to inject into the container (map of name -> value)"
-  type        = map(string)
-  default     = {}
-}
-
 # ============================================================================
 # Observability
 # ============================================================================

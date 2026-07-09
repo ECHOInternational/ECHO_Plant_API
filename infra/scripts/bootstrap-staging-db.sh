@@ -231,6 +231,16 @@ unset staging_password
 
 # ---------------------------------------------------------------------------
 # Step 5: Load db/structure.sql into the staging database
+#
+# structure.sql contains "CREATE EXTENSION IF NOT EXISTS pgcrypto" which
+# requires superuser privileges on RDS.  The app role (plantapi_staging_app)
+# is NOT a superuser and cannot create extensions.  We therefore:
+#   a. Connect AS THE MASTER USER to create the extension first.
+#   b. Then load the rest of structure.sql as the app role.
+#
+# No other superuser-requiring statements exist in structure.sql:
+#   grep -n "CREATE EXTENSION|ALTER SYSTEM|COPY FROM" db/structure.sql
+#   → only line 16: CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public
 # ---------------------------------------------------------------------------
 progress "Checking for db/structure.sql at: $STRUCTURE_SQL_PATH"
 if [ ! -f "$STRUCTURE_SQL_PATH" ]; then
@@ -238,6 +248,18 @@ if [ ! -f "$STRUCTURE_SQL_PATH" ]; then
   echo "         Schema load skipped.  Run 'bundle exec rails db:schema:load'" >&2
   echo "         (or db:structure:load) against the staging database manually." >&2
 else
+  # Step 5a: Create required extensions as the master user (superuser on RDS)
+  progress "Creating required extensions in '$STAGING_DB' as master user..."
+  PGPASSWORD="$master_password" psql \
+    --host="$RDS_ENDPOINT" \
+    --port="$RDS_PORT" \
+    --username="$master_username" \
+    --dbname="$STAGING_DB" \
+    --command="CREATE EXTENSION IF NOT EXISTS pgcrypto;"
+  progress "Extensions created."
+
+  # Step 5b: Load structure.sql as the app role.  pgcrypto is already installed
+  # so the CREATE EXTENSION line in structure.sql is a no-op (IF NOT EXISTS).
   progress "Retrieving staging app role password from Secrets Manager for schema load..."
   staging_secret_json="$(
     aws secretsmanager get-secret-value \
