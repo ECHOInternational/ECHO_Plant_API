@@ -11,7 +11,7 @@ before the remote state bucket exists. Apply it once:
 ```bash
 cd infra/bootstrap
 terraform init
-terraform apply -var="state_bucket_name=echo-plant-api-terraform-state-382724554857"
+terraform apply -var="state_bucket_name=echo-terraform-state-382724554857"
 ```
 
 Once the bucket is created, commit the `terraform.tfstate` file (it is tiny and
@@ -22,7 +22,7 @@ a restricted S3 path).
 
 ## What is created
 
-- S3 bucket `echo-plant-api-terraform-state-382724554857`
+- S3 bucket `echo-terraform-state-382724554857`
   - Versioning enabled
   - SSE-S3 (AES256) server-side encryption
   - Public access fully blocked
@@ -33,7 +33,7 @@ a restricted S3 path).
 ```hcl
 terraform {
   backend "s3" {
-    bucket = "echo-plant-api-terraform-state-382724554857"
+    bucket = "echo-terraform-state-382724554857"
     key    = "<module>/terraform.tfstate"
     region = "us-east-1"
   }

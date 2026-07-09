@@ -9,8 +9,8 @@ terraform {
   }
 
   backend "s3" {
-    bucket       = "echo-plant-api-terraform-state-382724554857"
-    key          = "envs/staging/terraform.tfstate"
+    bucket       = "echo-terraform-state-382724554857"
+    key          = "plant-api/staging.tfstate"
     region       = "us-east-1"
     use_lockfile = true
   }

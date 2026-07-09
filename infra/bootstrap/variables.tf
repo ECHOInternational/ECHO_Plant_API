@@ -7,5 +7,5 @@ variable "aws_region" {
 variable "state_bucket_name" {
   description = "Name of the S3 bucket for Terraform remote state"
   type        = string
-  default     = "echo-plant-api-terraform-state-382724554857"
+  default     = "echo-terraform-state-382724554857"
 }
