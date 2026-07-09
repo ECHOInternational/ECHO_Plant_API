@@ -33,9 +33,16 @@ module Types
     field :owned_by, String,
           description: "The user ID of an image's owner",
           null: true
+    field :visibility, Types::VisibilityEnum,
+          description: 'The visibility of the image. Can be: PUBLIC, PRIVATE, DRAFT, DELETED',
+          null: false
     field :translations, [Types::CategoryType::CategoryTranslationType],
           description: 'Translations of translatable category fields',
           null: false,
           method: :translations_array
+
+    def visibility
+      @object.visibility.to_sym
+    end
   end
 end

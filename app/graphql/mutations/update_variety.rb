@@ -11,6 +11,9 @@ module Mutations
     argument :language, String, required: false
     argument :visibility, Types::VisibilityEnum, required: false
 
+    include Mutations::Concerns::VarietyEditableArguments
+    include Mutations::Concerns::RangeLiteralValidation
+
     field :variety, Types::VarietyType, null: true
     field :errors, [Types::MutationError], null: false
 
@@ -19,6 +22,9 @@ module Mutations
     end
 
     def resolve(variety:, **attributes)
+      range_errors = validate_range_literals(attributes)
+      return { variety: variety, errors: range_errors } if range_errors.any?
+
       language = attributes[:language] || I18n.locale
 
       Mobility.with_locale(language) do

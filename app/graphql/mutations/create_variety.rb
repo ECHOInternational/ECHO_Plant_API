@@ -20,6 +20,9 @@ module Mutations
              required: false,
              description: 'The visibility of the variety'
 
+    include Mutations::Concerns::VarietyEditableArguments
+    include Mutations::Concerns::RangeLiteralValidation
+
     field :variety, Types::VarietyType, null: true
     field :errors, [Types::MutationError], null: false
 
@@ -27,7 +30,10 @@ module Mutations
       authorize Variety, :create?
     end
 
-    def resolve(**attributes)
+    def resolve(**attributes) # rubocop:disable Metrics/AbcSize
+      range_errors = validate_range_literals(attributes)
+      return { variety: nil, errors: range_errors } if range_errors.any?
+
       language = attributes[:language] || I18n.locale
 
       attributes

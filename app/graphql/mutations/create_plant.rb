@@ -22,6 +22,9 @@ module Mutations
              required: false,
              description: 'The visibility of the plant'
 
+    include Mutations::Concerns::PlantEditableArguments
+    include Mutations::Concerns::RangeLiteralValidation
+
     field :plant, Types::PlantType, null: true
     field :errors, [Types::MutationError], null: false
 
@@ -30,6 +33,9 @@ module Mutations
     end
 
     def resolve(**attributes) # rubocop:disable Metrics/AbcSize
+      range_errors = validate_range_literals(attributes)
+      return { plant: nil, errors: range_errors } if range_errors.any?
+
       language = attributes[:language] || I18n.locale
       primary_common_name = attributes[:primary_common_name]
 

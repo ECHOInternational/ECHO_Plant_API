@@ -59,9 +59,13 @@ module Types
       field :seeding_rate, String,
             description: 'Translated information about the seeding rate for a variety',
             null: true
-      field :varietying_instructions, String,
-            description: 'Translated varietying instructions for a variety',
+      field :planting_instructions, String,
+            description: 'Translated planting instructions for a variety',
             null: true
+      field :varietying_instructions, String,
+            hash_key: :planting_instructions,
+            null: true,
+            deprecation_reason: 'Use plantingInstructions'
       field :asia_regional_info, String,
             description: 'Translated information about a variety that is specifically relevant to Asia',
             null: true

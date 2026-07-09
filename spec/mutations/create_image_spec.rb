@@ -23,6 +23,7 @@ RSpec.describe 'Create Image Mutation', type: :graphql_mutation do
                     baseUrl
                     createdBy
 					ownedBy
+					visibility
 					imageAttributes{
 						id
 					}
@@ -226,6 +227,24 @@ RSpec.describe 'Create Image Mutation', type: :graphql_mutation do
         created_image = Image.find image_result['uuid']
         expect(created_image.visibility_public?).to be true
         expect(created_image.visibility_private?).to be false
+        expect(image_result['visibility']).to eq('PUBLIC')
+      end
+
+      it 'exposes visibility as PRIVATE by default' do
+        imageable_id = PlantApiSchema.id_from_object(imageable, Category, {})
+        result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                          input: {
+                                            name: 'a private record',
+                                            imageId: 'da5818be-da49-428f-87e6-e944dbb502f9',
+                                            objectId: imageable_id,
+                                            bucket: 'images.us-east-1.echocommunity.org',
+                                            key: 'a file name',
+                                            description: 'with an attached description',
+                                            language: 'en'
+                                          }
+                                        })
+        image_result = result['data']['createImage']['image']
+        expect(image_result['visibility']).to eq('PRIVATE')
       end
     end
   end
