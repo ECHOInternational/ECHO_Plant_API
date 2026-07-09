@@ -48,7 +48,7 @@ output "log_group_name" {
   value       = aws_cloudwatch_log_group.ecs.name
 }
 
-output "ssm_parameter_prefix" {
-  description = "SSM parameter path prefix for secrets"
-  value       = local.ssm_prefix
+output "jwt_secret_arn" {
+  description = "ARN of the plant-api-<env>/application-jwt-secret Secrets Manager secret"
+  value       = aws_secretsmanager_secret.jwt.arn
 }

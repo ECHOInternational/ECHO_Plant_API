@@ -75,8 +75,21 @@ variable "database_port" {
   default = 5432
 }
 
-variable "database_name" {
-  type = string
+variable "db_secret_arn" {
+  description = "ARN of the Secrets Manager secret holding DB credentials"
+  type        = string
+}
+
+variable "db_secret_username_key" {
+  description = "JSON key for the username inside db_secret_arn (default: username)"
+  type        = string
+  default     = "username"
+}
+
+variable "db_secret_password_key" {
+  description = "JSON key for the password inside db_secret_arn (default: password)"
+  type        = string
+  default     = "password"
 }
 
 variable "images_s3_bucket" {

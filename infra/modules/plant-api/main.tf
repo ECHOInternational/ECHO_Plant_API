@@ -9,9 +9,12 @@ terraform {
 
 locals {
   name_prefix = "plant-api-${var.env}"
-  ssm_prefix  = "/plant-api/${var.env}"
 
-  # Base environment variables (non-secret)
+  # Base environment variables (non-secret).
+  # DATABASE_NAME is intentionally omitted: config/database.yml already
+  # hardcodes the database name per RAILS_ENV (Plant_API_production /
+  # Plant_API_staging), so injecting it as an env var is redundant and
+  # could cause confusion if the two values diverge.
   base_env = [
     { name = "RAILS_ENV", value = var.env == "staging" ? "staging" : "production" },
     { name = "RACK_ENV", value = var.env == "staging" ? "staging" : "production" },
@@ -27,20 +30,49 @@ locals {
     { name = "APPLICATION_JWT_ALGORITHM", value = "RS256" },
     { name = "DATABASE_HOST", value = var.database_host },
     { name = "DATABASE_PORT", value = tostring(var.database_port) },
-    { name = "DATABASE_NAME", value = var.database_name },
   ]
 
   # Override env vars merged on top of base
-  override_env = [
-    for k, v in var.container_env_overrides : { name = k, value = v }
+  merged_env_map        = merge({ for e in local.base_env : e.name => e.value }, var.container_env_overrides)
+  container_environment = [for k, v in local.merged_env_map : { name = k, value = v }]
+
+  # -------------------------------------------------------------------------
+  # Secrets Manager ARNs for the task secrets block.
+  #
+  # DATABASE_USERNAME / DATABASE_PASSWORD come from the per-app scoped secret
+  # in the rds/echocommunity-production/ prefix.  The JSON key names inside
+  # those secrets follow the house convention ("username" / "password") but
+  # MUST be verified against the actual secret value before first apply —
+  # see infra/README.md §Secrets.
+  #
+  # APPLICATION_JWT_SECRET is a dedicated per-env plain-string secret
+  # (plant-api-<env>/application-jwt-secret).  It is referenced as a
+  # whole-value (no JSON key selector).
+  # -------------------------------------------------------------------------
+
+  db_secret_arn  = var.db_secret_arn
+  jwt_secret_arn = aws_secretsmanager_secret.jwt.arn
+
+  task_secrets = [
+    {
+      name      = "DATABASE_USERNAME"
+      valueFrom = "${local.db_secret_arn}:${var.db_secret_username_key}::"
+    },
+    {
+      name      = "DATABASE_PASSWORD"
+      valueFrom = "${local.db_secret_arn}:${var.db_secret_password_key}::"
+    },
+    {
+      name      = "APPLICATION_JWT_SECRET"
+      valueFrom = local.jwt_secret_arn
+    },
   ]
 
-  # Merge: overrides win over base (later entries win in ECS; use map->list trick)
-  merged_env_map = merge(
-    { for e in local.base_env : e.name => e.value },
-    var.container_env_overrides
-  )
-  container_environment = [for k, v in local.merged_env_map : { name = k, value = v }]
+  # Execution role needs GetSecretValue on both secrets.
+  execution_secret_arns = [
+    local.db_secret_arn,
+    local.jwt_secret_arn,
+  ]
 }
 
 # ============================================================================
@@ -90,18 +122,21 @@ resource "aws_cloudwatch_log_group" "ecs" {
 }
 
 # ============================================================================
-# SSM Parameters (placeholder values; lifecycle prevents Terraform overwriting)
+# Secrets Manager — APPLICATION_JWT_SECRET (per-env, per-app copy)
+#
+# Terraform creates the secret shell with a placeholder value.
+# The real RSA public key must be seeded out-of-band before first deploy
+# (see infra/README.md §Secrets).  lifecycle.ignore_changes ensures
+# Terraform never overwrites the real value after seeding.
+#
+# For production: seed from the current EB APPLICATION_JWT_SECRET env var.
+# For staging:    copy from echo-seeds-staging/application-jwt-secret
+#                 (see README for the exact pipe command).
 # ============================================================================
 
-resource "aws_ssm_parameter" "database_username" {
-  name        = "${local.ssm_prefix}/DATABASE_USERNAME"
-  description = "Plant API ${var.env} database username"
-  type        = "SecureString"
-  value       = "PLACEHOLDER_CHANGE_ME"
-
-  lifecycle {
-    ignore_changes = [value]
-  }
+resource "aws_secretsmanager_secret" "jwt" {
+  name        = "plant-api-${var.env}/application-jwt-secret"
+  description = "ECHOcommunity RS256 public key body, verifies access tokens (${var.env})"
 
   tags = {
     Project   = "plant-api"
@@ -110,42 +145,17 @@ resource "aws_ssm_parameter" "database_username" {
   }
 }
 
-resource "aws_ssm_parameter" "database_password" {
-  name        = "${local.ssm_prefix}/DATABASE_PASSWORD"
-  description = "Plant API ${var.env} database password"
-  type        = "SecureString"
-  value       = "PLACEHOLDER_CHANGE_ME"
+resource "aws_secretsmanager_secret_version" "jwt_placeholder" {
+  secret_id     = aws_secretsmanager_secret.jwt.id
+  secret_string = "PLACEHOLDER_CHANGE_ME"
 
   lifecycle {
-    ignore_changes = [value]
-  }
-
-  tags = {
-    Project   = "plant-api"
-    Env       = var.env
-    ManagedBy = "terraform"
-  }
-}
-
-resource "aws_ssm_parameter" "application_jwt_secret" {
-  name        = "${local.ssm_prefix}/APPLICATION_JWT_SECRET"
-  description = "Plant API ${var.env} RSA public key for JWT verification"
-  type        = "SecureString"
-  value       = "PLACEHOLDER_CHANGE_ME"
-
-  lifecycle {
-    ignore_changes = [value]
-  }
-
-  tags = {
-    Project   = "plant-api"
-    Env       = var.env
-    ManagedBy = "terraform"
+    ignore_changes = [secret_string]
   }
 }
 
 # ============================================================================
-# IAM — Execution Role (pull images, write logs, read SSM)
+# IAM — Execution Role (pull images, write logs, read Secrets Manager)
 # ============================================================================
 
 data "aws_iam_policy_document" "execution_assume_role" {
@@ -175,37 +185,24 @@ resource "aws_iam_role_policy_attachment" "execution_ecr_logs" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-data "aws_iam_policy_document" "execution_ssm" {
+# GetSecretValue scoped to exactly the two secret ARNs used by the task.
+# No kms:Decrypt statement is required because all referenced secrets use
+# the AWS-managed default key (KmsKeyId = null, verified via DescribeSecret).
+data "aws_iam_policy_document" "execution_secrets" {
   statement {
-    sid    = "SSMGetParameters"
+    sid    = "SecretsManagerGetValue"
     effect = "Allow"
     actions = [
-      "ssm:GetParameters",
-      "ssm:GetParameter",
-      "ssm:GetParametersByPath",
+      "secretsmanager:GetSecretValue",
     ]
-    resources = [
-      "arn:aws:ssm:${var.aws_region}:${var.aws_account_id}:parameter${local.ssm_prefix}/*",
-    ]
-  }
-
-  # Allow KMS decrypt for SSM SecureString parameters (uses aws/ssm managed key)
-  statement {
-    sid    = "KMSDecryptSSM"
-    effect = "Allow"
-    actions = [
-      "kms:Decrypt",
-    ]
-    resources = [
-      "arn:aws:kms:${var.aws_region}:${var.aws_account_id}:alias/aws/ssm",
-    ]
+    resources = local.execution_secret_arns
   }
 }
 
-resource "aws_iam_role_policy" "execution_ssm" {
-  name   = "ssm-read-${local.name_prefix}"
+resource "aws_iam_role_policy" "execution_secrets" {
+  name   = "secretsmanager-read-${local.name_prefix}"
   role   = aws_iam_role.execution.id
-  policy = data.aws_iam_policy_document.execution_ssm.json
+  policy = data.aws_iam_policy_document.execution_secrets.json
 }
 
 # ============================================================================
@@ -337,20 +334,7 @@ resource "aws_ecs_task_definition" "web" {
 
       environment = local.container_environment
 
-      secrets = [
-        {
-          name      = "DATABASE_USERNAME"
-          valueFrom = aws_ssm_parameter.database_username.arn
-        },
-        {
-          name      = "DATABASE_PASSWORD"
-          valueFrom = aws_ssm_parameter.database_password.arn
-        },
-        {
-          name      = "APPLICATION_JWT_SECRET"
-          valueFrom = aws_ssm_parameter.application_jwt_secret.arn
-        }
-      ]
+      secrets = local.task_secrets
 
       logConfiguration = {
         logDriver = "awslogs"
@@ -405,20 +389,7 @@ resource "aws_ecs_task_definition" "migrate" {
 
       environment = local.container_environment
 
-      secrets = [
-        {
-          name      = "DATABASE_USERNAME"
-          valueFrom = aws_ssm_parameter.database_username.arn
-        },
-        {
-          name      = "DATABASE_PASSWORD"
-          valueFrom = aws_ssm_parameter.database_password.arn
-        },
-        {
-          name      = "APPLICATION_JWT_SECRET"
-          valueFrom = aws_ssm_parameter.application_jwt_secret.arn
-        }
-      ]
+      secrets = local.task_secrets
 
       logConfiguration = {
         logDriver = "awslogs"

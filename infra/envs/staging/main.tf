@@ -50,7 +50,11 @@ module "plant_api" {
   rds_security_group_ids = var.rds_security_group_ids
   database_host          = var.database_host
   database_port          = var.database_port
-  database_name          = var.database_name
+
+  # Secrets Manager — DB credentials
+  db_secret_arn          = var.db_secret_arn
+  db_secret_username_key = var.db_secret_username_key
+  db_secret_password_key = var.db_secret_password_key
 
   # S3
   images_s3_bucket = var.images_s3_bucket

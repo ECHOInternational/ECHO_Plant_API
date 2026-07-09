@@ -16,12 +16,28 @@ infra/
 ├── envs/
 │   ├── staging/        # Staging environment (plant-api-staging.echocommunity.org)
 │   └── production/     # Production environment (plant-api.echocommunity.org)
+├── scripts/
+│   └── bootstrap-staging-db.sh  # One-time staging DB + secret creation
 └── README.md           # This file
 ```
 
 ---
 
 ## Apply order
+
+The full first-time ordering is:
+
+```
+Step 1: bootstrap TF (once only)
+Step 2: global TF
+Step 3: create write-profile / confirm credentials
+Step 4: run bootstrap-staging-db.sh (from this machine, once RDS SG grants access)
+Step 5: update staging db_secret_arn in terraform.tfvars
+Step 6: seed APPLICATION_JWT_SECRET for both environments (see §Secrets below)
+Step 7: terraform apply — staging
+Step 8: terraform apply — production
+Step 9: smoke-test staging; proceed to production cutover
+```
 
 ### Step 1 — Bootstrap (once only)
 
@@ -46,7 +62,103 @@ terraform init
 terraform apply
 ```
 
-### Step 3 — Staging
+### Step 3 — Create write-profile / confirm credentials
+
+You need an IAM profile with at minimum:
+- `secretsmanager:GetSecretValue` on the RDS master secret
+- `secretsmanager:CreateSecret`
+- `secretsmanager:DescribeSecret`
+- Standard Terraform permissions (S3 state bucket, ECS, IAM, etc.)
+
+Confirm the profile works:
+
+```bash
+aws sts get-caller-identity --profile <your-write-profile>
+```
+
+### Step 4 — Run bootstrap-staging-db.sh
+
+This script must be run **before** `terraform apply` for staging because staging's
+Terraform config references the `rds/echocommunity-production/plantapi-staging-app`
+Secrets Manager secret that the script creates.
+
+**Pre-requisite:** Your machine (or the machine you run this on) must be able to reach
+`echocommunity-production.ceui3mx2fcbs.us-east-1.rds.amazonaws.com:5432`.
+The RDS instance is `PubliclyAccessible: true`, so you just need your source IP
+allowed inbound in `sg-007ae20731af7483c` or `sg-35fa1548` (default SG).
+
+```bash
+AWS_PROFILE=<your-write-profile> ./infra/scripts/bootstrap-staging-db.sh
+```
+
+The script is idempotent (safe to re-run). It:
+1. Retrieves the RDS master credentials from Secrets Manager secret
+   `rds!db-65c1ca5f-392b-47ef-b6f1-e71c13c5b512`.
+2. Creates database `Plant_API_staging` and role `plantapi_staging_app` if they
+   do not already exist.
+3. Grants all privileges and loads `db/structure.sql` as the new role.
+4. Stores `{"username":"plantapi_staging_app","password":"<generated>"}` in
+   Secrets Manager as `rds/echocommunity-production/plantapi-staging-app`.
+
+After it completes, retrieve the secret ARN and update staging tfvars:
+
+```bash
+STAGING_ARN="$(aws secretsmanager describe-secret \
+  --secret-id rds/echocommunity-production/plantapi-staging-app \
+  --query ARN --output text \
+  --profile <your-write-profile>)"
+echo "Update db_secret_arn in infra/envs/staging/terraform.tfvars to: $STAGING_ARN"
+```
+
+Edit `infra/envs/staging/terraform.tfvars` and replace the placeholder
+`arn:aws:secretsmanager:...:rds/echocommunity-production/plantapi-staging-app-XXXXXX`
+with the real ARN.
+
+### Step 5 — Seed APPLICATION_JWT_SECRET
+
+Terraform creates the `plant-api-<env>/application-jwt-secret` Secrets Manager
+secret with a placeholder value and then ignores future changes.  Seed the real
+RSA public key before the first deploy.
+
+**Important:** The value is the RSA **public key PEM body** used to verify JWTs
+issued by `www.echocommunity.org`. It is the same key currently in the EB
+environment variable `APPLICATION_JWT_SECRET` (retrieve it before decommissioning EB).
+
+#### Production JWT secret
+
+Retrieve the current value from EB and store it in the new secret:
+
+```bash
+# Replace <REDACTED> with the actual PEM value from the EB env var
+aws secretsmanager put-secret-value \
+  --region us-east-1 \
+  --secret-id "plant-api-production/application-jwt-secret" \
+  --secret-string "<RSA-public-key-PEM>" \
+  --profile <your-write-profile>
+```
+
+#### Staging JWT secret
+
+The staging RSA public key is the same as production (same IdP); copy it from
+the sibling `echo-seeds-staging/application-jwt-secret` secret without printing
+the value:
+
+```bash
+# Pipe get | put — the value is never displayed in the terminal
+aws secretsmanager get-secret-value \
+  --region us-east-1 \
+  --secret-id "echo-seeds-staging/application-jwt-secret" \
+  --query SecretString \
+  --output text \
+  --profile <your-write-profile> \
+| aws secretsmanager put-secret-value \
+  --region us-east-1 \
+  --secret-id "plant-api-staging/application-jwt-secret" \
+  --secret-string "$(cat /dev/stdin)" \
+  --profile <your-write-profile>
+```
+
+### Step 6 — Staging apply
 
 ```bash
 cd infra/envs/staging
@@ -54,7 +166,7 @@ terraform init
 terraform apply
 ```
 
-### Step 4 — Production (creates the ECS stack but does NOT route live traffic)
+### Step 7 — Production apply (creates ECS stack; does NOT route live traffic)
 
 ```bash
 cd infra/envs/production
@@ -68,68 +180,74 @@ EB rule (priority 15) until you perform the cutover below.
 
 ---
 
-## Secret seeding
+## Secrets
 
-After each `terraform apply` for an environment, seed the three SSM SecureString
-parameters. Terraform creates them with placeholder values and then ignores future
-changes — you must set the real secrets via CLI or Console.
+### How secrets are managed
 
-### Staging
+This infrastructure uses **AWS Secrets Manager** with the per-app scoped convention
+already established in the account (`rds/echocommunity-production/` prefix).
 
-```bash
-ENV=staging
-REGION=us-east-1
+| Secret name | Type | Who creates | Terraform action |
+|---|---|---|---|
+| `rds/echocommunity-production/plantapi-app` | JSON (`username`/`password`) | EXISTING (pre-created) | `data` source via ARN variable |
+| `rds/echocommunity-production/plantapi-staging-app` | JSON (`username`/`password`) | `bootstrap-staging-db.sh` | ARN variable (no data source; must exist before apply) |
+| `plant-api-production/application-jwt-secret` | Plain string (PEM) | Terraform (placeholder) | `resource` with `lifecycle { ignore_changes = [secret_string] }` |
+| `plant-api-staging/application-jwt-secret` | Plain string (PEM) | Terraform (placeholder) | `resource` with `lifecycle { ignore_changes = [secret_string] }` |
 
-aws ssm put-parameter \
-  --region $REGION \
-  --name "/plant-api/${ENV}/DATABASE_USERNAME" \
-  --value "plantapi_app" \
-  --type SecureString \
-  --overwrite
+### JSON key names — VERIFY BEFORE FIRST APPLY
 
-aws ssm put-parameter \
-  --region $REGION \
-  --name "/plant-api/${ENV}/DATABASE_PASSWORD" \
-  --value "<the-real-password>" \
-  --type SecureString \
-  --overwrite
+The task definition references `rds/echocommunity-production/plantapi-app` with
+JSON-key selectors:
 
-aws ssm put-parameter \
-  --region $REGION \
-  --name "/plant-api/${ENV}/APPLICATION_JWT_SECRET" \
-  --value "<RSA-public-key-PEM>" \
-  --type SecureString \
-  --overwrite
+```
+valueFrom = "<secret-arn>:username::"   # DATABASE_USERNAME
+valueFrom = "<secret-arn>:password::"   # DATABASE_PASSWORD
 ```
 
-### Production
+The key names `username` / `password` match the house convention seen in sibling
+secrets (`discourse-app`, `echocommunity-app`, etc.) and the description
+"Scoped DB role plantapi_app". **However**, you cannot verify the actual key names
+with the `ReadOnlyAccess` profile (it lacks `GetSecretValue`).
+
+Before first apply, use a write-capable profile to confirm:
 
 ```bash
-ENV=production
-# Same three commands as above with ENV=production and production credentials.
+aws secretsmanager get-secret-value \
+  --secret-id rds/echocommunity-production/plantapi-app \
+  --query SecretString \
+  --output text \
+  --profile <your-write-profile>
 ```
 
-The `APPLICATION_JWT_SECRET` value is the RSA public key (PEM format) used to
-verify JWTs issued by `www.echocommunity.org`. Retrieve the current value from
-the EB environment variable `APPLICATION_JWT_SECRET` before decommissioning EB.
+The output will be JSON such as `{"username":"plantapi_app","password":"..."}`.
+If the key names differ from `username` / `password`, update:
+- `infra/envs/production/terraform.tfvars`:  `db_secret_username_key` / `db_secret_password_key`
+- `infra/envs/staging/terraform.tfvars`:     same variables
+
+### KMS keys
+
+All secrets in the `rds/echocommunity-production/` prefix and the
+`plant-api-<env>/` secrets use the **AWS managed default key** (KmsKeyId = null,
+verified via `DescribeSecret`). No `kms:Decrypt` IAM statement is required in the
+execution role — `secretsmanager:GetSecretValue` is sufficient.
 
 ---
 
 ## Staging database
 
-**There is no staging RDS instance.** Options (choose one before applying staging):
+The staging database `Plant_API_staging` lives on the shared production RDS instance
+(`echocommunity-production`). It is owned by a dedicated app role `plantapi_staging_app`
+with credentials stored in `rds/echocommunity-production/plantapi-staging-app`.
 
-1. **Shared schema (simplest):** Create a separate database on the existing production
-   RDS instance:
-   ```sql
-   CREATE DATABASE "Plant_API_staging" OWNER plantapi_app;
-   ```
-   The staging ECS tasks use `DATABASE_NAME=Plant_API_staging`. This isolates data
-   at the database level but shares the same RDS instance and credentials.
+**No `DATABASE_NAME` env var is injected** into the ECS task: `config/database.yml`
+already hardcodes `Plant_API_staging` for `RAILS_ENV=staging`, so the env var
+is redundant and has been removed to avoid any risk of value divergence.
 
-2. **Snapshot restore (recommended for long-term):** Restore a snapshot of
-   `Plant_API_production` to a new RDS instance. Update `database_host` in
-   `envs/staging/terraform.tfvars` to the new endpoint before applying.
+The staging database is created by `infra/scripts/bootstrap-staging-db.sh` (see
+§Apply order above). The Terraform staging config references the secret ARN as a
+plain variable (not a `data "aws_secretsmanager_secret"` data source) so that
+`terraform plan` works before the secret exists. Update `db_secret_arn` in
+`infra/envs/staging/terraform.tfvars` after the bootstrap script runs.
 
 ---
 
@@ -144,8 +262,9 @@ service exist at priority 19 with a placeholder host. To cut over production tra
 
 ### Pre-cutover checklist
 
+- [ ] `rds/echocommunity-production/plantapi-app` JSON key names confirmed (`username`/`password`)
+- [ ] `plant-api-production/application-jwt-secret` seeded with the real RSA public key PEM
 - [ ] Staging has been running successfully for at least 24 hours
-- [ ] All SSM parameters seeded for production (`DATABASE_*`, `APPLICATION_JWT_SECRET`)
 - [ ] `rails db:migrate` run against the production database via the migration task:
   ```bash
   aws ecs run-task \
@@ -158,6 +277,14 @@ service exist at priority 19 with a placeholder host. To cut over production tra
 - [ ] ECS service health check passes (target group shows healthy targets)
 - [ ] Smoke-tested via the placeholder domain `plant-api-cutover.echocommunity.org`
 
+### Smoke test (pre-cutover)
+
+```bash
+curl -s https://plant-api-cutover.echocommunity.org/graphql \
+  -H "Content-Type: application/json" \
+  -d '{"query":"{ plants(first: 1) { totalCount } }"}' | python3 -m json.tool
+```
+
 ### Cutover (zero-downtime)
 
 Get the new ECS target group ARN from Terraform output:
@@ -167,15 +294,25 @@ cd infra/envs/production
 terraform output target_group_arn
 ```
 
-Modify the existing priority-15 rule to forward to the new ECS target group:
+Retrieve the existing priority-15 rule ARN:
 
 ```bash
-NEW_TG_ARN="<output from above>"
-RULE_ARN="<priority-15 rule ARN>"   # retrieve with: aws elbv2 describe-rules --listener-arn ...
+LISTENER_ARN="arn:aws:elasticloadbalancing:us-east-1:382724554857:listener/app/ECHOcommunity-load-balancer/cda099b79e56784d/6f2b7bd42f572512"
+RULE_ARN="$(aws elbv2 describe-rules \
+  --listener-arn "$LISTENER_ARN" \
+  --region us-east-1 \
+  --query "Rules[?Priority=='15'].RuleArn" \
+  --output text)"
+```
+
+Modify the priority-15 rule to forward to the ECS target group:
+
+```bash
+NEW_TG_ARN="<output from terraform output target_group_arn>"
 
 aws elbv2 modify-rule \
-  --rule-arn $RULE_ARN \
-  --actions Type=forward,TargetGroupArn=$NEW_TG_ARN \
+  --rule-arn "$RULE_ARN" \
+  --actions "Type=forward,TargetGroupArn=$NEW_TG_ARN" \
   --region us-east-1
 ```
 
@@ -191,8 +328,8 @@ EB target group:
 EB_TG_ARN="arn:aws:elasticloadbalancing:us-east-1:382724554857:targetgroup/awseb-echoplan-default-em2rm/b85fa4d81a6e1217"
 
 aws elbv2 modify-rule \
-  --rule-arn $RULE_ARN \
-  --actions Type=forward,TargetGroupArn=$EB_TG_ARN \
+  --rule-arn "$RULE_ARN" \
+  --actions "Type=forward,TargetGroupArn=$EB_TG_ARN" \
   --region us-east-1
 ```
 
@@ -208,13 +345,18 @@ for at least 48 hours after cutover.
   Multi-AZ private subnets are a future improvement.
 
 - **NAT**: Outbound internet from the private subnet routes through a NAT EC2 instance
-  (`i-03f65b4dc1516cef7`). If the NAT instance goes down, ECS tasks lose ECR/SSM
-  connectivity. Consider replacing with an AWS Managed NAT Gateway.
+  (`i-03f65b4dc1516cef7`). If the NAT instance goes down, ECS tasks lose ECR/Secrets
+  Manager connectivity. Consider replacing with an AWS Managed NAT Gateway.
 
-- **SSM state locking**: uses Terraform 1.9+ native S3 locking (`use_lockfile = true`)
+- **S3 state locking**: uses Terraform 1.9+ native S3 locking (`use_lockfile = true`)
   — no DynamoDB table required.
 
 - **Task image pinning**: `aws_ecs_service` has `lifecycle { ignore_changes = [task_definition] }`
   so that CI/CD pipeline updates to the task definition (via `aws ecs update-service`)
   are not reverted by Terraform. Run `terraform apply` only for infrastructure changes;
   image deploys are handled by the GitHub Actions pipeline.
+
+- **RAILS_ENV vs DATABASE_NAME**: `config/database.yml` hardcodes the database name
+  per `RAILS_ENV` (`Plant_API_production` and `Plant_API_staging`). The task definition
+  sets `RAILS_ENV` correctly (production or staging) and omits `DATABASE_NAME` to avoid
+  redundancy and potential misconfiguration.

@@ -28,15 +28,32 @@ alb_listener_arn      = "arn:aws:elasticloadbalancing:us-east-1:382724554857:lis
 host_headers           = ["plant-api-staging.echocommunity.org"]
 listener_rule_priority = 17 # Free — verified: 1,5,8,9,10,11,12,13,14,15,16,18,50,120 used
 
-# RDS — shared production RDS instance (phase0-inputs.md §5)
-# NOTE: There is no staging-specific RDS instance. Options:
-#   (a) Use a separate schema/database on the production RDS (current approach — see infra/README.md)
-#   (b) Restore a snapshot to a separate RDS instance for true isolation
-# The database Plant_API_staging must be created out-of-band before first deploy.
+# RDS — shared production RDS instance, staging database (phase0-inputs.md §5)
+# The staging database and role are created out-of-band by:
+#   infra/scripts/bootstrap-staging-db.sh
+# That script also creates the secret rds/echocommunity-production/plantapi-staging-app.
+# The ARN below is the EXPECTED ARN pattern; it will be the actual ARN once the
+# script runs (Secrets Manager ARNs for named secrets follow this pattern).
+# Run bootstrap-staging-db.sh BEFORE terraform apply for staging (see README).
 rds_security_group_ids = ["sg-007ae20731af7483c", "sg-35fa1548"]
 database_host          = "echocommunity-production.ceui3mx2fcbs.us-east-1.rds.amazonaws.com"
 database_port          = 5432
-database_name          = "Plant_API_staging"
+# DATABASE_NAME is NOT injected as an env var — config/database.yml already
+# hardcodes "Plant_API_staging" for the staging RAILS_ENV.
+
+# Secrets Manager — staging DB credentials
+# Created out-of-band by infra/scripts/bootstrap-staging-db.sh.
+# Supply the full ARN here after the script runs; the suffix (-XXXXXX) is
+# assigned by Secrets Manager at creation time — retrieve with:
+#   aws secretsmanager describe-secret \
+#     --secret-id rds/echocommunity-production/plantapi-staging-app \
+#     --query ARN --output text
+# Using an ARN variable (not a data source) so that terraform plan works
+# before the secret exists.  Update this value after bootstrap-staging-db.sh
+# completes and before running terraform apply.
+db_secret_arn          = "arn:aws:secretsmanager:us-east-1:382724554857:secret:rds/echocommunity-production/plantapi-staging-app-XXXXXX"
+db_secret_username_key = "username"
+db_secret_password_key = "password"
 
 # S3 — shared images bucket
 images_s3_bucket = "images-us-east-1.echocommunity.org"

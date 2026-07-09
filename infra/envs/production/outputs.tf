@@ -19,8 +19,9 @@ output "log_group_name" {
   value = module.plant_api.log_group_name
 }
 
-output "ssm_parameter_prefix" {
-  value = module.plant_api.ssm_parameter_prefix
+output "jwt_secret_arn" {
+  description = "ARN of plant-api-production/application-jwt-secret — seed this before first deploy"
+  value       = module.plant_api.jwt_secret_arn
 }
 
 output "migrate_task_definition_arn" {

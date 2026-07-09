@@ -120,9 +120,48 @@ variable "database_port" {
   default     = 5432
 }
 
-variable "database_name" {
-  description = "Database name (non-secret)"
+# ============================================================================
+# Secrets Manager — DB credentials
+# ============================================================================
+
+variable "db_secret_arn" {
+  description = <<-EOT
+    ARN of the Secrets Manager secret that holds the database credentials.
+
+    For production: the EXISTING secret rds/echocommunity-production/plantapi-app
+      (ARN: arn:aws:secretsmanager:us-east-1:382724554857:secret:rds/echocommunity-production/plantapi-app-tNMZMM)
+
+    For staging: the NEW secret rds/echocommunity-production/plantapi-staging-app
+      created out-of-band by infra/scripts/bootstrap-staging-db.sh.  Supply its ARN
+      as a variable so terraform plan works before the secret exists.
+
+    IMPORTANT: verify the actual JSON key names in the secret before first apply
+    (see db_secret_username_key / db_secret_password_key variables below).
+  EOT
   type        = string
+}
+
+variable "db_secret_username_key" {
+  description = <<-EOT
+    JSON key name for the database username inside the db_secret_arn secret.
+
+    The house convention for rds/echocommunity-production/* scoped-role secrets
+    is "username" and "password" — but you MUST verify this against the actual
+    secret value before first apply.  If the keys differ, update these variables
+    in the env-level terraform.tfvars.  Do NOT hard-code different values in the
+    module — keep them as variables so each env can override if needed.
+  EOT
+  type        = string
+  default     = "username"
+}
+
+variable "db_secret_password_key" {
+  description = <<-EOT
+    JSON key name for the database password inside the db_secret_arn secret.
+    See db_secret_username_key for the verification note.
+  EOT
+  type        = string
+  default     = "password"
 }
 
 # ============================================================================

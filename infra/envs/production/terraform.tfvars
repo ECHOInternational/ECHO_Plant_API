@@ -41,7 +41,22 @@ listener_rule_priority = 19 # Free — verified: 1,5,8,9,10,11,12,13,14,15,16,18
 rds_security_group_ids = ["sg-007ae20731af7483c", "sg-35fa1548"]
 database_host          = "echocommunity-production.ceui3mx2fcbs.us-east-1.rds.amazonaws.com"
 database_port          = 5432
-database_name          = "Plant_API_production"
+# DATABASE_NAME is NOT injected as an env var — config/database.yml already
+# hardcodes "Plant_API_production" for the production RAILS_ENV.
+
+# Secrets Manager — production DB credentials
+# EXISTING secret created by the house RDS-scoped-role convention.
+# ARN verified via: aws secretsmanager describe-secret --secret-id rds/echocommunity-production/plantapi-app
+# KmsKeyId = null (uses AWS managed default key — no kms:Decrypt statement needed).
+#
+# IMPORTANT: verify that the JSON keys inside this secret are exactly "username"
+# and "password" before first apply (ReadOnlyAccess profile cannot read the value;
+# use a write-capable profile: aws secretsmanager get-secret-value --secret-id ...
+# and check the key names).  If they differ, override db_secret_username_key /
+# db_secret_password_key here.
+db_secret_arn          = "arn:aws:secretsmanager:us-east-1:382724554857:secret:rds/echocommunity-production/plantapi-app-tNMZMM"
+db_secret_username_key = "username"
+db_secret_password_key = "password"
 
 # S3 — shared images bucket
 images_s3_bucket = "images-us-east-1.echocommunity.org"
