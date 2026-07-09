@@ -37,6 +37,16 @@ RSpec.describe 'CORS', type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.headers['Access-Control-Allow-Origin']).to eq('https://echocommunity.org')
     end
+
+    it 'answers an OPTIONS preflight for an allowed origin' do
+      process :options, '/graphql', headers: {
+        'Origin' => 'https://echocommunity.org',
+        'Access-Control-Request-Method' => 'POST'
+      }
+      expect(response.status).to be_between(200, 204)
+      expect(response.headers['Access-Control-Allow-Origin']).to eq('https://echocommunity.org')
+      expect(response.headers['Access-Control-Allow-Methods']).to include('POST')
+    end
   end
 
   describe 'disallowed origins' do
