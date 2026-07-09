@@ -142,7 +142,7 @@ RSpec.describe 'Soft Delete Plant Mutation', type: :graphql_mutation do
           end
         end
         context 'and the specimen is soft-deleted' do
-          let(:variety) { create(:variety, plant: plant, visibility: :deleted)}
+          let(:variety) { create(:variety, plant: plant, visibility: :deleted) }
           it "soft deletes the record" do
             plant_id = PlantApiSchema.id_from_object(plant, Plant, {})
             record_id = plant.id
