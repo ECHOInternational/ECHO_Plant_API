@@ -40,7 +40,7 @@ gem 'http_accept_language'
 
 # Features
 # Versioning
-gem 'paper_trail', '~> 10.3.1'
+gem 'paper_trail', '~> 12.3'
 # I18n
 gem 'mobility', '~> 0.8.13'
 # Graphql
