@@ -34,8 +34,8 @@ alb_listener_arn      = "arn:aws:elasticloadbalancing:us-east-1:382724554857:lis
 #   Cutover is accomplished by modifying ONLY the existing priority-15 rule's action
 #   to forward to the new ECS target group — no DNS change required since the Route53
 #   A record already points to this ALB. See infra/README.md for the exact command.
-host_headers           = ["plant-api-cutover.echocommunity.org"]
-listener_rule_priority = 19 # Free — verified: 1,5,8,9,10,11,12,13,14,15,16,18,50,120 used
+host_headers           = ["plant-api.echocommunity.org"]
+listener_rule_priority = 6 # Must be ABOVE the /* catch-all at 16 (which forwards to EB); free slots: 2,3,4,6,7
 
 # RDS — production database (phase0-inputs.md §5)
 rds_security_group_ids = ["sg-007ae20731af7483c", "sg-35fa1548"]
