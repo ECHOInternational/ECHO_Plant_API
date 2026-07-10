@@ -1,0 +1,17 @@
+.git
+log/*
+tmp/*
+coverage
+spec
+development/
+.env*
+storage/*
+.vscode
+infra/
+node_modules
+.superpowers/
+*.md
+.ruby-version
+.rubocop*
+Procfile
+.github/

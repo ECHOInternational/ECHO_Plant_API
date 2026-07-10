@@ -19,7 +19,11 @@ port        ENV.fetch('PORT') { 3000 }
 environment ENV.fetch('RAILS_ENV') { 'development' }
 
 # Specifies the `pidfile` that Puma will use.
-pidfile ENV.fetch('PIDFILE') { 'tmp/pids/server.pid' }
+# In production (ECS), pidfile is not required. Only write it in development or if explicitly requested.
+rails_env = ENV.fetch('RAILS_ENV', 'development')
+if rails_env == 'development' || ENV['PIDFILE']
+  pidfile ENV.fetch('PIDFILE') { 'tmp/pids/server.pid' }
+end
 
 # Specifies the number of `workers` to boot in clustered mode.
 # Workers are forked web server processes. If using threads and workers together
@@ -27,14 +31,18 @@ pidfile ENV.fetch('PIDFILE') { 'tmp/pids/server.pid' }
 # Workers do not work on JRuby or Windows (both of which do not support
 # processes).
 #
-# workers ENV.fetch("WEB_CONCURRENCY") { 2 }
+# Cluster mode is enabled via the WEB_CONCURRENCY environment variable.
+# Default is single-process mode (0 workers).
+web_concurrency = ENV.fetch('WEB_CONCURRENCY') { 0 }.to_i
+workers web_concurrency
 
 # Use the `preload_app!` method when specifying a `workers` number.
 # This directive tells Puma to first boot the application and load code
 # before forking the application. This takes advantage of Copy On Write
 # process behavior so workers use less memory.
 #
-# preload_app!
+# Only enable preload_app! when actually using multiple workers.
+preload_app! if web_concurrency > 0
 
 # Allow puma to be restarted by `rails restart` command.
 plugin :tmp_restart

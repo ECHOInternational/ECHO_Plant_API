@@ -2,6 +2,8 @@ inherit_from: .rubocop_todo.yml
 AllCops:
     Exclude:
         - 'db/seeds.rb'
+        # CI installs gems into vendor/bundle (in-repo for caching); never lint vendored code
+        - 'vendor/**/*'
 # Rspec doesn't support do...end so block delimiters must be allowed
 Style/BlockDelimiters:
     Exclude:

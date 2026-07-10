@@ -1,4 +1,7 @@
 # frozen_string_literal: true
+
+require_relative '../../lib/cors_origins'
+
 # Be sure to restart your server when you modify this file.
 
 # Avoid CORS issues when API is called from the frontend app.
@@ -8,14 +11,7 @@
 
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    origins 'echocommunity.org'
-
-    resource '*',
-             headers: :any,
-             methods: :any
-  end
-  allow do
-    origins 'http://development.echocommunity.org:3000'
+    origins CorsOrigins.list
 
     resource '*',
              headers: :any,
