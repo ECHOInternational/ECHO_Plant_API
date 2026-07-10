@@ -397,7 +397,10 @@ resource "aws_ecs_task_definition" "web" {
       }
 
       healthCheck = {
-        command     = ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+        # The production image is intentionally minimal and has no curl —
+        # a curl-based check fails on every task and ECS kills the (otherwise
+        # healthy) task after retries. Ruby is always present in this image.
+        command     = ["CMD-SHELL", "ruby -rnet/http -e 'exit(Net::HTTP.get_response(URI(\"http://127.0.0.1:3000/health\")).is_a?(Net::HTTPSuccess) ? 0 : 1)'"]
         interval    = 30
         timeout     = 5
         retries     = 3

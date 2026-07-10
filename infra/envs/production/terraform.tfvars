@@ -6,7 +6,7 @@ aws_region     = "us-east-1"
 aws_account_id = "382724554857"
 
 # Image: updated by CI/CD pipeline on each deploy.
-image = "382724554857.dkr.ecr.us-east-1.amazonaws.com/plant-api:latest"
+image = "382724554857.dkr.ecr.us-east-1.amazonaws.com/plant-api:35c1bef18557"
 
 # ECS sizing (production: 2 tasks minimum)
 cpu           = 512
