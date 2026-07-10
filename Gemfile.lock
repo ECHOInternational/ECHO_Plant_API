@@ -102,7 +102,8 @@ GEM
     ffi (1.13.1)
     globalid (1.4.0)
       activesupport (>= 6.1)
-    graphql (1.11.5)
+    graphql (1.13.25)
+      base64
     http_accept_language (2.1.1)
     i18n (1.14.8)
       concurrent-ruby (~> 1.0)
@@ -271,7 +272,7 @@ DEPENDENCIES
   byebug
   factory_bot_rails
   faker (~> 2.23)
-  graphql (~> 1.9)
+  graphql (~> 1.13.25)
   http_accept_language
   jwt (~> 2.10)
   listen (~> 3.2)
