@@ -3,7 +3,7 @@
 module Mutations
   # All mutations inherit from this set of defaults
   class BaseMutation < GraphQL::Schema::RelayClassicMutation
-    include Pundit
+    include Pundit::Authorization
     def pundit_user
       context[:current_user]
     end
