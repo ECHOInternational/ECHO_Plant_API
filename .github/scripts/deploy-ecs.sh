@@ -26,14 +26,19 @@ SMOKE_URL=${5:-}
 
 register_revision() {
   local family=$1
+  # A real temp file: the AWS CLI cannot reliably read piped stdin via
+  # file:///dev/stdin (it re-opens the path, losing the pipe contents).
+  local tmp
+  tmp=$(mktemp)
   aws ecs describe-task-definition --task-definition "$family" \
     --query 'taskDefinition' --output json |
     jq --arg IMAGE "$IMAGE" '
       .containerDefinitions[0].image = $IMAGE
       | del(.taskDefinitionArn, .revision, .status, .requiresAttributes,
-            .compatibilities, .registeredAt, .registeredBy)' |
-    aws ecs register-task-definition --cli-input-json file:///dev/stdin \
-      --query 'taskDefinition.taskDefinitionArn' --output text
+            .compatibilities, .registeredAt, .registeredBy)' > "$tmp"
+  aws ecs register-task-definition --cli-input-json "file://$tmp" \
+    --query 'taskDefinition.taskDefinitionArn' --output text
+  rm -f "$tmp"
 }
 
 WEB_FAMILY=$(aws ecs describe-services --cluster "$CLUSTER" --services "$SERVICE" \
