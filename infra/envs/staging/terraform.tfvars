@@ -7,7 +7,7 @@ aws_account_id = "382724554857"
 
 # Image: updated by CI/CD pipeline on each deploy.
 # Set to a placeholder — CI will pass -var="image=..." at apply time.
-image = "382724554857.dkr.ecr.us-east-1.amazonaws.com/plant-api:latest"
+image = "382724554857.dkr.ecr.us-east-1.amazonaws.com/plant-api:35c1bef18557"
 
 # ECS sizing (staging: minimum viable)
 cpu           = 256
