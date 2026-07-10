@@ -58,7 +58,8 @@ RSpec.describe 'Error code contract', type: :request do
     # graphql-ruby's base64 decoder raises ArgumentError on a malformed id in some
     # versions and wraps it as a bare GraphQL::ExecutionError (no extensions.code)
     # in others; object_from_id rescues both so malformed ids always yield a coded 404.
-    # The Relay node field routes through object_from_id; plant(id:) decodes inline.
+    # The Relay node field routes through object_from_id; single-object queries
+    # (plant etc.) route through decode_global_id which mirrors the same rescue.
     it 'returns 404 for a malformed (undecodable) global id via the Relay node field' do
       post '/graphql', params: { query: '{ node(id: "not-base64!!") { id } }' }
 
