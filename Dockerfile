@@ -11,6 +11,9 @@ RUN apt-get update -qq \
       build-essential \
       libpq-dev \
       libyaml-dev \
+      # (headers for psych 5's native ext at BUILD time only; the production stage
+      # needs just libyaml-0.so.2, which the ruby-slim base already ships - do not
+      # add libyaml here in a slimming pass, and do not remove it from base)
       git \
  && rm -rf /var/lib/apt/lists/*
 
@@ -80,6 +83,9 @@ RUN apt-get update -qq \
       build-essential \
       libpq-dev \
       libyaml-dev \
+      # (headers for psych 5's native ext at BUILD time only; the production stage
+      # needs just libyaml-0.so.2, which the ruby-slim base already ships - do not
+      # add libyaml here in a slimming pass, and do not remove it from base)
       git \
       postgresql-client \
  && rm -rf /var/lib/apt/lists/*
