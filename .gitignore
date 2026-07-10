@@ -74,3 +74,6 @@ yarn-debug.log*
 coverage
 # Terraform saved plan files — may embed sensitive values, never commit
 *.tfplan
+
+# Rails-upgrade session scratch (SDD briefs/reports), never committed
+.superpowers/
