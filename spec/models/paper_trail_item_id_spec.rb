@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
-# Migration classes are not autoloaded; require it so the spec can pin the exact
-# extraction SQL the migration uses.
+# Migration classes are not autoloaded; require each migration so specs can pin the
+# exact extraction SQL each uses.
 require Rails.root.join('db', 'migrate', '20260710000000_repair_versions_item_id_to_uuid')
+require Rails.root.join('db', 'migrate', '20260710000001_backfill_versions_item_id_quoted_uuids')
 
 # Tripwire for the versions.item_id repair (pre-promotion step P2).
 #
@@ -139,6 +140,114 @@ RSpec.describe 'PaperTrail versions.item_id repair', type: :model do
 
       # Must return NULL - no `id:` at line start means no record uuid to extract.
       expect(extracted).to be_nil
+    end
+  end
+
+  # Pre-promo 2b: pins the QUOTED-uuid patterns introduced in
+  # BackfillVersionsItemIdQuotedUuids (20260710000001). Old-era PaperTrail YAML
+  # single-quotes the uuid value:
+  #
+  #   object:          id: '06283413-7115-4abd-9147-1a47f17749c5'
+  #   object_changes:  id:\n- \n- '06283413-7115-4abd-9147-1a47f17749c5'
+  #
+  # The v2 patterns are a STRICT SUPERSET: they accept both quoted and bare uuids.
+  describe 'v2 quote-tolerant extraction (BackfillVersionsItemIdQuotedUuids constants)' do
+    # Anonymized uuid from the real staging payload evidence documented in the brief.
+    let(:quoted_uuid) { '06283413-7115-4abd-9147-1a47f17749c5' }
+    let(:bare_uuid)   { 'de68e499-3ff6-4954-b3fa-8ec754923b74' }
+
+    # ---- OBJECT_SQL_V2 --------------------------------------------------------
+
+    it 'extracts a single-quoted uuid from an object payload (old-era YAML)' do
+      # Old PaperTrail YAML: id: '06283413-...'
+      object_payload = "---\nid: '#{quoted_uuid}'\nowned_by: user@example.org\nname: Galangal\n"
+      version = PaperTrail::Version.create!(
+        item_type: 'Specimen',
+        event: 'update',
+        object: object_payload
+      )
+      expect(version.item_id).to be_nil
+
+      extracted = ActiveRecord::Base.connection.select_value(<<~SQL.squish)
+        SELECT #{BackfillVersionsItemIdQuotedUuids::ITEM_ID_FROM_OBJECT_SQL_V2}
+          FROM versions
+         WHERE id = #{version.id}
+      SQL
+
+      expect(extracted).to eq(quoted_uuid)
+    end
+
+    it 'also extracts a bare uuid from an object payload (v2 is a superset of v1)' do
+      object_payload = "---\nid: #{bare_uuid}\nname: Galangal\n"
+      version = PaperTrail::Version.create!(
+        item_type: 'Specimen',
+        event: 'update',
+        object: object_payload
+      )
+
+      extracted = ActiveRecord::Base.connection.select_value(<<~SQL.squish)
+        SELECT #{BackfillVersionsItemIdQuotedUuids::ITEM_ID_FROM_OBJECT_SQL_V2}
+          FROM versions
+         WHERE id = #{version.id}
+      SQL
+
+      expect(extracted).to eq(bare_uuid)
+    end
+
+    # ---- OBJECT_CHANGES_SQL_V2 ------------------------------------------------
+
+    it 'extracts a single-quoted uuid from an object_changes create-tuple (dash-SPACE shape)' do
+      # Real staging payload shape: nil line is `- ` (dash-SPACE), uuid is single-quoted.
+      object_changes = "---\nid:\n- \n- '#{quoted_uuid}'\nname:\n-\n- Galangal\n"
+      version = PaperTrail::Version.create!(
+        item_type: 'Specimen',
+        event: 'create',
+        object_changes: object_changes
+      )
+      expect(version.item_id).to be_nil
+
+      extracted = ActiveRecord::Base.connection.select_value(<<~SQL.squish)
+        SELECT #{BackfillVersionsItemIdQuotedUuids::ITEM_ID_FROM_OBJECT_CHANGES_SQL_V2}
+          FROM versions
+         WHERE id = #{version.id}
+      SQL
+
+      expect(extracted).to eq(quoted_uuid)
+    end
+
+    it 'extracts a single-quoted uuid from an object_changes create-tuple (bare-dash shape)' do
+      # Alternate nil-line spelling without trailing space.
+      object_changes = "---\nid:\n-\n- '#{quoted_uuid}'\nname:\n-\n- Galangal\n"
+      version = PaperTrail::Version.create!(
+        item_type: 'Specimen',
+        event: 'create',
+        object_changes: object_changes
+      )
+
+      extracted = ActiveRecord::Base.connection.select_value(<<~SQL.squish)
+        SELECT #{BackfillVersionsItemIdQuotedUuids::ITEM_ID_FROM_OBJECT_CHANGES_SQL_V2}
+          FROM versions
+         WHERE id = #{version.id}
+      SQL
+
+      expect(extracted).to eq(quoted_uuid)
+    end
+
+    it 'also extracts a bare uuid from an object_changes create-tuple (v2 is a superset of v1)' do
+      object_changes = "---\nid:\n-\n- #{bare_uuid}\nname:\n-\n- Galangal\n"
+      version = PaperTrail::Version.create!(
+        item_type: 'Specimen',
+        event: 'create',
+        object_changes: object_changes
+      )
+
+      extracted = ActiveRecord::Base.connection.select_value(<<~SQL.squish)
+        SELECT #{BackfillVersionsItemIdQuotedUuids::ITEM_ID_FROM_OBJECT_CHANGES_SQL_V2}
+          FROM versions
+         WHERE id = #{version.id}
+      SQL
+
+      expect(extracted).to eq(bare_uuid)
     end
   end
 end
