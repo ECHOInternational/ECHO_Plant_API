@@ -36,7 +36,17 @@ module API
     # to true until Mobility is upgraded to seed the attribute default itself.
     config.active_record.partial_inserts = true
 
-    config.autoload_paths += %W[#{config.root}/app/models/life_cycle_events #{config.root}/lib]
+    # app/models/life_cycle_events is an explicit autoload root (STI subtree:
+    # LifeCycleEvent + 22 subclasses). Because it is declared as its own root it
+    # is NOT covered by app/models' default eager load, so in production it was
+    # skipped by eager loading (0/22 files required; zeitwerk:check flagged it).
+    # Add it to eager_load_paths so every STI subclass is loaded at boot
+    # (eager_load_paths entries are autoloaded too, so this also preserves dev/
+    # test autoloading). lib stays autoload-only: its two files (cors_origins,
+    # paper_trail_yaml_serializer) are require'd explicitly by their initializers
+    # and eager-loading lib is discouraged.
+    config.eager_load_paths << "#{config.root}/app/models/life_cycle_events"
+    config.autoload_paths << "#{config.root}/lib"
 
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration can go into files in config/initializers
