@@ -88,9 +88,6 @@ module Types
     field :visibility, Types::VisibilityEnum,
           description: 'The visibility of the variety. Can be: PUBLIC, PRIVATE, DRAFT, DELETED',
           null: false
-    field :description, String,
-          description: 'A translated description of a variety',
-          null: true
     field :info_sheet_description, String,
           description: 'A translated description suitable for an ECHO Variety information sheet',
           null: true

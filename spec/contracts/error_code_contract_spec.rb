@@ -54,6 +54,17 @@ RSpec.describe 'Error code contract', type: :request do
 
       expect(error_code(response)).to eq(404)
     end
+
+    # graphql-ruby's base64 decoder raises ArgumentError on a malformed id in some
+    # versions and wraps it as a bare GraphQL::ExecutionError (no extensions.code)
+    # in others; object_from_id rescues both so malformed ids always yield a coded 404.
+    # The Relay node field routes through object_from_id; plant(id:) decodes inline.
+    it 'returns 404 for a malformed (undecodable) global id via the Relay node field' do
+      post '/graphql', params: { query: '{ node(id: "not-base64!!") { id } }' }
+
+      expect(error_code(response)).to eq(404)
+      expect(JSON.parse(response.body).dig('errors', 0, 'message')).not_to be_empty
+    end
   end
 
   describe '403 forbidden' do

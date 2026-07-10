@@ -5,11 +5,6 @@ class PlantApiSchema < GraphQL::Schema
   mutation(Types::MutationType)
   query(Types::QueryType)
 
-  # Opt in to the new runtime (default in future graphql-ruby versions)
-  use GraphQL::Execution::Interpreter
-  use GraphQL::Analysis::AST
-  use GraphQL::Execution::Errors
-
   orphan_types [Types::AcquireEventType]
 
   rescue_from(ActiveRecord::RecordNotFound) do |err, _obj, _args, _ctx, _field|
@@ -35,9 +30,6 @@ class PlantApiSchema < GraphQL::Schema
     )
   end
 
-  # Add built-in connections for pagination
-  use GraphQL::Pagination::Connections
-
   # Relay Object Identification:
 
   # Return a string UUID for `object`
@@ -45,7 +37,15 @@ class PlantApiSchema < GraphQL::Schema
     # Here's a simple implementation which:
     # - joins the type name & object.id
     # - encodes it with base64:
-    GraphQL::Schema::UniqueWithinType.encode(type_definition.name, object.id)
+    #
+    # graphql-ruby 1.13 passes a class-based GraphQL type here, whose `.name`
+    # is now the Ruby class name (e.g. "Types::SpecimenType") rather than the
+    # GraphQL type name. Prefer `graphql_name` ("Specimen") so the public
+    # global-ID format (TypeName + UUID) stays byte-identical. Fall back to
+    # `.name` for callers that pass a model class directly (its `.name`
+    # already equals the GraphQL type name).
+    type_name = type_definition.respond_to?(:graphql_name) ? type_definition.graphql_name : type_definition.name
+    GraphQL::Schema::UniqueWithinType.encode(type_name, object.id)
   end
 
   # Given a string UUID, find the object
@@ -58,7 +58,12 @@ class PlantApiSchema < GraphQL::Schema
         "Not Found: #{id} not found.",
         extensions: { 'code' => 404 }
       )
-    rescue ArgumentError
+    rescue ArgumentError, GraphQL::ExecutionError
+      # graphql-ruby 1.13's base64 decoder catches the ArgumentError raised on a
+      # malformed id and re-raises it as a plain GraphQL::ExecutionError
+      # ("Invalid input: ...") that carries no extensions.code. Catch both so a
+      # malformed global id keeps producing our coded 404 (contract), regardless
+      # of which exception class the decoder surfaces.
       raise GraphQL::ExecutionError.new(
         "Not Found: #{id} not found. The provided ID is in an invalid format.",
         extensions: { 'code' => 404 }

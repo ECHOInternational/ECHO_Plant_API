@@ -7,9 +7,9 @@ module Types
     # They will be entry points for queries on your schema.
 
     # Used by Relay to lookup objects by UUID:
-    add_field(GraphQL::Types::Relay::NodeField)
+    include GraphQL::Types::Relay::HasNodeField
     # Fetches a list of objects given a list of IDs
-    add_field(GraphQL::Types::Relay::NodesField)
+    include GraphQL::Types::Relay::HasNodesField
 
     # Collection Queries
     field :categories, resolver: Resolvers::CategoriesResolver, connection: true
