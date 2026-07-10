@@ -1,6 +1,6 @@
-ARG RUBY_VERSION=3.3.11
-# ruby:3.3.x ships no -slim-bullseye variant (Debian bullseye was retired for the
-# Ruby 3.3 image line); bookworm is the sanctioned base from this rung forward.
+ARG RUBY_VERSION=3.4.10
+# ruby:3.4.x ships no -slim-bullseye variant (Debian bullseye was retired for the
+# Ruby 3.3/3.4 image line); bookworm is the sanctioned base from this rung forward.
 # bookworm provides libjemalloc2 (5.3.0) and libpq5 (15.x, SCRAM-SHA-256 capable).
 FROM ruby:${RUBY_VERSION}-slim-bookworm AS base
 
@@ -51,9 +51,13 @@ RUN apt-get update -qq \
 # so LD_PRELOAD works on both x86_64 and arm64.
 RUN ln -s "/usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2" /usr/local/lib/libjemalloc.so.2
 
+# Rails 8.0 defaults already enable YJIT at boot when available (since the 7.2
+# rung). RUBY_YJIT_ENABLE=1 makes that intent explicit at the runtime layer and
+# survives any future framework-default change - harmless duplication by design.
 ENV LD_PRELOAD=/usr/local/lib/libjemalloc.so.2 \
     RAILS_ENV=production \
     RAILS_LOG_TO_STDOUT=true \
+    RUBY_YJIT_ENABLE=1 \
     BUNDLE_WITHOUT="development:test"
 
 # Create the app user/group BEFORE copying files so COPY --chown works
