@@ -54,6 +54,12 @@ jobs:
       - name: Run RSpec
         run: bundle exec rspec
 
+      - name: Schema drift gate
+        run: |
+          bundle exec rails graphql:schema:dump
+          git config --global --add safe.directory "$GITHUB_WORKSPACE" || true
+          git diff --exit-code schema.graphql
+
       - name: Run RuboCop
         run: bundle exec rubocop
 
