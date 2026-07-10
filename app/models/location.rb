@@ -3,8 +3,8 @@
 # Locations can belong to life cycle events and provide a reusable location for a plant specimen
 class Location < ApplicationRecord
   validates :name, :owned_by, :created_by, :visibility, :soil_quality, presence: true
-  enum visibility: { private: 0, public: 1, draft: 2, deleted: 3 }, _prefix: :visibility
-  enum soil_quality: { poor: 'poor', fair: 'fair', good: 'good' }, _prefix: :soil_quality
+  enum :visibility, { private: 0, public: 1, draft: 2, deleted: 3 }, prefix: :visibility
+  enum :soil_quality, { poor: 'poor', fair: 'fair', good: 'good' }, prefix: :soil_quality
 
   has_many :images, as: :imageable, dependent: :destroy
   has_many :life_cycle_events, dependent: :restrict_with_error

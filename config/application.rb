@@ -25,7 +25,16 @@ module API
   # Defines configuration for the entire Rails Application
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 6.1
+    config.load_defaults 7.0
+
+    # Rails 7.0 defaults partial_inserts to false, which forces every column
+    # (including the Mobility container backend jsonb translations column) into
+    # the INSERT. Mobility 1.2.9 (frozen on this ladder rung) leaves translations
+    # as nil in memory for a record with no translated attributes set and relies
+    # on the column's DB-side DEFAULT '{}'. With full inserts that nil is sent
+    # explicitly and violates the NOT NULL constraint. Pin partial_inserts back
+    # to true until Mobility is upgraded to seed the attribute default itself.
+    config.active_record.partial_inserts = true
 
     config.autoload_paths += %W[#{config.root}/app/models/life_cycle_events #{config.root}/lib]
 

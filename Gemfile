@@ -6,7 +6,7 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 ruby '~> 2.7.1'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '~> 6.1.7'
+gem 'rails', '~> 7.0.10'
 # Use postgresql as the database for Active Record
 gem 'pg', '~> 1.5.9'
 # Use Puma as the app server
@@ -60,11 +60,12 @@ group :development, :test do
 end
 
 group :development do
-  gem 'listen', '~> 3.2'
-  # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
+  # Rails 7.0 EventedFileUpdateChecker requires listen ~> 3.5; keep listen (dev file watcher).
+  gem 'listen', '~> 3.5'
+  # Pin ffi to the last release supporting Ruby 2.7 (1.17+ needs Ruby >= 3.0).
+  # ffi arrives transitively via listen -> rb-inotify. Remove this pin at the Ruby 3.x hop.
+  gem 'ffi', '~> 1.16.3'
   gem 'rubocop', require: false
-  gem 'spring'
-  gem 'spring-watcher-listen', '~> 2.0.0'
 end
 
 group :test do

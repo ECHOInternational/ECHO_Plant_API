@@ -2,10 +2,10 @@
 
 # Defines the Plant object type
 class Plant < ApplicationRecord # rubocop:disable Metrics/ClassLength
-  enum early_growth_phase: { slow: 'slow', intermediate: 'intermediate', fast: 'fast' }
-  enum life_cycle: { annual: 'annual', biennial: 'biennial', perennial: 'perennial' }
+  enum :early_growth_phase, { slow: 'slow', intermediate: 'intermediate', fast: 'fast' }
+  enum :life_cycle, { annual: 'annual', biennial: 'biennial', perennial: 'perennial' }
   validates :owned_by, :created_by, :visibility, presence: true
-  enum visibility: { private: 0, public: 1, draft: 2, deleted: 3 }, _prefix: :visibility
+  enum :visibility, { private: 0, public: 1, draft: 2, deleted: 3 }, prefix: :visibility
   has_many :images, as: :imageable, dependent: :destroy
 
   has_many :antinutrients_plants, dependent: :destroy
