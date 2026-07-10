@@ -156,18 +156,17 @@ data "aws_iam_policy_document" "gha_deploy_policy" {
     resources = [aws_ecr_repository.plant_api.arn]
   }
 
-  # ECS: register task definitions, describe services, update services, run tasks
-  # Scoped to the two Plant API clusters
+  # ECS actions that carry the ecs:cluster condition key — scoped to the two
+  # Plant API clusters
   statement {
-    sid    = "ECSManage"
+    sid    = "EcsClusterScoped"
     effect = "Allow"
     actions = [
-      "ecs:RegisterTaskDefinition",
-      "ecs:DescribeTaskDefinition",
       "ecs:DescribeServices",
       "ecs:UpdateService",
       "ecs:RunTask",
-      "ecs:ListTaskDefinitions",
+      "ecs:StopTask",
+      "ecs:DescribeTasks",
     ]
     resources = ["*"]
 
@@ -179,6 +178,22 @@ data "aws_iam_policy_document" "gha_deploy_policy" {
         "arn:aws:ecs:${var.aws_region}:${var.aws_account_id}:cluster/plant-api-production",
       ]
     }
+  }
+
+  # Task-definition actions do NOT carry ecs:cluster — a cluster condition on
+  # them evaluates against a missing key and silently denies. They also accept
+  # no meaningful resource scoping, so they get a bare allow. Registering a
+  # task definition is harmless without the (scoped) PassRole + RunTask +
+  # UpdateService rights above.
+  statement {
+    sid    = "EcsTaskDefinitions"
+    effect = "Allow"
+    actions = [
+      "ecs:RegisterTaskDefinition",
+      "ecs:DescribeTaskDefinition",
+      "ecs:ListTaskDefinitions",
+    ]
+    resources = ["*"]
   }
 
   # iam:PassRole scoped to the task and execution roles for both environments

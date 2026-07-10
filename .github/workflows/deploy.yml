@@ -1,0 +1,118 @@
+name: Deploy
+
+# Merge to master → build & push SHA-tagged image → deploy staging (migrate →
+# service → smoke) → manual approval (production environment reviewers) →
+# deploy production with the SAME image tag (never rebuilt).
+#
+# Rollback: run this workflow manually (workflow_dispatch) with `sha` set to a
+# previously deployed commit — the build job sees the tag already in ECR,
+# skips the build, and the deploy jobs roll the services back to that image.
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "Git SHA to deploy (must have been built before for rollbacks; defaults to branch head)"
+        required: false
+
+# One deploy at a time; a queued push waits rather than cancelling a deploy
+# that may already be mutating ECS.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  id-token: write # OIDC token for AWS role assumption — no static keys
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REGISTRY: 382724554857.dkr.ecr.us-east-1.amazonaws.com
+  ECR_REPOSITORY: plant-api
+  DEPLOY_ROLE_ARN: arn:aws:iam::382724554857:role/gha-plant-api-deploy
+
+jobs:
+  build:
+    name: Build & push image
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sha || github.sha }}
+
+      - name: Resolve image tag (12-char commit SHA)
+        id: meta
+        run: echo "tag=$(git rev-parse --short=12 HEAD)" >> "$GITHUB_OUTPUT"
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push (skipped when the tag already exists — rollback path)
+        run: |
+          TAG="${{ steps.meta.outputs.tag }}"
+          if aws ecr describe-images --repository-name "$ECR_REPOSITORY" \
+               --image-ids imageTag="$TAG" > /dev/null 2>&1; then
+            echo "Image $TAG already in ECR — skipping build (re-deploy/rollback)."
+            exit 0
+          fi
+          docker build --target production -t "$ECR_REGISTRY/$ECR_REPOSITORY:$TAG" .
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$TAG"
+
+  deploy-staging:
+    name: Deploy staging
+    needs: build
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sha || github.sha }}
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Migrate + deploy + smoke
+        run: |
+          bash .github/scripts/deploy-ecs.sh \
+            plant-api-staging \
+            plant-api-staging-web \
+            plant-api-staging-migrate \
+            "$ECR_REGISTRY/$ECR_REPOSITORY:${{ needs.build.outputs.tag }}" \
+            https://plant-api-staging.echocommunity.org
+
+  deploy-production:
+    name: Deploy production
+    needs: [build, deploy-staging]
+    runs-on: ubuntu-latest
+    # The production GitHub environment requires manual reviewer approval —
+    # this job pauses until approved.
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sha || github.sha }}
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # TODO(cutover): once plant-api.echocommunity.org points at the ECS
+      # target group, add it as the SMOKE_URL argument below.
+      - name: Migrate + deploy
+        run: |
+          bash .github/scripts/deploy-ecs.sh \
+            plant-api-production \
+            plant-api-production-web \
+            plant-api-production-migrate \
+            "$ECR_REGISTRY/$ECR_REPOSITORY:${{ needs.build.outputs.tag }}"
