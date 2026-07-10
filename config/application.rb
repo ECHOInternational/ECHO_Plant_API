@@ -25,7 +25,7 @@ module API
   # Defines configuration for the entire Rails Application
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 8.0
+    config.load_defaults 8.1
 
     # Rails 7.0 defaults partial_inserts to false, which forces every column
     # (including the Mobility container backend jsonb translations column) into
