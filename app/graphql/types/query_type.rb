@@ -30,7 +30,7 @@ module Types
                required: true
     end
     def life_cycle_event(id:)
-      _type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
+      item_id = decode_global_id(id)
       Pundit.policy_scope(context[:current_user], LifeCycleEvent).find(item_id)
     end
     field :plant, Types::PlantType, null: true do
@@ -44,7 +44,7 @@ module Types
                description: 'Request returned fields in a specific languge. Overrides ACCEPT-LANGUAGE header.'
     end
     def plant(id:, language: nil)
-      _type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
+      item_id = decode_global_id(id)
       Mobility.locale = language || I18n.locale
       Pundit.policy_scope(context[:current_user], Plant).find(item_id)
     end
@@ -59,7 +59,7 @@ module Types
                description: 'Request returned fields in a specific languge. Overrides ACCEPT-LANGUAGE header.'
     end
     def variety(id:, language: nil)
-      _type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
+      item_id = decode_global_id(id)
       Mobility.locale = language || I18n.locale
       Pundit.policy_scope(context[:current_user], Variety).find(item_id)
     end
@@ -75,7 +75,7 @@ module Types
                description: 'Request returned fields in a specific languge. Overrides ACCEPT-LANGUAGE header.'
     end
     def category(id:, language: nil)
-      _type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
+      item_id = decode_global_id(id)
       Mobility.locale = language || I18n.locale
       Pundit.policy_scope(context[:current_user], Category).find(item_id)
     end
@@ -91,7 +91,7 @@ module Types
                description: 'Request returned fields in a specific languge. Overrides ACCEPT-LANGUAGE header.'
     end
     def specimen(id:, language: nil)
-      _type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
+      item_id = decode_global_id(id)
       Mobility.locale = language || I18n.locale
       Pundit.policy_scope(context[:current_user], Specimen).find(item_id)
     end
@@ -107,7 +107,7 @@ module Types
                description: 'Request returned fields in a specific languge. Overrides ACCEPT-LANGUAGE header.'
     end
     def location(id:, language: nil)
-      _type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
+      item_id = decode_global_id(id)
       Mobility.locale = language || I18n.locale
       Pundit.policy_scope(context[:current_user], Location).find(item_id)
     end
@@ -123,7 +123,7 @@ module Types
                description: 'Request returned fields in a specific language. Overrides ACCEPT-LANGUAGE header.'
     end
     def image_attribute(id:, language: nil)
-      _type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
+      item_id = decode_global_id(id)
       Mobility.locale = language || I18n.locale
       ImageAttribute.find(item_id)
     end
@@ -139,7 +139,7 @@ module Types
                description: 'Request returned fields in a specific language. Overrides ACCEPT-LANGUAGE header.'
     end
     def antinutrient(id:, language: nil)
-      _type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
+      item_id = decode_global_id(id)
       Mobility.locale = language || I18n.locale
       Antinutrient.find(item_id)
     end
@@ -155,7 +155,7 @@ module Types
                description: 'Request returned fields in a specific language. Overrides ACCEPT-LANGUAGE header.'
     end
     def tolerance(id:, language: nil)
-      _type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
+      item_id = decode_global_id(id)
       Mobility.locale = language || I18n.locale
       Tolerance.find(item_id)
     end
@@ -171,9 +171,28 @@ module Types
                description: 'Request returned fields in a specific language. Overrides ACCEPT-LANGUAGE header.'
     end
     def growth_habit(id:, language: nil)
-      _type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
+      item_id = decode_global_id(id)
       Mobility.locale = language || I18n.locale
       GrowthHabit.find(item_id)
+    end
+
+    private
+
+    # Decodes a Relay global ID, matching the error shape of PlantApiSchema.object_from_id
+    # so that malformed IDs on single-object queries yield the same coded 404 as the node()
+    # field (unified at pre-promo 3; was a raw 500 on Rails 6 production).
+    def decode_global_id(id)
+      _type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
+      item_id
+    rescue ArgumentError, GraphQL::ExecutionError
+      # graphql-ruby's base64 decoder raises ArgumentError on a malformed id in some
+      # versions and wraps it as a bare GraphQL::ExecutionError (no extensions.code)
+      # in others. Rescue both to guarantee a coded 404 regardless of which exception
+      # the decoder surfaces (mirrors the dual-class rescue in object_from_id).
+      raise GraphQL::ExecutionError.new(
+        "Not Found: #{id} not found. The provided ID is in an invalid format.",
+        extensions: { 'code' => 404 }
+      )
     end
   end
 end

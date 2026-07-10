@@ -65,6 +65,16 @@ RSpec.describe 'Error code contract', type: :request do
       expect(error_code(response)).to eq(404)
       expect(JSON.parse(response.body).dig('errors', 0, 'message')).not_to be_empty
     end
+
+    # Pins the inline-decode path's coded-404 (unified with node() at pre-promo 3;
+    # was a raw 500 on Rails 6 production). QueryType#plant and all other single-object
+    # resolvers now route through decode_global_id which mirrors object_from_id's rescue.
+    it 'returns 404 for a malformed (undecodable) global id via a single-object query (plant)' do
+      post '/graphql', params: { query: '{ plant(id: "not-base64!!") { id } }' }
+
+      expect(error_code(response)).to eq(404)
+      expect(JSON.parse(response.body).dig('errors', 0, 'message')).not_to be_empty
+    end
   end
 
   describe '403 forbidden' do
