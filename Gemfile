@@ -8,9 +8,9 @@ ruby '~> 2.7.1'
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 6.0.3', '>= 6.0.3.2'
 # Use postgresql as the database for Active Record
-gem 'pg', '>= 0.18', '< 2.0'
+gem 'pg', '~> 1.5.9'
 # Use Puma as the app server
-gem 'puma', '~> 4.3.12'
+gem 'puma', '~> 6.6'
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 # gem 'jbuilder', '~> 2.7'
 # Use Redis adapter to run Action Cable in production
@@ -23,9 +23,14 @@ gem 'puma', '~> 4.3.12'
 
 # Reduces boot times through caching; required in config/boot.rb
 gem 'bootsnap', '>= 1.10', require: false
+# Pin concurrent-ruby to 1.1.x: Rails 6.0 references Logger via concurrent-ruby
+# and concurrent-ruby 1.2+ removes that constant (broken on Rails 6.0).
+# Drop this pin at upgrade Step 3 (Rails 6.1.7.10) - that version rewrites
+# LoggerThreadSafeLevel and no longer depends on concurrent-ruby's Logger constant.
+gem 'concurrent-ruby', '~> 1.1.10'
 
 # Authentication
-gem 'jwt'
+gem 'jwt', '~> 2.10'
 
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin AJAX possible
 gem 'rack-cors'
@@ -54,7 +59,7 @@ group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug', platforms: %i[mri mingw x64_mingw]
   gem 'factory_bot_rails'
-  gem 'faker'
+  gem 'faker', '~> 2.23'
   gem 'pundit-matchers'
   gem 'rspec-rails', '~> 4.0.0'
 end
