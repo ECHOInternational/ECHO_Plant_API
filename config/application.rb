@@ -25,7 +25,7 @@ module API
   # Defines configuration for the entire Rails Application
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 6.0
+    config.load_defaults 6.1
 
     config.autoload_paths += %W[#{config.root}/app/models/life_cycle_events #{config.root}/lib]
 
