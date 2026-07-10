@@ -6,7 +6,7 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 ruby '~> 2.7.1'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '~> 6.0.3', '>= 6.0.3.2'
+gem 'rails', '~> 6.1.7'
 # Use postgresql as the database for Active Record
 gem 'pg', '~> 1.5.9'
 # Use Puma as the app server
@@ -23,11 +23,6 @@ gem 'puma', '~> 6.6'
 
 # Reduces boot times through caching; required in config/boot.rb
 gem 'bootsnap', '>= 1.10', require: false
-# Pin concurrent-ruby to 1.1.x: Rails 6.0 references Logger via concurrent-ruby
-# and concurrent-ruby 1.2+ removes that constant (broken on Rails 6.0).
-# Drop this pin at upgrade Step 3 (Rails 6.1.7.10) - that version rewrites
-# LoggerThreadSafeLevel and no longer depends on concurrent-ruby's Logger constant.
-gem 'concurrent-ruby', '~> 1.1.10'
 
 # Authentication
 gem 'jwt', '~> 2.10'
