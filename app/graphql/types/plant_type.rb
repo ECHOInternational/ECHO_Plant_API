@@ -105,9 +105,6 @@ module Types
     field :visibility, Types::VisibilityEnum,
           description: 'The visibility of the plant. Can be: PUBLIC, PRIVATE, DRAFT, DELETED',
           null: false
-    field :description, String,
-          description: 'A translated description of a plant',
-          null: true
     field :info_sheet_description, String,
           description: 'A translated description suitable for an ECHO Plant information sheet',
           null: true
