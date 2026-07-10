@@ -3,9 +3,9 @@
 # Life cycle events are ordered events that chronicle the crop management of a plant specimen
 class LifeCycleEvent < ApplicationRecord
   validates :type, :specimen, :datetime, presence: true
-  enum condition: { poor: 'poor', fair: 'fair', good: 'good' }
-  enum unit: { weight: 'weight', count: 'count' }, _prefix: :unit
-  enum soil_preparation: {
+  enum :condition, { poor: 'poor', fair: 'fair', good: 'good' }
+  enum :unit, { weight: 'weight', count: 'count' }, prefix: :unit
+  enum :soil_preparation, {
     greenhouse: 'greenhouse',
     planting_station: 'planting_station',
     no_till: 'no_till',

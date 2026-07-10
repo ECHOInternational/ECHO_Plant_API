@@ -14,7 +14,7 @@ class Image < ApplicationRecord
   has_many :image_attributes_image, dependent: :destroy
   has_many :image_attributes, through: :image_attributes_image
   belongs_to :imageable, polymorphic: true, optional: false, touch: true
-  enum visibility: { private: 0, public: 1, draft: 2, deleted: 3 }, _prefix: :visibility
+  enum :visibility, { private: 0, public: 1, draft: 2, deleted: 3 }, prefix: :visibility
 
   # Raise an error when trying to update readonly fields
   def s3_key=(val)
