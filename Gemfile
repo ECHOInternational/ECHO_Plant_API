@@ -37,7 +37,7 @@ gem 'http_accept_language'
 # Versioning
 gem 'paper_trail', '~> 12.3'
 # I18n
-gem 'mobility', '~> 0.8.13'
+gem 'mobility', '~> 1.2.9'
 # Graphql
 gem 'graphql', '~> 2.0.32'
 gem 'search_object_graphql', '~> 1.0.5'
