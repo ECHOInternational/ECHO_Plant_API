@@ -62,7 +62,7 @@ db_secret_password_key = "password"
 images_s3_bucket = "images-us-east-1.echocommunity.org"
 
 # CORS origins — production
-cors_origins = "https://plant-api.echocommunity.org,https://plant-admin.echocommunity.org"
+cors_origins = "echocommunity.org,http://development.echocommunity.org:3000,https://plant-admin.echocommunity.org"
 
 # Observability — 90 days for production
 log_retention_days = 90

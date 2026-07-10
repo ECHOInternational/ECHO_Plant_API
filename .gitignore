@@ -72,3 +72,5 @@ yarn-debug.log*
 /spec/examples.txt
 
 coverage
+# Terraform saved plan files — may embed sensitive values, never commit
+*.tfplan
