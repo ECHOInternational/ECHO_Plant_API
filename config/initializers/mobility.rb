@@ -65,3 +65,12 @@ Mobility.configure do
     # so no accessor_method override is needed.
   end
 end
+
+# Rails 8.0 renamed ActiveRecord::Relation's model ivar from @klass to @model,
+# which breaks Mobility 1.2.9's query plugin (the .i18n scope's order/where
+# helpers read @klass and get nil, emitting a bare ORDER BY "name" against the
+# jsonb-backed translated attribute). Mobility is held at 1.2.9, so this shim
+# restores the ivar the plugin expects. See lib/mobility_query_rails8_compat.rb
+# for the full rationale and removal condition. Required after the plugins DSL
+# above so the Query plugin module is loaded.
+require Rails.root.join('lib', 'mobility_query_rails8_compat')
