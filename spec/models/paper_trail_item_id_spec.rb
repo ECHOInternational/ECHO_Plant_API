@@ -91,5 +91,54 @@ RSpec.describe 'PaperTrail versions.item_id repair', type: :model do
 
       expect(extracted).to eq(known_uuid)
     end
+
+    # Adversarial case 1: `plant_id` tuple appears BEFORE the `id` tuple in the payload.
+    # Without the `(?n)^` line-start anchor, `plant_id:\n-\n- <uuid>` would match the
+    # unanchored pattern `id:\n-\n- <uuid>` (substring returns leftmost occurrence, which
+    # would be the plant_id's uuid rather than the record's own uuid).
+    # With line-anchoring, only the line that begins exactly with `id:` matches.
+    it 'extracts the record uuid when the id tuple appears after a plant_id tuple' do
+      plant_uuid = 'aaaa1234-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+      # id: tuple is ordinal-2 in this payload (plant_id comes first).
+      object_changes = "---\nplant_id:\n-\n- #{plant_uuid}\nid:\n-\n- #{known_uuid}\nname:\n-\n- Galangal\n"
+      version = PaperTrail::Version.create!(
+        item_type: 'Specimen',
+        event: 'create',
+        object_changes: object_changes
+      )
+
+      extracted = ActiveRecord::Base.connection.select_value(<<~SQL.squish)
+        SELECT #{RepairVersionsItemIdToUuid::ITEM_ID_FROM_OBJECT_CHANGES_SQL}
+          FROM versions
+         WHERE id = #{version.id}
+      SQL
+
+      # Must return the record's OWN uuid, not plant_id's uuid.
+      expect(extracted).to eq(known_uuid)
+      expect(extracted).not_to eq(plant_uuid)
+    end
+
+    # Adversarial case 2: payload has a `plant_id` tuple but NO `id` tuple.
+    # The unanchored pattern would still match and return the plant_id's uuid (wrong).
+    # The line-anchored pattern must return NULL (no `id:` line exists at line-start).
+    it 'returns NULL when the payload has plant_id but no id tuple' do
+      plant_uuid = 'bbbb5678-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
+      # No `id:` change tuple - only plant_id.
+      object_changes = "---\nplant_id:\n-\n- #{plant_uuid}\nname:\n-\n- Galangal\n"
+      version = PaperTrail::Version.create!(
+        item_type: 'Specimen',
+        event: 'create',
+        object_changes: object_changes
+      )
+
+      extracted = ActiveRecord::Base.connection.select_value(<<~SQL.squish)
+        SELECT #{RepairVersionsItemIdToUuid::ITEM_ID_FROM_OBJECT_CHANGES_SQL}
+          FROM versions
+         WHERE id = #{version.id}
+      SQL
+
+      # Must return NULL - no `id:` at line start means no record uuid to extract.
+      expect(extracted).to be_nil
+    end
   end
 end

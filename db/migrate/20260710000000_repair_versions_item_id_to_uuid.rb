@@ -27,8 +27,13 @@ class RepairVersionsItemIdToUuid < ActiveRecord::Migration[8.1]
 
   # OBJECT_CHANGES: the create-tuple `id:\n- \n- <uuid>` / `id:\n-\n- <uuid>`. The
   # optional space after the first `-` absorbs both YAML spellings PaperTrail emits.
+  # `(?n)^` is the same newline-sensitive line-start anchor used in ITEM_ID_FROM_OBJECT_SQL:
+  # without it, a key like `plant_id:\n-\n- <uuid>` would match (substring on the suffix
+  # `id:\n-\n-`). Line-anchoring rejects any key whose name ends in `id` but is not `id` itself.
+  # Empirically verified on the compose PostgreSQL: adversarial payloads with `plant_id:` before
+  # `id:` still return the record's uuid; payloads with `plant_id:` and no `id:` return NULL.
   ITEM_ID_FROM_OBJECT_CHANGES_SQL =
-    "substring(object_changes from E'id:\\n-[ ]?\\n- ([0-9a-f\\\\-]{36})')"
+    "substring(object_changes from E'(?n)^id:\\n-[ ]?\\n- ([0-9a-f\\\\-]{36})')"
 
   def up
     add_column :versions, :item_uuid, :uuid
