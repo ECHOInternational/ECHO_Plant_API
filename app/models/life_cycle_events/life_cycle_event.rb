@@ -3,9 +3,13 @@
 # Life cycle events are ordered events that chronicle the crop management of a plant specimen
 class LifeCycleEvent < ApplicationRecord
   validates :type, :specimen, :datetime, presence: true
-  enum :condition, { poor: 'poor', fair: 'fair', good: 'good' }
+  # Ruby 3.1/Psych-4 rung: a bare hash as the last positional arg to enum (which
+  # takes **options) is an ambiguous-kwargs deprecation on 2.7 and mis-binds on 3.x.
+  # Use the Rails 7 keyword-definition form (enum name: {...}) for enums with no
+  # trailing option kwarg; behaviour is identical.
+  enum condition: { poor: 'poor', fair: 'fair', good: 'good' }
   enum :unit, { weight: 'weight', count: 'count' }, prefix: :unit
-  enum :soil_preparation, {
+  enum soil_preparation: {
     greenhouse: 'greenhouse',
     planting_station: 'planting_station',
     no_till: 'no_till',

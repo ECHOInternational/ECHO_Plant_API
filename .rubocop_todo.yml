@@ -6,6 +6,14 @@
 # Note that changes in the inspected code, or installation of new
 # versions of RuboCop, may require this file to be generated again.
 
+# Ruby 3.1 rung: RuboCop 0.92 (frozen until the post-ladder tooling bump) caps at
+# Ruby 3.0 and aborts when it auto-detects the 3.1 .ruby-version. RuboCop validates
+# each inherited config file standalone, so the TargetRubyVersion pin in .rubocop.yml
+# alone is not enough - this base file must carry it too. Governs cop selection only,
+# not the Ruby the app actually runs on (3.1). Remove both pins when RuboCop is bumped.
+AllCops:
+  TargetRubyVersion: 2.7
+
 # Offense count: 2
 # Cop supports --auto-correct.
 Layout/EmptyLines:

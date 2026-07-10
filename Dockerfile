@@ -1,4 +1,4 @@
-ARG RUBY_VERSION=2.7.8
+ARG RUBY_VERSION=3.1.7
 FROM ruby:${RUBY_VERSION}-slim-bullseye AS base
 
 # --------------------------------------------------------------------------- #

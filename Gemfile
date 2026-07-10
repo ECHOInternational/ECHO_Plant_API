@@ -3,7 +3,7 @@
 source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby '~> 2.7.1'
+ruby '~> 3.1.0'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 7.0.10'
@@ -53,8 +53,8 @@ gem 'rails-healthcheck'
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug', platforms: %i[mri mingw x64_mingw]
-  gem 'factory_bot_rails'
-  gem 'faker', '~> 2.23'
+  gem 'factory_bot_rails', '~> 6.4'
+  gem 'faker', '~> 3.5'
   gem 'pundit-matchers'
   gem 'rspec-rails', '~> 6.1.5'
 end
@@ -62,9 +62,6 @@ end
 group :development do
   # Rails 7.0 EventedFileUpdateChecker requires listen ~> 3.5; keep listen (dev file watcher).
   gem 'listen', '~> 3.5'
-  # Pin ffi to the last release supporting Ruby 2.7 (1.17+ needs Ruby >= 3.0).
-  # ffi arrives transitively via listen -> rb-inotify. Remove this pin at the Ruby 3.x hop.
-  gem 'ffi', '~> 1.16.3'
   gem 'rubocop', require: false
 end
 
