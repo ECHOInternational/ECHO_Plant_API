@@ -35,7 +35,7 @@ gem 'http_accept_language'
 
 # Features
 # Versioning
-gem 'paper_trail', '~> 16.0'
+gem 'paper_trail', '~> 17.0'
 # I18n
 # Held at 1.2.9: mobility 1.3.x has a container-backend regression (Container#write
 # returns the decorated read; the cache+dirty plugin chain then poisons in-memory
