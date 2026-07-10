@@ -3217,7 +3217,7 @@ type HarvestEvent implements LifeCycleEvent & Node {
 """
 An ISO 8601-encoded datetime
 """
-scalar ISO8601DateTime
+scalar ISO8601DateTime @specifiedBy(url: "https://tools.ietf.org/html/rfc3339")
 
 """
 Images can be associated with most data types in the Plant API
