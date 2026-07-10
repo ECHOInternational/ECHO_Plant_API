@@ -3803,473 +3803,938 @@ type Mutation {
   """
   Adds an acquire life cycle event to a specimen
   """
-  addAcquireEventToSpecimen(input: AddAcquireLifeCycleEventInput!): AddAcquireLifeCycleEventPayload!
+  addAcquireEventToSpecimen(
+    """
+    Parameters for AddAcquireLifeCycleEvent
+    """
+    input: AddAcquireLifeCycleEventInput!
+  ): AddAcquireLifeCycleEventPayload!
 
   """
   Adds a common name to a plant
   """
-  addCommonName(input: AddCommonNameInput!): AddCommonNamePayload!
+  addCommonName(
+    """
+    Parameters for AddCommonName
+    """
+    input: AddCommonNameInput!
+  ): AddCommonNamePayload!
 
   """
   Adds a Composting life cycle event to a specimen
   """
-  addCompostingEventToSpecimen(input: AddCompostingLifeCycleEventInput!): AddCompostingLifeCycleEventPayload!
+  addCompostingEventToSpecimen(
+    """
+    Parameters for AddCompostingLifeCycleEvent
+    """
+    input: AddCompostingLifeCycleEventInput!
+  ): AddCompostingLifeCycleEventPayload!
 
   """
   Adds a Cultivating life cycle event to a specimen
   """
-  addCultivatingEventToSpecimen(input: AddCultivatingLifeCycleEventInput!): AddCultivatingLifeCycleEventPayload!
+  addCultivatingEventToSpecimen(
+    """
+    Parameters for AddCultivatingLifeCycleEvent
+    """
+    input: AddCultivatingLifeCycleEventInput!
+  ): AddCultivatingLifeCycleEventPayload!
 
   """
   Adds a Disease life cycle event to a specimen
   """
-  addDiseaseEventToSpecimen(input: AddDiseaseLifeCycleEventInput!): AddDiseaseLifeCycleEventPayload!
+  addDiseaseEventToSpecimen(
+    """
+    Parameters for AddDiseaseLifeCycleEvent
+    """
+    input: AddDiseaseLifeCycleEventInput!
+  ): AddDiseaseLifeCycleEventPayload!
 
   """
   Adds an End Of Life life cycle event to a specimen
   """
-  addEndOfLifeEventToSpecimen(input: AddEndOfLifeLifeCycleEventInput!): AddEndOfLifeLifeCycleEventPayload!
+  addEndOfLifeEventToSpecimen(
+    """
+    Parameters for AddEndOfLifeLifeCycleEvent
+    """
+    input: AddEndOfLifeLifeCycleEventInput!
+  ): AddEndOfLifeLifeCycleEventPayload!
 
   """
   Adds a Fertilizing life cycle event to a specimen
   """
-  addFertilizingEventToSpecimen(input: AddFertilizingLifeCycleEventInput!): AddFertilizingLifeCycleEventPayload!
+  addFertilizingEventToSpecimen(
+    """
+    Parameters for AddFertilizingLifeCycleEvent
+    """
+    input: AddFertilizingLifeCycleEventInput!
+  ): AddFertilizingLifeCycleEventPayload!
 
   """
   Adds a Flowering life cycle event to a specimen
   """
-  addFloweringEventToSpecimen(input: AddFloweringLifeCycleEventInput!): AddFloweringLifeCycleEventPayload!
+  addFloweringEventToSpecimen(
+    """
+    Parameters for AddFloweringLifeCycleEvent
+    """
+    input: AddFloweringLifeCycleEventInput!
+  ): AddFloweringLifeCycleEventPayload!
 
   """
   Adds a Germination life cycle event to a specimen
   """
-  addGerminationEventToSpecimen(input: AddGerminationLifeCycleEventInput!): AddGerminationLifeCycleEventPayload!
+  addGerminationEventToSpecimen(
+    """
+    Parameters for AddGerminationLifeCycleEvent
+    """
+    input: AddGerminationLifeCycleEventInput!
+  ): AddGerminationLifeCycleEventPayload!
 
   """
   Adds a Harvest life cycle event to a specimen
   """
-  addHarvestEventToSpecimen(input: AddHarvestLifeCycleEventInput!): AddHarvestLifeCycleEventPayload!
+  addHarvestEventToSpecimen(
+    """
+    Parameters for AddHarvestLifeCycleEvent
+    """
+    input: AddHarvestLifeCycleEventInput!
+  ): AddHarvestLifeCycleEventPayload!
 
   """
   Adds image attributes to an image
   """
-  addImageAttributesToImage(input: AddImageAttributesToImageInput!): AddImageAttributesToImagePayload!
+  addImageAttributesToImage(
+    """
+    Parameters for AddImageAttributesToImage
+    """
+    input: AddImageAttributesToImageInput!
+  ): AddImageAttributesToImagePayload!
 
   """
   Adds a Movement life cycle event to a specimen
   """
-  addMovementEventToSpecimen(input: AddMovementLifeCycleEventInput!): AddMovementLifeCycleEventPayload!
+  addMovementEventToSpecimen(
+    """
+    Parameters for AddMovementLifeCycleEvent
+    """
+    input: AddMovementLifeCycleEventInput!
+  ): AddMovementLifeCycleEventPayload!
 
   """
   Adds a Mulching life cycle event to a specimen
   """
-  addMulchingEventToSpecimen(input: AddMulchingLifeCycleEventInput!): AddMulchingLifeCycleEventPayload!
+  addMulchingEventToSpecimen(
+    """
+    Parameters for AddMulchingLifeCycleEvent
+    """
+    input: AddMulchingLifeCycleEventInput!
+  ): AddMulchingLifeCycleEventPayload!
 
   """
   Adds a nutrient deficiency life cycle event to a specimen
   """
-  addNutrientDeficiencyEventToSpecimen(input: AddNutrientDeficiencyLifeCycleEventInput!): AddNutrientDeficiencyLifeCycleEventPayload!
+  addNutrientDeficiencyEventToSpecimen(
+    """
+    Parameters for AddNutrientDeficiencyLifeCycleEvent
+    """
+    input: AddNutrientDeficiencyLifeCycleEventInput!
+  ): AddNutrientDeficiencyLifeCycleEventPayload!
 
   """
   Adds an Other life cycle event to a specimen
   """
-  addOtherEventToSpecimen(input: AddOtherLifeCycleEventInput!): AddOtherLifeCycleEventPayload!
+  addOtherEventToSpecimen(
+    """
+    Parameters for AddOtherLifeCycleEvent
+    """
+    input: AddOtherLifeCycleEventInput!
+  ): AddOtherLifeCycleEventPayload!
 
   """
   Adds a Pest life cycle event to a specimen
   """
-  addPestEventToSpecimen(input: AddPestLifeCycleEventInput!): AddPestLifeCycleEventPayload!
+  addPestEventToSpecimen(
+    """
+    Parameters for AddPestLifeCycleEvent
+    """
+    input: AddPestLifeCycleEventInput!
+  ): AddPestLifeCycleEventPayload!
 
   """
   Adds a Planting life cycle event to a specimen
   """
-  addPlantingEventToSpecimen(input: AddPlantingLifeCycleEventInput!): AddPlantingLifeCycleEventPayload!
+  addPlantingEventToSpecimen(
+    """
+    Parameters for AddPlantingLifeCycleEvent
+    """
+    input: AddPlantingLifeCycleEventInput!
+  ): AddPlantingLifeCycleEventPayload!
 
   """
   Adds a Pruning life cycle event to a specimen
   """
-  addPruningEventToSpecimen(input: AddPruningLifeCycleEventInput!): AddPruningLifeCycleEventPayload!
+  addPruningEventToSpecimen(
+    """
+    Parameters for AddPruningLifeCycleEvent
+    """
+    input: AddPruningLifeCycleEventInput!
+  ): AddPruningLifeCycleEventPayload!
 
   """
   Adds a Soil Preparation life cycle event to a specimen
   """
-  addSoilPreparationEventToSpecimen(input: AddSoilPreparationLifeCycleEventInput!): AddSoilPreparationLifeCycleEventPayload!
+  addSoilPreparationEventToSpecimen(
+    """
+    Parameters for AddSoilPreparationLifeCycleEvent
+    """
+    input: AddSoilPreparationLifeCycleEventInput!
+  ): AddSoilPreparationLifeCycleEventPayload!
 
   """
   Adds a Staking life cycle event to a specimen
   """
-  addStakingEventToSpecimen(input: AddStakingLifeCycleEventInput!): AddStakingLifeCycleEventPayload!
+  addStakingEventToSpecimen(
+    """
+    Parameters for AddStakingLifeCycleEvent
+    """
+    input: AddStakingLifeCycleEventInput!
+  ): AddStakingLifeCycleEventPayload!
 
   """
   Adds a thinning life cycle event to a specimen
   """
-  addThinningEventToSpecimen(input: AddThinningLifeCycleEventInput!): AddThinningLifeCycleEventPayload!
+  addThinningEventToSpecimen(
+    """
+    Parameters for AddThinningLifeCycleEvent
+    """
+    input: AddThinningLifeCycleEventInput!
+  ): AddThinningLifeCycleEventPayload!
 
   """
   Adds a Trellising life cycle event to a specimen
   """
-  addTrellisingEventToSpecimen(input: AddTrellisingLifeCycleEventInput!): AddTrellisingLifeCycleEventPayload!
+  addTrellisingEventToSpecimen(
+    """
+    Parameters for AddTrellisingLifeCycleEvent
+    """
+    input: AddTrellisingLifeCycleEventInput!
+  ): AddTrellisingLifeCycleEventPayload!
 
   """
   Adds a Weather life cycle event to a specimen
   """
-  addWeatherEventToSpecimen(input: AddWeatherLifeCycleEventInput!): AddWeatherLifeCycleEventPayload!
+  addWeatherEventToSpecimen(
+    """
+    Parameters for AddWeatherLifeCycleEvent
+    """
+    input: AddWeatherLifeCycleEventInput!
+  ): AddWeatherLifeCycleEventPayload!
 
   """
   Adds a Weed Management life cycle event to a specimen
   """
-  addWeedManagementEventToSpecimen(input: AddWeedManagementLifeCycleEventInput!): AddWeedManagementLifeCycleEventPayload!
+  addWeedManagementEventToSpecimen(
+    """
+    Parameters for AddWeedManagementLifeCycleEvent
+    """
+    input: AddWeedManagementLifeCycleEventInput!
+  ): AddWeedManagementLifeCycleEventPayload!
 
   """
   Creates an antinutrient
   """
-  createAntinutrient(input: CreateAntinutrientInput!): CreateAntinutrientPayload!
+  createAntinutrient(
+    """
+    Parameters for CreateAntinutrient
+    """
+    input: CreateAntinutrientInput!
+  ): CreateAntinutrientPayload!
 
   """
   Creates a new plant category
   """
-  createCategory(input: CreateCategoryInput!): CreateCategoryPayload!
+  createCategory(
+    """
+    Parameters for CreateCategory
+    """
+    input: CreateCategoryInput!
+  ): CreateCategoryPayload!
 
   """
   Creates a growth habit
   """
-  createGrowthHabit(input: CreateGrowthHabitInput!): CreateGrowthHabitPayload!
+  createGrowthHabit(
+    """
+    Parameters for CreateGrowthHabit
+    """
+    input: CreateGrowthHabitInput!
+  ): CreateGrowthHabitPayload!
 
   """
   Creates an image for a given API object
   """
-  createImage(input: CreateImageInput!): CreateImagePayload!
+  createImage(
+    """
+    Parameters for CreateImage
+    """
+    input: CreateImageInput!
+  ): CreateImagePayload!
 
   """
   Creates an image attribute
   """
-  createImageAttribute(input: CreateImageAttributeInput!): CreateImageAttributePayload!
+  createImageAttribute(
+    """
+    Parameters for CreateImageAttribute
+    """
+    input: CreateImageAttributeInput!
+  ): CreateImageAttributePayload!
 
   """
   Creates a new location
   """
-  createLocation(input: CreateLocationInput!): CreateLocationPayload!
+  createLocation(
+    """
+    Parameters for CreateLocation
+    """
+    input: CreateLocationInput!
+  ): CreateLocationPayload!
 
   """
   Creates a plant
   """
-  createPlant(input: CreatePlantInput!): CreatePlantPayload!
+  createPlant(
+    """
+    Parameters for CreatePlant
+    """
+    input: CreatePlantInput!
+  ): CreatePlantPayload!
 
   """
   Creates a new specimen
   """
-  createSpecimen(input: CreateSpecimenInput!): CreateSpecimenPayload!
+  createSpecimen(
+    """
+    Parameters for CreateSpecimen
+    """
+    input: CreateSpecimenInput!
+  ): CreateSpecimenPayload!
 
   """
   Creates a tolerance
   """
-  createTolerance(input: CreateToleranceInput!): CreateTolerancePayload!
+  createTolerance(
+    """
+    Parameters for CreateTolerance
+    """
+    input: CreateToleranceInput!
+  ): CreateTolerancePayload!
 
   """
   Returns a presigned S3 PUT URL so a client can upload an image file directly
   """
-  createUpload(input: CreateUploadInput!): CreateUploadPayload!
+  createUpload(
+    """
+    Parameters for CreateUpload
+    """
+    input: CreateUploadInput!
+  ): CreateUploadPayload!
 
   """
   Creates a variety
   """
-  createVariety(input: CreateVarietyInput!): CreateVarietyPayload!
+  createVariety(
+    """
+    Parameters for CreateVariety
+    """
+    input: CreateVarietyInput!
+  ): CreateVarietyPayload!
 
   """
   Deletes an antinutrient
   """
-  deleteAntinutrient(input: DeleteAntinutrientInput!): DeleteAntinutrientPayload!
+  deleteAntinutrient(
+    """
+    Parameters for DeleteAntinutrient
+    """
+    input: DeleteAntinutrientInput!
+  ): DeleteAntinutrientPayload!
 
   """
   Deletes a plant category
   """
-  deleteCategory(input: DeleteCategoryInput!): DeleteCategoryPayload!
+  deleteCategory(
+    """
+    Parameters for DeleteCategory
+    """
+    input: DeleteCategoryInput!
+  ): DeleteCategoryPayload!
 
   """
   Deletes a common name
   """
-  deleteCommonName(input: DeleteCommonNameInput!): DeleteCommonNamePayload!
+  deleteCommonName(
+    """
+    Parameters for DeleteCommonName
+    """
+    input: DeleteCommonNameInput!
+  ): DeleteCommonNamePayload!
 
   """
   Deletes a growth habit
   """
-  deleteGrowthHabit(input: DeleteGrowthHabitInput!): DeleteGrowthHabitPayload!
+  deleteGrowthHabit(
+    """
+    Parameters for DeleteGrowthHabit
+    """
+    input: DeleteGrowthHabitInput!
+  ): DeleteGrowthHabitPayload!
 
   """
   Deletes an image
   """
-  deleteImage(input: DeleteImageInput!): DeleteImagePayload!
+  deleteImage(
+    """
+    Parameters for DeleteImage
+    """
+    input: DeleteImageInput!
+  ): DeleteImagePayload!
 
   """
   Deletes an image attribute
   """
-  deleteImageAttribute(input: DeleteImageAttributeInput!): DeleteImageAttributePayload!
+  deleteImageAttribute(
+    """
+    Parameters for DeleteImageAttribute
+    """
+    input: DeleteImageAttributeInput!
+  ): DeleteImageAttributePayload!
 
   """
   Deletes a life cycle event
   """
-  deleteLifeCycleEvent(input: DeleteLifeCycleEventInput!): DeleteLifeCycleEventPayload!
+  deleteLifeCycleEvent(
+    """
+    Parameters for DeleteLifeCycleEvent
+    """
+    input: DeleteLifeCycleEventInput!
+  ): DeleteLifeCycleEventPayload!
 
   """
   Deletes a location
   """
-  deleteLocation(input: DeleteLocationInput!): DeleteLocationPayload!
+  deleteLocation(
+    """
+    Parameters for DeleteLocation
+    """
+    input: DeleteLocationInput!
+  ): DeleteLocationPayload!
 
   """
   Deletes a plant
   """
-  deletePlant(input: DeletePlantInput!): DeletePlantPayload!
+  deletePlant(
+    """
+    Parameters for DeletePlant
+    """
+    input: DeletePlantInput!
+  ): DeletePlantPayload!
 
   """
   Deletes a specimen
   """
-  deleteSpecimen(input: DeleteSpecimenInput!): DeleteSpecimenPayload!
+  deleteSpecimen(
+    """
+    Parameters for DeleteSpecimen
+    """
+    input: DeleteSpecimenInput!
+  ): DeleteSpecimenPayload!
 
   """
   Deletes a tolerance
   """
-  deleteTolerance(input: DeleteToleranceInput!): DeleteTolerancePayload!
+  deleteTolerance(
+    """
+    Parameters for DeleteTolerance
+    """
+    input: DeleteToleranceInput!
+  ): DeleteTolerancePayload!
 
   """
   Deletes a variety
   """
-  deleteVariety(input: DeleteVarietyInput!): DeleteVarietyPayload!
+  deleteVariety(
+    """
+    Parameters for DeleteVariety
+    """
+    input: DeleteVarietyInput!
+  ): DeleteVarietyPayload!
 
   """
   Sets evaluation attributes for a specimen
   """
-  evaluateSpecimen(input: EvaluateSpecimenInput!): EvaluateSpecimenPayload!
+  evaluateSpecimen(
+    """
+    Parameters for EvaluateSpecimen
+    """
+    input: EvaluateSpecimenInput!
+  ): EvaluateSpecimenPayload!
 
   """
   Removes image attributes from an image
   """
-  removeImageAttributesFromImage(input: RemoveImageAttributesFromImageInput!): RemoveImageAttributesFromImagePayload!
+  removeImageAttributesFromImage(
+    """
+    Parameters for RemoveImageAttributesFromImage
+    """
+    input: RemoveImageAttributesFromImageInput!
+  ): RemoveImageAttributesFromImagePayload!
 
   """
   Makes a common name the primary for its plant and language
   """
-  setPrimaryCommonName(input: SetPrimaryCommonNameInput!): SetPrimaryCommonNamePayload!
+  setPrimaryCommonName(
+    """
+    Parameters for SetPrimaryCommonName
+    """
+    input: SetPrimaryCommonNameInput!
+  ): SetPrimaryCommonNamePayload!
 
   """
   Soft Deletes a location. This mutation will return an error if any dependent
   relationships exist which have not also been soft deleted. This behavior can
   be overridden with the force parameter
   """
-  softDeleteLocation(input: SoftDeleteLocationInput!): SoftDeleteLocationPayload!
+  softDeleteLocation(
+    """
+    Parameters for SoftDeleteLocation
+    """
+    input: SoftDeleteLocationInput!
+  ): SoftDeleteLocationPayload!
 
   """
   Soft Deletes a Plant. This mutation will return an error if any dependent
   relationships exist which have not also been soft deleted. This behavior can
   be overridden with the force parameter
   """
-  softDeletePlant(input: SoftDeletePlantInput!): SoftDeletePlantPayload!
+  softDeletePlant(
+    """
+    Parameters for SoftDeletePlant
+    """
+    input: SoftDeletePlantInput!
+  ): SoftDeletePlantPayload!
 
   """
   Soft Deletes a Variety. This mutation will return an error if any dependent
   relationships exist which have not also been soft deleted. This behavior can
   be overridden with the force parameter
   """
-  softDeleteVariety(input: SoftDeleteVarietyInput!): SoftDeleteVarietyPayload!
+  softDeleteVariety(
+    """
+    Parameters for SoftDeleteVariety
+    """
+    input: SoftDeleteVarietyInput!
+  ): SoftDeleteVarietyPayload!
 
   """
   Updates an acquire life cycle event
   """
-  updateAcquireEvent(input: UpdateAcquireLifeCycleEventInput!): UpdateAcquireLifeCycleEventPayload!
+  updateAcquireEvent(
+    """
+    Parameters for UpdateAcquireLifeCycleEvent
+    """
+    input: UpdateAcquireLifeCycleEventInput!
+  ): UpdateAcquireLifeCycleEventPayload!
 
   """
   Updates an antinutrient
   """
-  updateAntinutrient(input: UpdateAntinutrientInput!): UpdateAntinutrientPayload!
+  updateAntinutrient(
+    """
+    Parameters for UpdateAntinutrient
+    """
+    input: UpdateAntinutrientInput!
+  ): UpdateAntinutrientPayload!
 
   """
   Updates a plant category
   """
-  updateCategory(input: UpdateCategoryInput!): UpdateCategoryPayload!
+  updateCategory(
+    """
+    Parameters for UpdateCategory
+    """
+    input: UpdateCategoryInput!
+  ): UpdateCategoryPayload!
 
   """
   Updates a common name
   """
-  updateCommonName(input: UpdateCommonNameInput!): UpdateCommonNamePayload!
+  updateCommonName(
+    """
+    Parameters for UpdateCommonName
+    """
+    input: UpdateCommonNameInput!
+  ): UpdateCommonNamePayload!
 
   """
   Updates a Composting life cycle event
   """
-  updateCompostingEvent(input: UpdateCompostingLifeCycleEventInput!): UpdateCompostingLifeCycleEventPayload!
+  updateCompostingEvent(
+    """
+    Parameters for UpdateCompostingLifeCycleEvent
+    """
+    input: UpdateCompostingLifeCycleEventInput!
+  ): UpdateCompostingLifeCycleEventPayload!
 
   """
   Updates a Cultivating life cycle event
   """
-  updateCultivatingEvent(input: UpdateCultivatingLifeCycleEventInput!): UpdateCultivatingLifeCycleEventPayload!
+  updateCultivatingEvent(
+    """
+    Parameters for UpdateCultivatingLifeCycleEvent
+    """
+    input: UpdateCultivatingLifeCycleEventInput!
+  ): UpdateCultivatingLifeCycleEventPayload!
 
   """
   Updates a Disease life cycle event
   """
-  updateDiseaseEvent(input: UpdateDiseaseLifeCycleEventInput!): UpdateDiseaseLifeCycleEventPayload!
+  updateDiseaseEvent(
+    """
+    Parameters for UpdateDiseaseLifeCycleEvent
+    """
+    input: UpdateDiseaseLifeCycleEventInput!
+  ): UpdateDiseaseLifeCycleEventPayload!
 
   """
   Updates an End Of Life life cycle event
   """
-  updateEndOfLifeEvent(input: UpdateEndOfLifeLifeCycleEventInput!): UpdateEndOfLifeLifeCycleEventPayload!
+  updateEndOfLifeEvent(
+    """
+    Parameters for UpdateEndOfLifeLifeCycleEvent
+    """
+    input: UpdateEndOfLifeLifeCycleEventInput!
+  ): UpdateEndOfLifeLifeCycleEventPayload!
 
   """
   Updates a Fertilizing life cycle event
   """
-  updateFertilizingEvent(input: UpdateFertilizingLifeCycleEventInput!): UpdateFertilizingLifeCycleEventPayload!
+  updateFertilizingEvent(
+    """
+    Parameters for UpdateFertilizingLifeCycleEvent
+    """
+    input: UpdateFertilizingLifeCycleEventInput!
+  ): UpdateFertilizingLifeCycleEventPayload!
 
   """
   Updates a Flowering life cycle event
   """
-  updateFloweringEvent(input: UpdateFloweringLifeCycleEventInput!): UpdateFloweringLifeCycleEventPayload!
+  updateFloweringEvent(
+    """
+    Parameters for UpdateFloweringLifeCycleEvent
+    """
+    input: UpdateFloweringLifeCycleEventInput!
+  ): UpdateFloweringLifeCycleEventPayload!
 
   """
   Updates a Germination life cycle event
   """
-  updateGerminationEvent(input: UpdateGerminationLifeCycleEventInput!): UpdateGerminationLifeCycleEventPayload!
+  updateGerminationEvent(
+    """
+    Parameters for UpdateGerminationLifeCycleEvent
+    """
+    input: UpdateGerminationLifeCycleEventInput!
+  ): UpdateGerminationLifeCycleEventPayload!
 
   """
   Updates a growth habit
   """
-  updateGrowthHabit(input: UpdateGrowthHabitInput!): UpdateGrowthHabitPayload!
+  updateGrowthHabit(
+    """
+    Parameters for UpdateGrowthHabit
+    """
+    input: UpdateGrowthHabitInput!
+  ): UpdateGrowthHabitPayload!
 
   """
   Updates a Harvest life cycle event
   """
-  updateHarvestEvent(input: UpdateHarvestLifeCycleEventInput!): UpdateHarvestLifeCycleEventPayload!
+  updateHarvestEvent(
+    """
+    Parameters for UpdateHarvestLifeCycleEvent
+    """
+    input: UpdateHarvestLifeCycleEventInput!
+  ): UpdateHarvestLifeCycleEventPayload!
 
   """
   Updates an image's editable metadata
   """
-  updateImage(input: UpdateImageInput!): UpdateImagePayload!
+  updateImage(
+    """
+    Parameters for UpdateImage
+    """
+    input: UpdateImageInput!
+  ): UpdateImagePayload!
 
   """
   Updates an image attribute
   """
-  updateImageAttribute(input: UpdateImageAttributeInput!): UpdateImageAttributePayload!
+  updateImageAttribute(
+    """
+    Parameters for UpdateImageAttribute
+    """
+    input: UpdateImageAttributeInput!
+  ): UpdateImageAttributePayload!
 
   """
   Updates a location
   """
-  updateLocation(input: UpdateLocationInput!): UpdateLocationPayload!
+  updateLocation(
+    """
+    Parameters for UpdateLocation
+    """
+    input: UpdateLocationInput!
+  ): UpdateLocationPayload!
 
   """
   Updates a Movement life cycle event
   """
-  updateMovementEvent(input: UpdateMovementLifeCycleEventInput!): UpdateMovementLifeCycleEventPayload!
+  updateMovementEvent(
+    """
+    Parameters for UpdateMovementLifeCycleEvent
+    """
+    input: UpdateMovementLifeCycleEventInput!
+  ): UpdateMovementLifeCycleEventPayload!
 
   """
   Updates a Mulching life cycle event
   """
-  updateMulchingEvent(input: UpdateMulchingLifeCycleEventInput!): UpdateMulchingLifeCycleEventPayload!
+  updateMulchingEvent(
+    """
+    Parameters for UpdateMulchingLifeCycleEvent
+    """
+    input: UpdateMulchingLifeCycleEventInput!
+  ): UpdateMulchingLifeCycleEventPayload!
 
   """
   Updates a nutrient deficiency life cycle event
   """
-  updateNutrientDeficiencyEvent(input: UpdateNutrientDeficiencyLifeCycleEventInput!): UpdateNutrientDeficiencyLifeCycleEventPayload!
+  updateNutrientDeficiencyEvent(
+    """
+    Parameters for UpdateNutrientDeficiencyLifeCycleEvent
+    """
+    input: UpdateNutrientDeficiencyLifeCycleEventInput!
+  ): UpdateNutrientDeficiencyLifeCycleEventPayload!
 
   """
   Updates an Other life cycle event
   """
-  updateOtherEvent(input: UpdateOtherLifeCycleEventInput!): UpdateOtherLifeCycleEventPayload!
+  updateOtherEvent(
+    """
+    Parameters for UpdateOtherLifeCycleEvent
+    """
+    input: UpdateOtherLifeCycleEventInput!
+  ): UpdateOtherLifeCycleEventPayload!
 
   """
   Updates a Pest life cycle event
   """
-  updatePestEvent(input: UpdatePestLifeCycleEventInput!): UpdatePestLifeCycleEventPayload!
+  updatePestEvent(
+    """
+    Parameters for UpdatePestLifeCycleEvent
+    """
+    input: UpdatePestLifeCycleEventInput!
+  ): UpdatePestLifeCycleEventPayload!
 
   """
   Updates a plant
   """
-  updatePlant(input: UpdatePlantInput!): UpdatePlantPayload!
+  updatePlant(
+    """
+    Parameters for UpdatePlant
+    """
+    input: UpdatePlantInput!
+  ): UpdatePlantPayload!
 
   """
   Replaces a plant's set of antinutrients
   """
-  updatePlantAntinutrients(input: UpdatePlantAntinutrientsInput!): UpdatePlantAntinutrientsPayload!
+  updatePlantAntinutrients(
+    """
+    Parameters for UpdatePlantAntinutrients
+    """
+    input: UpdatePlantAntinutrientsInput!
+  ): UpdatePlantAntinutrientsPayload!
 
   """
   Replaces a plant's set of categories
   """
-  updatePlantCategories(input: UpdatePlantCategoriesInput!): UpdatePlantCategoriesPayload!
+  updatePlantCategories(
+    """
+    Parameters for UpdatePlantCategories
+    """
+    input: UpdatePlantCategoriesInput!
+  ): UpdatePlantCategoriesPayload!
 
   """
   Replaces a plant's set of growth habits
   """
-  updatePlantGrowthHabits(input: UpdatePlantGrowthHabitsInput!): UpdatePlantGrowthHabitsPayload!
+  updatePlantGrowthHabits(
+    """
+    Parameters for UpdatePlantGrowthHabits
+    """
+    input: UpdatePlantGrowthHabitsInput!
+  ): UpdatePlantGrowthHabitsPayload!
 
   """
   Replaces a plant's set of tolerances
   """
-  updatePlantTolerances(input: UpdatePlantTolerancesInput!): UpdatePlantTolerancesPayload!
+  updatePlantTolerances(
+    """
+    Parameters for UpdatePlantTolerances
+    """
+    input: UpdatePlantTolerancesInput!
+  ): UpdatePlantTolerancesPayload!
 
   """
   Updates a Planting life cycle event
   """
-  updatePlantingEvent(input: UpdatePlantingLifeCycleEventInput!): UpdatePlantingLifeCycleEventPayload!
+  updatePlantingEvent(
+    """
+    Parameters for UpdatePlantingLifeCycleEvent
+    """
+    input: UpdatePlantingLifeCycleEventInput!
+  ): UpdatePlantingLifeCycleEventPayload!
 
   """
   Updates a Pruning life cycle event
   """
-  updatePruningEvent(input: UpdatePruningLifeCycleEventInput!): UpdatePruningLifeCycleEventPayload!
+  updatePruningEvent(
+    """
+    Parameters for UpdatePruningLifeCycleEvent
+    """
+    input: UpdatePruningLifeCycleEventInput!
+  ): UpdatePruningLifeCycleEventPayload!
 
   """
   Updates a Soil Preparation life cycle event
   """
-  updateSoilPreparationEvent(input: UpdateSoilPreparationLifeCycleEventInput!): UpdateSoilPreparationLifeCycleEventPayload!
+  updateSoilPreparationEvent(
+    """
+    Parameters for UpdateSoilPreparationLifeCycleEvent
+    """
+    input: UpdateSoilPreparationLifeCycleEventInput!
+  ): UpdateSoilPreparationLifeCycleEventPayload!
 
   """
   Updates a specimen
   """
-  updateSpecimen(input: UpdateSpecimenInput!): UpdateSpecimenPayload!
+  updateSpecimen(
+    """
+    Parameters for UpdateSpecimen
+    """
+    input: UpdateSpecimenInput!
+  ): UpdateSpecimenPayload!
 
   """
   Updates a Staking life cycle event
   """
-  updateStakingEvent(input: UpdateStakingLifeCycleEventInput!): UpdateStakingLifeCycleEventPayload!
+  updateStakingEvent(
+    """
+    Parameters for UpdateStakingLifeCycleEvent
+    """
+    input: UpdateStakingLifeCycleEventInput!
+  ): UpdateStakingLifeCycleEventPayload!
 
   """
   Updates a thinning life cycle event
   """
-  updateThinningEvent(input: UpdateThinningLifeCycleEventInput!): UpdateThinningLifeCycleEventPayload!
+  updateThinningEvent(
+    """
+    Parameters for UpdateThinningLifeCycleEvent
+    """
+    input: UpdateThinningLifeCycleEventInput!
+  ): UpdateThinningLifeCycleEventPayload!
 
   """
   Updates a tolerance
   """
-  updateTolerance(input: UpdateToleranceInput!): UpdateTolerancePayload!
+  updateTolerance(
+    """
+    Parameters for UpdateTolerance
+    """
+    input: UpdateToleranceInput!
+  ): UpdateTolerancePayload!
 
   """
   Updates a Trellising life cycle event
   """
-  updateTrellisingEvent(input: UpdateTrellisingLifeCycleEventInput!): UpdateTrellisingLifeCycleEventPayload!
+  updateTrellisingEvent(
+    """
+    Parameters for UpdateTrellisingLifeCycleEvent
+    """
+    input: UpdateTrellisingLifeCycleEventInput!
+  ): UpdateTrellisingLifeCycleEventPayload!
 
   """
   Updates a variety
   """
-  updateVariety(input: UpdateVarietyInput!): UpdateVarietyPayload!
+  updateVariety(
+    """
+    Parameters for UpdateVariety
+    """
+    input: UpdateVarietyInput!
+  ): UpdateVarietyPayload!
 
   """
   Replaces a variety's set of antinutrients
   """
-  updateVarietyAntinutrients(input: UpdateVarietyAntinutrientsInput!): UpdateVarietyAntinutrientsPayload!
+  updateVarietyAntinutrients(
+    """
+    Parameters for UpdateVarietyAntinutrients
+    """
+    input: UpdateVarietyAntinutrientsInput!
+  ): UpdateVarietyAntinutrientsPayload!
 
   """
   Replaces a variety's set of growth habits
   """
-  updateVarietyGrowthHabits(input: UpdateVarietyGrowthHabitsInput!): UpdateVarietyGrowthHabitsPayload!
+  updateVarietyGrowthHabits(
+    """
+    Parameters for UpdateVarietyGrowthHabits
+    """
+    input: UpdateVarietyGrowthHabitsInput!
+  ): UpdateVarietyGrowthHabitsPayload!
 
   """
   Replaces a variety's set of tolerances
   """
-  updateVarietyTolerances(input: UpdateVarietyTolerancesInput!): UpdateVarietyTolerancesPayload!
+  updateVarietyTolerances(
+    """
+    Parameters for UpdateVarietyTolerances
+    """
+    input: UpdateVarietyTolerancesInput!
+  ): UpdateVarietyTolerancesPayload!
 
   """
   Updates a Weather life cycle event
   """
-  updateWeatherEvent(input: UpdateWeatherLifeCycleEventInput!): UpdateWeatherLifeCycleEventPayload!
+  updateWeatherEvent(
+    """
+    Parameters for UpdateWeatherLifeCycleEvent
+    """
+    input: UpdateWeatherLifeCycleEventInput!
+  ): UpdateWeatherLifeCycleEventPayload!
 
   """
   Updates a Weed Management life cycle event
   """
-  updateWeedManagementEvent(input: UpdateWeedManagementLifeCycleEventInput!): UpdateWeedManagementLifeCycleEventPayload!
+  updateWeedManagementEvent(
+    """
+    Parameters for UpdateWeedManagementLifeCycleEvent
+    """
+    input: UpdateWeedManagementLifeCycleEventInput!
+  ): UpdateWeedManagementLifeCycleEventPayload!
 }
 
 type MutationError {
