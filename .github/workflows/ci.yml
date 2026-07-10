@@ -49,7 +49,7 @@ jobs:
         run: bundle install --jobs 4
 
       - name: Set up database
-        run: bundle exec rails db:create db:structure:load
+        run: bundle exec rails db:create db:schema:load
 
       - name: Run RSpec
         run: bundle exec rspec
