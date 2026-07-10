@@ -67,7 +67,7 @@ end
 group :development do
   # Rails 7.0 EventedFileUpdateChecker requires listen ~> 3.5; keep listen (dev file watcher).
   gem 'listen', '~> 3.5'
-  gem 'rubocop', require: false
+  gem 'rubocop', '~> 1.0', require: false
 end
 
 group :test do
