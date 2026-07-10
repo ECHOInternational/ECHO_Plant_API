@@ -17,10 +17,11 @@ module Mutations
       mutation_errors = []
       return mutation_errors if errors.empty?
 
-      errors.each do |attribute, error|
+      errors.each do |error|
+        attribute = error.attribute
         mutation_errors << {
           field: field_mappings[attribute] || attribute,
-          message: "#{attribute} #{error}",
+          message: "#{attribute} #{error.message}",
           code: 400
         }
       end
