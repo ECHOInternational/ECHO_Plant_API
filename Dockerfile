@@ -1,5 +1,8 @@
-ARG RUBY_VERSION=3.1.7
-FROM ruby:${RUBY_VERSION}-slim-bullseye AS base
+ARG RUBY_VERSION=3.3.11
+# ruby:3.3.x ships no -slim-bullseye variant (Debian bullseye was retired for the
+# Ruby 3.3 image line); bookworm is the sanctioned base from this rung forward.
+# bookworm provides libjemalloc2 (5.3.0) and libpq5 (15.x, SCRAM-SHA-256 capable).
+FROM ruby:${RUBY_VERSION}-slim-bookworm AS base
 
 # --------------------------------------------------------------------------- #
 # build stage: compile gems + precompile bootsnap cache                        #

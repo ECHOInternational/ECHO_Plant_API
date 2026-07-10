@@ -3,12 +3,12 @@
 source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby '~> 3.1.0'
+ruby '~> 3.3.0'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 7.1.6'
 # Use postgresql as the database for Active Record
-gem 'pg', '~> 1.5.9'
+gem 'pg', '~> 1.6.3'
 # Use Puma as the app server
 gem 'puma', '~> 6.6'
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
