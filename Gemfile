@@ -6,7 +6,7 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 ruby '~> 3.1.0'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '~> 7.0.10'
+gem 'rails', '~> 7.1.6'
 # Use postgresql as the database for Active Record
 gem 'pg', '~> 1.5.9'
 # Use Puma as the app server
@@ -28,21 +28,21 @@ gem 'bootsnap', '>= 1.10', require: false
 gem 'jwt', '~> 2.10'
 
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin AJAX possible
-gem 'rack-cors'
+gem 'rack-cors', '~> 2.0.2'
 
 # Accept-Language Header
 gem 'http_accept_language'
 
 # Features
 # Versioning
-gem 'paper_trail', '~> 12.3'
+gem 'paper_trail', '~> 16.0'
 # I18n
 gem 'mobility', '~> 1.2.9'
 # Graphql
 gem 'graphql', '~> 2.0.32'
 gem 'search_object_graphql', '~> 1.0.5'
 # Authorization Policies
-gem 'pundit'
+gem 'pundit', '~> 2.5'
 
 # S3 presigned URL generation for direct image uploads
 gem 'aws-sdk-s3', '~> 1'

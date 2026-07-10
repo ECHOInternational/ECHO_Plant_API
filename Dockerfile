@@ -10,6 +10,7 @@ RUN apt-get update -qq \
  && apt-get install -y --no-install-recommends \
       build-essential \
       libpq-dev \
+      libyaml-dev \
       git \
  && rm -rf /var/lib/apt/lists/*
 
@@ -78,6 +79,7 @@ RUN apt-get update -qq \
  && apt-get install -y --no-install-recommends \
       build-essential \
       libpq-dev \
+      libyaml-dev \
       git \
       postgresql-client \
  && rm -rf /var/lib/apt/lists/*
