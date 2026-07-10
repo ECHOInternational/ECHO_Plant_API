@@ -39,7 +39,7 @@ gem 'paper_trail', '~> 16.0'
 # I18n
 gem 'mobility', '~> 1.2.9'
 # Graphql
-gem 'graphql', '~> 2.0.32'
+gem 'graphql', '~> 2.3.23'
 gem 'search_object_graphql', '~> 1.0.5'
 # Authorization Policies
 gem 'pundit', '~> 2.5'
