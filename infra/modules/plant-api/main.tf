@@ -311,7 +311,7 @@ resource "aws_iam_role_policy" "task_s3" {
 
 resource "aws_security_group" "tasks" {
   name        = "${local.name_prefix}-tasks"
-  description = "Plant API ${var.env} ECS tasks — ingress from ALB only"
+  description = "Plant API ${var.env} ECS tasks - ingress from ALB only"
   vpc_id      = var.vpc_id
 
   egress {

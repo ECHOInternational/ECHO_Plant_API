@@ -51,7 +51,7 @@ database_port          = 5432
 # Using an ARN variable (not a data source) so that terraform plan works
 # before the secret exists.  Update this value after bootstrap-staging-db.sh
 # completes and before running terraform apply.
-db_secret_arn          = "arn:aws:secretsmanager:us-east-1:382724554857:secret:rds/echocommunity-production/plantapi-staging-app-XXXXXX"
+db_secret_arn          = "arn:aws:secretsmanager:us-east-1:382724554857:secret:rds/echocommunity-production/plantapi-staging-app-kb0idH"
 db_secret_username_key = "username"
 db_secret_password_key = "password"
 
