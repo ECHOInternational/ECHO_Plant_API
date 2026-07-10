@@ -6,7 +6,7 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 ruby '~> 3.3.0'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '~> 7.1.6'
+gem 'rails', '~> 7.2.3'
 # Use postgresql as the database for Active Record
 gem 'pg', '~> 1.6.3'
 # Use Puma as the app server
@@ -37,6 +37,11 @@ gem 'http_accept_language'
 # Versioning
 gem 'paper_trail', '~> 16.0'
 # I18n
+# Held at 1.2.9: mobility 1.3.x has a container-backend regression (Container#write
+# returns the decorated read; the cache+dirty plugin chain then poisons in-memory
+# reads of just-written translations with nil, breaking create for translated-only
+# records). Bump when a fixed release (> 1.3.2) passes
+# spec/models/mobility_compat_spec.rb unchanged.
 gem 'mobility', '~> 1.2.9'
 # Graphql
 gem 'graphql', '~> 2.3.23'
@@ -56,7 +61,7 @@ group :development, :test do
   gem 'factory_bot_rails', '~> 6.4'
   gem 'faker', '~> 3.5'
   gem 'pundit-matchers'
-  gem 'rspec-rails', '~> 6.1.5'
+  gem 'rspec-rails', '~> 8.0'
 end
 
 group :development do

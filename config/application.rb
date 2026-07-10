@@ -25,15 +25,21 @@ module API
   # Defines configuration for the entire Rails Application
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 7.1
+    config.load_defaults 7.2
 
     # Rails 7.0 defaults partial_inserts to false, which forces every column
     # (including the Mobility container backend jsonb translations column) into
-    # the INSERT. Mobility 1.2.9 (frozen on this ladder rung) leaves translations
-    # as nil in memory for a record with no translated attributes set and relies
-    # on the column's DB-side DEFAULT '{}'. With full inserts that nil is sent
-    # explicitly and violates the NOT NULL constraint. Pin partial_inserts back
-    # to true until Mobility is upgraded to seed the attribute default itself.
+    # the INSERT. Mobility 1.2.9 leaves translations as nil in memory for a
+    # record with no translated attributes set and relies on the column's
+    # DB-side DEFAULT '{}'. With full inserts that nil is sent explicitly and
+    # violates the NOT NULL constraint, so partial_inserts is pinned to true.
+    # The documented relax condition (the next Mobility bump) arrived at the
+    # Rails 7.2 rung and was BLOCKED: mobility 1.3.x has a container-backend
+    # regression (Container#write returns the decorated read; the cache+dirty
+    # plugin chain then poisons in-memory reads of just-written translations
+    # with nil), so mobility stays held at 1.2.9. Unpin when a fixed mobility
+    # (> 1.3.2) passes the 9-example spec/models/mobility_compat_spec.rb
+    # unchanged.
     config.active_record.partial_inserts = true
 
     # app/models/life_cycle_events is an explicit autoload root (STI subtree:
