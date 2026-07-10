@@ -102,7 +102,7 @@ GEM
     ffi (1.13.1)
     globalid (1.4.0)
       activesupport (>= 6.1)
-    graphql (1.13.25)
+    graphql (2.0.32)
       base64
     http_accept_language (2.1.1)
     i18n (1.14.8)
@@ -232,10 +232,10 @@ GEM
     rubocop-ast (0.7.1)
       parser (>= 2.7.1.5)
     ruby-progressbar (1.10.1)
-    search_object (1.2.4)
-    search_object_graphql (0.3.2)
-      graphql (~> 1.8)
-      search_object (~> 1.2.2)
+    search_object (1.2.5)
+    search_object_graphql (1.0.5)
+      graphql (> 1.8)
+      search_object (~> 1.2.5)
     simplecov (0.19.0)
       docile (~> 1.1)
       simplecov-html (~> 0.11)
@@ -272,7 +272,7 @@ DEPENDENCIES
   byebug
   factory_bot_rails
   faker (~> 2.23)
-  graphql (~> 1.13.25)
+  graphql (~> 2.0.32)
   http_accept_language
   jwt (~> 2.10)
   listen (~> 3.2)
@@ -287,7 +287,7 @@ DEPENDENCIES
   rails-healthcheck
   rspec-rails (~> 6.1.5)
   rubocop
-  search_object_graphql
+  search_object_graphql (~> 1.0.5)
   simplecov
   spring
   spring-watcher-listen (~> 2.0.0)
