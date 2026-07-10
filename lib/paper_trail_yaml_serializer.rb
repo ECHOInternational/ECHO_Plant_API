@@ -40,6 +40,7 @@ require 'bigdecimal'
 #   Ruby Range objects. Add to this list only when a failing reify proves a new
 #   class is genuinely present in stored history.
 module PaperTrailYamlSerializer
+  # Base permitted classes resolved at load time (no AR connection needed).
   PERMITTED_CLASSES = [
     Time,
     Date,
@@ -55,8 +56,21 @@ module PaperTrailYamlSerializer
   # them usable as instance methods too; mirrors PaperTrail::Serializers::YAML.
   module_function
 
+  # Returns the full permitted-class list, resolving AR adapter classes lazily
+  # so this file can be required before the PostgreSQL adapter is loaded.
+  #
+  # ActiveRecord::Point (Location#latlng point column) is defined in the PG OID
+  # layer and is only available after the first DB connection is established.
+  # Forward-risk only - production history contains zero Point payloads as of
+  # 2026-07-10 (tag-scan of all versions rows).
+  def permitted_classes
+    base = PERMITTED_CLASSES
+    ar_point = ::ActiveRecord::Point if defined?(::ActiveRecord::Point)
+    ar_point ? base + [ar_point] : base
+  end
+
   def load(string)
-    ::YAML.safe_load(string, permitted_classes: PERMITTED_CLASSES, aliases: true)
+    ::YAML.safe_load(string, permitted_classes: permitted_classes, aliases: true)
   end
 
   def dump(object)
