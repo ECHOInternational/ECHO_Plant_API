@@ -224,10 +224,15 @@ the service to stabilise.
    aws ecr get-login-password --region us-east-1 | \
      docker login --username AWS --password-stdin \
      382724554857.dkr.ecr.us-east-1.amazonaws.com
-   docker build -t plant-api:staging .
-   docker tag plant-api:staging \
-     382724554857.dkr.ecr.us-east-1.amazonaws.com/plant-api:staging
-   docker push 382724554857.dkr.ecr.us-east-1.amazonaws.com/plant-api:staging
+   # The bootstrap task definition references the :latest tag; the repo uses
+   # immutable tags, so :latest is pushed exactly once here. All subsequent
+   # deploys push git-SHA tags and register new task-definition revisions.
+   SHA=$(git rev-parse --short=12 HEAD)
+   docker build --target production -t plant-api:$SHA .
+   docker tag plant-api:$SHA 382724554857.dkr.ecr.us-east-1.amazonaws.com/plant-api:$SHA
+   docker tag plant-api:$SHA 382724554857.dkr.ecr.us-east-1.amazonaws.com/plant-api:latest
+   docker push 382724554857.dkr.ecr.us-east-1.amazonaws.com/plant-api:$SHA
+   docker push 382724554857.dkr.ecr.us-east-1.amazonaws.com/plant-api:latest
    ```
 
 2. **Run the migration task once** (the web tasks will fail `/health` while
