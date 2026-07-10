@@ -2,8 +2,12 @@
 
 # Defines the Plant object type
 class Plant < ApplicationRecord # rubocop:disable Metrics/ClassLength
-  enum :early_growth_phase, { slow: 'slow', intermediate: 'intermediate', fast: 'fast' }
-  enum :life_cycle, { annual: 'annual', biennial: 'biennial', perennial: 'perennial' }
+  # Ruby 3.1/Psych-4 rung: a bare hash as the last positional arg to enum (which
+  # takes **options) is an ambiguous-kwargs deprecation on 2.7 and mis-binds on 3.x.
+  # Use the Rails 7 keyword-definition form (enum name: {...}) for enums with no
+  # trailing option kwarg; behaviour is identical.
+  enum early_growth_phase: { slow: 'slow', intermediate: 'intermediate', fast: 'fast' }
+  enum life_cycle: { annual: 'annual', biennial: 'biennial', perennial: 'perennial' }
   validates :owned_by, :created_by, :visibility, presence: true
   enum :visibility, { private: 0, public: 1, draft: 2, deleted: 3 }, prefix: :visibility
   has_many :images, as: :imageable, dependent: :destroy
