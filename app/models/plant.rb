@@ -158,19 +158,23 @@ class Plant < ApplicationRecord # rubocop:disable Metrics/ClassLength
   # zero SQL. +min_by(&:id)+ reproduces the SQL path's implicit ORDER BY id ASC
   # so the chosen record (and thus the returned name) is byte-identical.
   def primary_common_name_from_loaded(locale)
-    names = common_names.to_a
     requested_lang = locale.to_s.upcase
+    en = in_language(common_names.to_a, 'EN')
 
-    requested = names.select { |cn| cn.language == requested_lang && cn.primary }.min_by(&:id)
-    return requested.name if requested
+    match = first_by_id(in_language(common_names.to_a, requested_lang).select(&:primary)) ||
+            first_by_id(en.select(&:primary)) ||
+            first_by_id(en)
 
-    en = names.select { |cn| cn.language == 'EN' }
-    fallback = en.select(&:primary).min_by(&:id)
-    return fallback.name if fallback
+    match&.name
+  end
 
-    default = en.min_by(&:id)
-    return default.name if default
+  def in_language(records, language)
+    records.select { |cn| cn.language == language }
+  end
 
-    nil
+  # Picks the record with the lowest id, matching the SQL path's implicit
+  # ORDER BY id ASC used by bare +.first+.
+  def first_by_id(records)
+    records.min_by(&:id)
   end
 end
