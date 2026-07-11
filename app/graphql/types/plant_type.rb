@@ -210,7 +210,29 @@ module Types
     end
 
     def varieties
-      Pundit.policy_scope(context[:current_user], @object.varieties)
+      user = context[:current_user]
+      # When the plants list resolver has eager-loaded :varieties, filter the
+      # in-memory records with the same rules Pundit's policy_scope would apply
+      # (OwnedResourcePolicy::Scope) instead of issuing a fresh per-plant query.
+      # This preserves the exact visible set while eliminating the N+1. When the
+      # association is not loaded (single-plant contexts) fall back to the SQL
+      # policy_scope so we don't force-load the association.
+      if @object.association(:varieties).loaded?
+        policy_scope_loaded(user, @object.varieties.to_a)
+      else
+        Pundit.policy_scope(user, @object.varieties)
+      end
+    end
+
+    # In-Ruby mirror of OwnedResourcePolicy::Scope#resolve for a loaded array.
+    def policy_scope_loaded(user, records)
+      if user&.admin?
+        records
+      elsif user
+        records.select { |r| r.visibility_public? || r.owned_by == user.email }
+      else
+        records.select(&:visibility_public?)
+      end
     end
 
     # def versions
