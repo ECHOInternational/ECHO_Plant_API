@@ -1,20 +1,11 @@
 inherit_from: .rubocop_todo.yml
 AllCops:
-    # RuboCop 0.92 (frozen until the post-ladder tooling bump) cannot parse a
-    # 3.1 .ruby-version and aborts if it auto-detects the runtime. Pin the target
-    # to the highest version 0.92 supports so the linter keeps running unchanged;
-    # this governs cop selection only, not the actual Ruby the app runs on (3.1).
-    TargetRubyVersion: 2.7
+    # Surface new cops in todo regeneration rather than silently ignoring them.
+    NewCops: enable
     Exclude:
         - 'db/seeds.rb'
         # CI installs gems into vendor/bundle (in-repo for caching); never lint vendored code
         - 'vendor/**/*'
-# RuboCop 0.92's Layout/BlockAlignment cop CRASHES (cop error -> exit 1 despite
-# zero offenses) on 53 files when the runtime is Ruby 3.1 with parser 2.7.x.
-# Disabled until the post-ladder RuboCop bump; re-enable it there together with
-# removing the TargetRubyVersion pins.
-Layout/BlockAlignment:
-    Enabled: false
 # Rspec doesn't support do...end so block delimiters must be allowed
 Style/BlockDelimiters:
     Exclude:
