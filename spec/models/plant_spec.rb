@@ -217,4 +217,83 @@ RSpec.describe Plant, type: :model do
       expect(plant.errors.count).to eq 1
     end
   end
+
+  describe '#primary_common_name_for_locale' do
+    # The fixed fallback precedence, highest priority first:
+    #   1. requested language, primary == true
+    #   2. 'EN', primary == true
+    #   3. 'EN', any (primary true or false)
+    #   4. nil
+    # Within each tier, ActiveRecord's implicit ORDER BY id ASC picks the winner.
+    #
+    # These examples run each case twice: once with the common_names association
+    # NOT loaded (the SQL path) and once with it loaded (the Ruby path), proving
+    # both paths return byte-identical results.
+    def resolve_both_ways(plant, locale)
+      plant.reload # ensure the association is not loaded (SQL path)
+      raise 'expected association to be unloaded' if plant.association(:common_names).loaded?
+
+      sql_result = plant.primary_common_name_for_locale(locale)
+
+      plant.common_names.load # force the association to load (Ruby path)
+      raise 'expected association to be loaded' unless plant.association(:common_names).loaded?
+
+      loaded_result = plant.primary_common_name_for_locale(locale)
+
+      expect(loaded_result).to eq(sql_result)
+      sql_result
+    end
+
+    it 'prefers the requested-language primary name (tier 1)' do
+      plant = create(:plant)
+      create(:common_name, plant: plant, name: 'Spanish Primary', language: 'ES', primary: true)
+      create(:common_name, plant: plant, name: 'Spanish Other', language: 'ES', primary: false)
+      create(:common_name, plant: plant, name: 'English Primary', language: 'EN', primary: true)
+
+      expect(resolve_both_ways(plant, 'es')).to eq 'Spanish Primary'
+    end
+
+    it 'falls back to the EN primary name when the requested language has no primary (tier 2)' do
+      plant = create(:plant)
+      create(:common_name, plant: plant, name: 'Spanish Other', language: 'ES', primary: false)
+      create(:common_name, plant: plant, name: 'English Primary', language: 'EN', primary: true)
+      create(:common_name, plant: plant, name: 'English Other', language: 'EN', primary: false)
+
+      expect(resolve_both_ways(plant, 'es')).to eq 'English Primary'
+    end
+
+    it 'falls back to any EN name when there is no EN primary (tier 3)' do
+      plant = create(:plant)
+      create(:common_name, plant: plant, name: 'Spanish Other', language: 'ES', primary: false)
+      create(:common_name, plant: plant, name: 'English Other', language: 'EN', primary: false)
+
+      expect(resolve_both_ways(plant, 'es')).to eq 'English Other'
+    end
+
+    it 'returns nil when there is no matching name (tier 4)' do
+      plant = create(:plant)
+      create(:common_name, plant: plant, name: 'French Only', language: 'FR', primary: false)
+
+      expect(resolve_both_ways(plant, 'es')).to be_nil
+    end
+
+    it 'is locale-case-insensitive for the requested language' do
+      plant = create(:plant)
+      create(:common_name, plant: plant, name: 'Spanish Primary', language: 'ES', primary: true)
+
+      expect(resolve_both_ways(plant, 'es')).to eq 'Spanish Primary'
+      expect(resolve_both_ways(plant, 'ES')).to eq 'Spanish Primary'
+    end
+
+    it 'breaks ties within a tier by implicit id order identically on both paths' do
+      # Two EN primaries (a data anomaly the SQL .first tolerates): the record
+      # with the lower id wins, and both paths must agree on which one.
+      plant = create(:plant)
+      first = create(:common_name, plant: plant, name: 'EN Primary One', language: 'EN', primary: true)
+      second = create(:common_name, plant: plant, name: 'EN Primary Two', language: 'EN', primary: true)
+      winner = [first, second].min_by(&:id).name
+
+      expect(resolve_both_ways(plant, 'en')).to eq winner
+    end
+  end
 end

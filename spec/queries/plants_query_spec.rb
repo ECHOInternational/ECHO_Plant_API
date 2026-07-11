@@ -389,6 +389,23 @@ RSpec.describe 'Plants Query', type: :graphql_query do
 
       expect(plant_result.length).to eq 3
     end
+
+    # Regression: the name filter must not truncate the eager-loaded
+    # common_names association. When it matches only the FR name "Beta", the
+    # loaded-aware primary_common_name must still see the full association and
+    # return the EN primary "Alpha" (the unfiltered display value).
+    it 'does not truncate the loaded association used by primaryCommonName' do
+      plant = create(:plant, :public, scientific_name: 'silk tree')
+      create(:common_name, plant: plant, language: 'EN', primary: true, name: 'Alpha')
+      create(:common_name, plant: plant, language: 'FR', primary: true, name: 'Beta')
+
+      result = PlantApiSchema.execute(@query_string, variables: { name: 'Beta' })
+      nodes = result['data']['plants']['nodes']
+
+      expect(nodes.length).to eq 1
+      expect(nodes.first['scientificName']).to eq 'silk tree'
+      expect(nodes.first['primaryCommonName']).to eq 'Alpha'
+    end
   end
 
   describe 'anyName filter' do
@@ -458,6 +475,23 @@ RSpec.describe 'Plants Query', type: :graphql_query do
       plant_result = result['data']['plants']['nodes']
 
       expect(plant_result.length).to eq 4
+    end
+
+    # Regression: the anyName filter must not truncate the eager-loaded
+    # common_names association. Matching only the FR name "Beta" must still
+    # leave the full association loaded so the loaded-aware
+    # primary_common_name returns the EN primary "Alpha" rather than nil.
+    it 'does not truncate the loaded association used by primaryCommonName' do
+      plant = create(:plant, :public, scientific_name: 'silk tree')
+      create(:common_name, plant: plant, language: 'EN', primary: true, name: 'Alpha')
+      create(:common_name, plant: plant, language: 'FR', primary: true, name: 'Beta')
+
+      result = PlantApiSchema.execute(@query_string, variables: { anyName: 'Beta' })
+      nodes = result['data']['plants']['nodes']
+
+      expect(nodes.length).to eq 1
+      expect(nodes.first['scientificName']).to eq 'silk tree'
+      expect(nodes.first['primaryCommonName']).to eq 'Alpha'
     end
   end
 
