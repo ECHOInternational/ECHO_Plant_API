@@ -24,7 +24,7 @@ alb_security_group_id = "sg-0ea89191a2ca2065a"
 alb_listener_arn      = "arn:aws:elasticloadbalancing:us-east-1:382724554857:listener/app/ECHOcommunity-load-balancer/cda099b79e56784d/6f2b7bd42f572512"
 
 # CUTOVER STRATEGY:
-#   The existing priority-15 rule currently forwards plant-api.echocommunity.org
+#   HISTORICAL (pre-2026-07-11, EB now decommissioned): the priority-15/16 EB rules
 #   traffic to the EB target group (awseb-echoplan-default-em2rm).
 #
 #   This Terraform config creates a new target group + listener rule at priority 19

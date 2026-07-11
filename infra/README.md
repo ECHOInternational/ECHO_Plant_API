@@ -1,5 +1,14 @@
 # ECHO Plant API — ECS Infrastructure
 
+> **HISTORICAL NOTE (2026-07-11): Elastic Beanstalk is DECOMMISSIONED.**
+> The environment was terminated on 2026-07-11 after the ECS cutover
+> (2026-07-10) and the Rails 8.1 promotion (2026-07-11). Sections below that
+> reference EB, the priority-15/16 listener rules, or EB-sourced secrets are
+> retained for historical context only. Rollback today = re-run the Deploy
+> workflow (workflow_dispatch) with a previously built git SHA. The
+> plantapi_app DB role now uses scram-sha-256 (the md5 workaround died with
+> EB's old libpq - see issue #38).
+
 Terraform infrastructure for migrating the ECHO Plant API from Elastic Beanstalk to Amazon ECS
 (Fargate). All resources are in **us-east-1**, account **382724554857**.
 
