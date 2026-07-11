@@ -84,10 +84,16 @@ module Resolvers
     def apply_name_filter(scope, value)
       return scope if value.blank?
 
-      scope
-        .includes(:common_names)
-        .where('common_names.name iLIKE ?', "%#{value}%")
-        .references(:common_names)
+      # Filter via an EXISTS subquery instead of joining/referencing the
+      # eager-loaded common_names association. A referenced where would turn the
+      # includes into a filtered LEFT JOIN and truncate the loaded association
+      # to only the matching rows, corrupting the loaded-aware
+      # primary_common_name tier resolution. The subquery keeps the outer
+      # includes(:common_names) loading the FULL association.
+      scope.where(
+        'EXISTS (SELECT 1 FROM common_names cn WHERE cn.plant_id = plants.id AND cn.name iLIKE :search)',
+        search: "%#{value}%"
+      )
     end
 
     def apply_scientific_name_filter(scope, value)
@@ -99,10 +105,15 @@ module Resolvers
     def apply_any_name_filter(scope, value)
       return scope if value.blank?
 
-      scope
-        .includes(:common_names)
-        .where('common_names.name iLIKE :search OR scientific_name iLIKE :search', { search: "%#{value}%" })
-        .references(:common_names)
+      # Match on scientific_name OR any common name via an EXISTS subquery so the
+      # eager-loaded common_names association is not truncated to matching rows
+      # (see apply_name_filter). The outer includes(:common_names) still loads
+      # the FULL association, keeping loaded-aware primary_common_name correct.
+      scope.where(
+        'plants.scientific_name iLIKE :search OR ' \
+        'EXISTS (SELECT 1 FROM common_names cn WHERE cn.plant_id = plants.id AND cn.name iLIKE :search)',
+        search: "%#{value}%"
+      )
     end
 
     def apply_language_filter(scope, _value)
