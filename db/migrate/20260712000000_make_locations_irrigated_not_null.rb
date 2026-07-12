@@ -11,7 +11,7 @@
 class MakeLocationsIrrigatedNotNull < ActiveRecord::Migration[8.1]
   def up
     # 1. Backfill any existing NULLs to false.
-    execute "UPDATE locations SET irrigated = false WHERE irrigated IS NULL"
+    execute 'UPDATE locations SET irrigated = false WHERE irrigated IS NULL'
 
     # 2. Set the column default so future INSERTs without irrigated get false.
     change_column_default :locations, :irrigated, false
