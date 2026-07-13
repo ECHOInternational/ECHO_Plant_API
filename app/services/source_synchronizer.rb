@@ -169,9 +169,10 @@ class SourceSynchronizer
         )
         report.synced += 1
       else
-        # Local diverges from incoming -- conservatively treat as locally modified
-        record.update_columns(last_synced_at: Time.current, sync_state: 'locally_modified')
-        report.locally_modified += 1
+        # Local diverges from incoming and there is no base to arbitrate.
+        # Settled rule: never silently choose one side -- surface a reviewable
+        # conflict with an empty base payload marking the first-sync case.
+        handle_content_conflict(record, {}, local, incoming_attrs, report)
       end
       return
     end
@@ -189,16 +190,29 @@ class SourceSynchronizer
       report.synced += 1
 
     elsif !local_changed && incoming_changed
-      # unchanged / incoming changed -- apply incoming
-      cols = incoming_attrs.merge(
-        'source_snapshot' => incoming_attrs,
-        'source_digest' => incoming_digest,
-        'source_updated_at' => src_at,
-        'last_synced_at' => Time.current,
-        'sync_state' => 'synced'
+      # unchanged / incoming changed -- apply incoming through a full save so
+      # the change is validated and PaperTrail-versioned with the sync
+      # attribution (whodunnit = service principal, metadata origin 'sync').
+      record.assign_attributes(
+        incoming_attrs.merge(
+          'source_snapshot' => incoming_attrs,
+          'source_digest' => incoming_digest,
+          'source_updated_at' => src_at,
+          'last_synced_at' => Time.current,
+          'sync_state' => 'synced'
+        )
       )
-      record.update_columns(cols)
-      report.applied += 1
+      begin
+        record.save!
+        report.applied += 1
+      rescue ActiveRecord::RecordInvalid => e
+        record.reload
+        report.invalid += 1
+        report.invalid_details << {
+          source_record_id: record.source_record_id,
+          error: e.message
+        }
+      end
 
     elsif local_changed && !incoming_changed
       # local changed / incoming unchanged -- keep local

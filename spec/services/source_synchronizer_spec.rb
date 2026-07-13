@@ -100,6 +100,17 @@ RSpec.describe SourceSynchronizer, type: :service do
       expect(plant.source_snapshot['scientific_name']).to eq 'Cajanus cajan'
       expect(plant.source_digest).to be_present
     end
+
+    it 'records a PaperTrail version attributed to the service principal', versioning: true do
+      plant = synced_plant(src_id: 'src-2v')
+
+      expect do
+        sync.apply([row(source_record_id: 'src-2v', scientific_name: 'Cajanus cajan')])
+      end.to change { PaperTrail::Version.where(item: plant).count }.by(1)
+
+      version = PaperTrail::Version.where(item: plant).order(:created_at).last
+      expect(version.whodunnit).to eq data_source.service_principal!.id
+    end
   end
 
   # ---------------------------------------------------------------------------
@@ -233,8 +244,11 @@ RSpec.describe SourceSynchronizer, type: :service do
       end
     end
 
-    context 'when local values differ from incoming (locally_modified)' do
-      it 'marks as locally_modified (conservative)' do
+    context 'when local values differ from incoming (reviewable conflict)' do
+      # Settled rule: never silently choose one side. With no base snapshot
+      # to arbitrate, divergence surfaces as a content conflict whose
+      # base_payload is empty (first-sync marker), and local data is kept.
+      it 'creates a content conflict with an empty base payload' do
         plant = create(
           :plant,
           data_source_id:   data_source.id,
@@ -249,8 +263,13 @@ RSpec.describe SourceSynchronizer, type: :service do
         report = sync.apply([row(source_record_id: 'src-new-2')])
 
         plant.reload
-        expect(plant.sync_state).to eq('locally_modified').or eq('conflict')
-        expect(report.locally_modified + report.conflicts_created).to be >= 1
+        expect(plant.sync_state).to eq 'conflict'
+        expect(plant.scientific_name).to eq 'Different Local Name'
+        expect(report.conflicts_created).to eq 1
+
+        conflict = SyncConflict.find_by(syncable: plant, status: 'open')
+        expect(conflict.conflict_type).to eq 'content'
+        expect(conflict.base_payload).to eq({})
       end
     end
   end

@@ -119,13 +119,17 @@ module Mutations
         incoming_digest = canonical_digest(incoming)
         record          = conflict.syncable
 
-        record.update_columns(
+        # Full save (not update_columns): accepting upstream content is a
+        # user-driven change and must be validated and PaperTrail-versioned
+        # with the acting principal as whodunnit.
+        record.assign_attributes(
           incoming.merge(
             'source_snapshot' => incoming,
             'source_digest' => incoming_digest,
             'sync_state' => 'synced'
           )
         )
+        record.save!
 
         resolve_conflict!(conflict, 'accept_incoming')
       end
