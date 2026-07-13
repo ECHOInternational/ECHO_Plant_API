@@ -12,9 +12,9 @@ module VisibilityBridge
   # Maps a legacy visibility symbol to the new-model publication/access pair.
   # :deleted has no trio because deletion is expressed through deleted_at.
   TRIO_MAP = {
-    private: { publication_state: "published", access_level: "organization" },
-    public:  { publication_state: "published", access_level: "public"       },
-    draft:   { publication_state: "draft",     access_level: "organization" }
+    private: { publication_state: 'published', access_level: 'organization' },
+    public: { publication_state: 'published', access_level: 'public' },
+    draft: { publication_state: 'draft', access_level: 'organization' }
   }.freeze
 
   # Returns { publication_state:, access_level: } for a given legacy visibility
@@ -30,8 +30,8 @@ module VisibilityBridge
   #   4. everything else (incl. nil/nil legacy) -> :private
   def visibility_for(publication_state:, access_level:, deleted_at:)
     return :deleted    if deleted_at.present?
-    return :draft      if publication_state == "draft"
-    return :public     if publication_state == "published" && access_level == "public"
+    return :draft      if publication_state == 'draft'
+    return :public     if publication_state == 'published' && access_level == 'public'
 
     :private
   end

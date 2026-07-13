@@ -11,12 +11,12 @@ class SyncConflict < ApplicationRecord
 
   belongs_to :syncable, polymorphic: true
   belongs_to :data_source
-  belongs_to :resolved_by_principal, class_name: "Principal", optional: true
+  belongs_to :resolved_by_principal, class_name: 'Principal', optional: true
 
   validates :conflict_type, presence: true, inclusion: { in: CONFLICT_TYPES }
   validates :status,        presence: true, inclusion: { in: STATUSES }
   validates :data_source,   presence: true
   validates :syncable,      presence: true
 
-  scope :open_conflicts, -> { where(status: "open") }
+  scope :open_conflicts, -> { where(status: 'open') }
 end

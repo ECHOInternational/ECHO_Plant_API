@@ -25,25 +25,25 @@ RSpec.describe 'ResolveSyncConflict Mutation', type: :graphql_mutation do
   let(:plant) do
     create(
       :plant,
-      owner_organization_id:   org.id,
-      source_organization_id:  org.id,
-      data_source_id:          data_source.id,
-      source_record_id:        'src-plant-1',
-      source_snapshot:         source_attrs,
-      scientific_name:         'Local Name',
-      family_names:            'Moringaceae'
+      owner_organization_id: org.id,
+      source_organization_id: org.id,
+      data_source_id: data_source.id,
+      source_record_id: 'src-plant-1',
+      source_snapshot: source_attrs,
+      scientific_name: 'Local Name',
+      family_names: 'Moringaceae'
     )
   end
 
   let(:content_conflict) do
     create(
       :sync_conflict,
-      syncable:         plant,
-      data_source:      data_source,
-      conflict_type:    'content',
-      status:           'open',
-      base_payload:     source_attrs,
-      local_payload:    { 'scientific_name' => 'Local Name', 'family_names' => 'Moringaceae' },
+      syncable: plant,
+      data_source: data_source,
+      conflict_type: 'content',
+      status: 'open',
+      base_payload: source_attrs,
+      local_payload: { 'scientific_name' => 'Local Name', 'family_names' => 'Moringaceae' },
       incoming_payload: { 'scientific_name' => 'Upstream Name', 'family_names' => 'Moringaceae' }
     )
   end
@@ -51,12 +51,12 @@ RSpec.describe 'ResolveSyncConflict Mutation', type: :graphql_mutation do
   let(:deletion_conflict) do
     create(
       :sync_conflict,
-      syncable:         plant,
-      data_source:      data_source,
-      conflict_type:    'source_deletion',
-      status:           'open',
-      base_payload:     source_attrs,
-      local_payload:    source_attrs,
+      syncable: plant,
+      data_source: data_source,
+      conflict_type: 'source_deletion',
+      status: 'open',
+      base_payload: source_attrs,
+      local_payload: source_attrs,
       incoming_payload: {}
     )
   end
@@ -66,16 +66,16 @@ RSpec.describe 'ResolveSyncConflict Mutation', type: :graphql_mutation do
   def build_org_user(org, role:, trust: 4)
     principal = create(:principal)
     User.new(
-      'uid'          => principal.external_uid,
-      'email'        => principal.email,
+      'uid' => principal.external_uid,
+      'email' => principal.email,
       'trust_levels' => { 'plant' => trust },
       'organizations' => [{
-        'id'    => org.id,
-        'name'  => org.name,
+        'id' => org.id,
+        'name' => org.name,
         'roles' => { 'plant' => role }
       }]
     ).tap do |u|
-      u.principal            = principal
+      u.principal = principal
       u.personal_organization = Organization.personal_for!(principal)
     end
   end
@@ -84,7 +84,7 @@ RSpec.describe 'ResolveSyncConflict Mutation', type: :graphql_mutation do
     conflict_gid = PlantApiSchema.id_from_object(conflict, SyncConflict, {})
     PlantApiSchema.execute(
       mutation,
-      context:   { current_user: user },
+      context: { current_user: user },
       variables: { input: { conflictId: conflict_gid, resolution: resolution } }
     )
   end
@@ -199,12 +199,12 @@ RSpec.describe 'ResolveSyncConflict Mutation', type: :graphql_mutation do
     let(:superuser) do
       principal = create(:principal)
       User.new(
-        'uid'          => principal.external_uid,
-        'email'        => principal.email,
+        'uid' => principal.external_uid,
+        'email' => principal.email,
         'trust_levels' => { 'plant' => 10 },
         'organizations' => []
       ).tap do |u|
-        u.principal            = principal
+        u.principal = principal
         u.personal_organization = Organization.personal_for!(principal)
       end
     end
@@ -231,7 +231,7 @@ RSpec.describe 'ResolveSyncConflict Mutation', type: :graphql_mutation do
       create(
         :sync_conflict,
         :resolved,
-        syncable:    plant,
+        syncable: plant,
         data_source: data_source
       )
     end

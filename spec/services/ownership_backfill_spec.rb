@@ -707,11 +707,11 @@ RSpec.describe OwnershipBackfill, type: :service do
       violations = []
       models.each do |model|
         count = model.where(visibility: 3).where(deleted_at: nil).count
-        if count.positive?
-          sample_ids = model.where(visibility: 3).where(deleted_at: nil).limit(5).pluck(:id)
-          violations << "#{model.table_name}: #{count} rows have visibility=deleted " \
-                        "but deleted_at IS NULL (first 5: #{sample_ids.join(', ')})"
-        end
+        next unless count.positive?
+
+        sample_ids = model.where(visibility: 3).where(deleted_at: nil).limit(5).pluck(:id)
+        violations << "#{model.table_name}: #{count} rows have visibility=deleted " \
+                      "but deleted_at IS NULL (first 5: #{sample_ids.join(', ')})"
       end
       violations
     end

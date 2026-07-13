@@ -2,9 +2,9 @@
 
 class CreateOrganizations < ActiveRecord::Migration[8.1]
   def change
-    create_table :organizations, id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+    create_table :organizations, id: :uuid, default: -> { 'gen_random_uuid()' } do |t|
       t.string :name, null: false
-      t.string :kind, null: false, default: "personal"
+      t.string :kind, null: false, default: 'personal'
       t.uuid :external_idp_id
       # index: false because we add a unique index below instead of the
       # default non-unique one that t.references would generate.
@@ -13,9 +13,9 @@ class CreateOrganizations < ActiveRecord::Migration[8.1]
     end
 
     add_index :organizations, :external_idp_id, unique: true,
-              name: "index_organizations_on_external_idp_id"
+                                                name: 'index_organizations_on_external_idp_id'
     add_index :organizations, :principal_id, unique: true,
-              name: "index_organizations_on_principal_id"
+                                             name: 'index_organizations_on_principal_id'
 
     # CHECK constraint enforcing kind shape
     reversible do |dir|
@@ -29,7 +29,7 @@ class CreateOrganizations < ActiveRecord::Migration[8.1]
         SQL
       end
       dir.down do
-        execute "ALTER TABLE organizations DROP CONSTRAINT organizations_kind_shape"
+        execute 'ALTER TABLE organizations DROP CONSTRAINT organizations_kind_shape'
       end
     end
   end

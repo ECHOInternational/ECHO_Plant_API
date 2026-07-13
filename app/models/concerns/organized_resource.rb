@@ -18,11 +18,11 @@ module OrganizedResource
     # New string enums. Prefix avoids clashing with the existing integer
     # visibility enum and its generated methods.
     enum :publication_state,
-         { draft: "draft", published: "published" },
+         { draft: 'draft', published: 'published' },
          prefix: :publication
 
     enum :access_level,
-         { organization: "organization", public: "public" },
+         { organization: 'organization', public: 'public' },
          prefix: :access
 
     before_save :sync_visibility_columns
@@ -72,8 +72,8 @@ module OrganizedResource
       # Precedence (a): new trio is authoritative this save.
       derived = VisibilityBridge.visibility_for(
         publication_state: publication_state,
-        access_level:      access_level,
-        deleted_at:        deleted_at
+        access_level: access_level,
+        deleted_at: deleted_at
       )
       self.visibility = self.class.visibilities[derived]
     elsif visibility_changed?

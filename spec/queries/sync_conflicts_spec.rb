@@ -20,7 +20,7 @@ RSpec.describe 'syncConflicts query', type: :graphql_query do
     vars[:status] = status if status
     PlantApiSchema.execute(
       query_string,
-      context:   { current_user: user },
+      context: { current_user: user },
       variables: vars
     )
   end
@@ -29,16 +29,16 @@ RSpec.describe 'syncConflicts query', type: :graphql_query do
   def build_org_user(org, role:, trust: 4)
     principal = create(:principal)
     User.new(
-      'uid'          => principal.external_uid,
-      'email'        => principal.email,
+      'uid' => principal.external_uid,
+      'email' => principal.email,
       'trust_levels' => { 'plant' => trust },
       'organizations' => [{
-        'id'    => org.id,
-        'name'  => org.name,
+        'id' => org.id,
+        'name' => org.name,
         'roles' => { 'plant' => role }
       }]
     ).tap do |u|
-      u.principal            = principal
+      u.principal = principal
       u.personal_organization = Organization.personal_for!(principal)
     end
   end
@@ -57,26 +57,26 @@ RSpec.describe 'syncConflicts query', type: :graphql_query do
   let!(:conflict_in_org) do
     create(
       :sync_conflict,
-      syncable:      plant_in_org,
-      data_source:   data_source,
+      syncable: plant_in_org,
+      data_source: data_source,
       conflict_type: 'content',
-      status:        'open'
+      status: 'open'
     )
   end
   let!(:conflict_in_other_org) do
     create(
       :sync_conflict,
-      syncable:      plant_in_other_org,
-      data_source:   data_source,
+      syncable: plant_in_other_org,
+      data_source: data_source,
       conflict_type: 'content',
-      status:        'open'
+      status: 'open'
     )
   end
   let!(:resolved_conflict_in_org) do
     create(
       :sync_conflict,
       :resolved,
-      syncable:    plant_in_org,
+      syncable: plant_in_org,
       data_source: data_source
     )
   end

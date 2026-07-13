@@ -13,10 +13,10 @@ RSpec.describe SourceSynchronizer, type: :service do
   # Helper to build a synchronizer with the default setup
   def sync(attrs: SOURCE_ATTRS, model: Plant, ds: data_source)
     SourceSynchronizer.new(
-      data_source:       ds,
-      model:             model,
+      data_source: ds,
+      model: model,
       source_attributes: attrs,
-      run_id:            run_id
+      run_id: run_id
     )
   end
 
@@ -25,8 +25,8 @@ RSpec.describe SourceSynchronizer, type: :service do
           deleted: false, source_updated_at: 1.day.ago)
     {
       source_record_id: source_record_id,
-      deleted:          deleted,
-      attributes:       { 'scientific_name' => scientific_name, 'family_names' => family_names },
+      deleted: deleted,
+      attributes: { 'scientific_name' => scientific_name, 'family_names' => family_names },
       source_updated_at: source_updated_at
     }
   end
@@ -36,13 +36,13 @@ RSpec.describe SourceSynchronizer, type: :service do
     snap = { 'scientific_name' => scientific_name, 'family_names' => family_names }
     create(
       :plant,
-      data_source_id:   data_source.id,
+      data_source_id: data_source.id,
       source_record_id: src_id,
-      source_snapshot:  snap,
-      scientific_name:  scientific_name,
-      family_names:     family_names,
-      owner_organization_id:   org.id,
-      source_organization_id:  org.id
+      source_snapshot: snap,
+      scientific_name: scientific_name,
+      family_names: family_names,
+      owner_organization_id: org.id,
+      source_organization_id: org.id
     )
   end
 
@@ -54,10 +54,10 @@ RSpec.describe SourceSynchronizer, type: :service do
       it "raises ArgumentError when source_attributes includes '#{denied_attr}'" do
         expect do
           SourceSynchronizer.new(
-            data_source:       data_source,
-            model:             Plant,
+            data_source: data_source,
+            model: Plant,
             source_attributes: [denied_attr],
-            run_id:            run_id
+            run_id: run_id
           )
         end.to raise_error(ArgumentError, /deny-list/)
       end
@@ -162,10 +162,10 @@ RSpec.describe SourceSynchronizer, type: :service do
 
       new_run = SecureRandom.hex(8)
       SourceSynchronizer.new(
-        data_source:       data_source,
-        model:             Plant,
+        data_source: data_source,
+        model: Plant,
         source_attributes: SOURCE_ATTRS,
-        run_id:            new_run
+        run_id: new_run
       ).apply([row(source_record_id: 'src-4b', scientific_name: 'Second Upstream')])
 
       expect(SyncConflict.where(syncable: plant, conflict_type: 'content', status: 'open').count).to eq 1
@@ -222,12 +222,12 @@ RSpec.describe SourceSynchronizer, type: :service do
       it 'treats as unchanged -> synced, adopts snapshot' do
         plant = create(
           :plant,
-          data_source_id:   data_source.id,
+          data_source_id: data_source.id,
           source_record_id: 'src-new-1',
-          source_snapshot:  nil,
-          scientific_name:  'Moringa oleifera',
-          family_names:     'Moringaceae',
-          owner_organization_id:  org.id,
+          source_snapshot: nil,
+          scientific_name: 'Moringa oleifera',
+          family_names: 'Moringaceae',
+          owner_organization_id: org.id,
           source_organization_id: org.id
         )
 
@@ -238,7 +238,7 @@ RSpec.describe SourceSynchronizer, type: :service do
         expect(plant.sync_state).to eq 'synced'
         expect(plant.source_snapshot).to eq(
           'scientific_name' => 'Moringa oleifera',
-          'family_names'    => 'Moringaceae'
+          'family_names' => 'Moringaceae'
         )
         expect(report.applied + report.synced).to be >= 1
       end
@@ -251,12 +251,12 @@ RSpec.describe SourceSynchronizer, type: :service do
       it 'creates a content conflict with an empty base payload' do
         plant = create(
           :plant,
-          data_source_id:   data_source.id,
+          data_source_id: data_source.id,
           source_record_id: 'src-new-2',
-          source_snapshot:  nil,
-          scientific_name:  'Different Local Name',
-          family_names:     'Moringaceae',
-          owner_organization_id:  org.id,
+          source_snapshot: nil,
+          scientific_name: 'Different Local Name',
+          family_names: 'Moringaceae',
+          owner_organization_id: org.id,
           source_organization_id: org.id
         )
 
@@ -293,7 +293,7 @@ RSpec.describe SourceSynchronizer, type: :service do
       expect(plant.owner_organization_id).to eq org.id
       expect(plant.source_snapshot).to eq(
         'scientific_name' => 'Moringa oleifera',
-        'family_names'    => 'Moringaceae'
+        'family_names' => 'Moringaceae'
       )
     end
   end
@@ -319,17 +319,17 @@ RSpec.describe SourceSynchronizer, type: :service do
       # source_attributes only includes 'description' which is not required,
       # so the model will fail validation on the missing required fields.
       incoming = [{
-        source_record_id:  'invalid-1',
-        deleted:           false,
-        attributes:        { 'description' => 'A description' },
+        source_record_id: 'invalid-1',
+        deleted: false,
+        attributes: { 'description' => 'A description' },
         source_updated_at: Time.current
       }]
 
       report = SourceSynchronizer.new(
-        data_source:       data_source,
-        model:             Variety,
+        data_source: data_source,
+        model: Variety,
         source_attributes: %w[description],
-        run_id:            run_id
+        run_id: run_id
       ).apply(incoming)
 
       expect(report.invalid).to eq 1
@@ -352,7 +352,7 @@ RSpec.describe SourceSynchronizer, type: :service do
       # Stub find_record to raise only for the bad source_record_id, using
       # and_wrap_original so the other rows still resolve normally.
       allow(s).to receive(:find_record).and_wrap_original do |orig, src_id|
-        raise RuntimeError, 'injected failure' if src_id == 'iso-boom'
+        raise 'injected failure' if src_id == 'iso-boom'
 
         orig.call(src_id)
       end
@@ -377,10 +377,10 @@ RSpec.describe SourceSynchronizer, type: :service do
     it 'does not swallow ArgumentError raised at construction time (DENY_LIST guard)' do
       expect do
         SourceSynchronizer.new(
-          data_source:       data_source,
-          model:             Plant,
+          data_source: data_source,
+          model: Plant,
           source_attributes: %w[visibility],
-          run_id:            run_id
+          run_id: run_id
         )
       end.to raise_error(ArgumentError, /deny-list/)
     end
@@ -401,9 +401,9 @@ RSpec.describe SourceSynchronizer, type: :service do
       end
 
       sync.apply([
-        row(source_record_id: 'memo-1'),
-        row(source_record_id: 'memo-2')
-      ])
+                   row(source_record_id: 'memo-1'),
+                   row(source_record_id: 'memo-2')
+                 ])
 
       expect(call_count).to eq 1
     end
@@ -457,7 +457,7 @@ RSpec.describe SourceSynchronizer, type: :service do
 
       version = PaperTrail::Version.where(
         item_type: 'Plant',
-        event:     'create'
+        event: 'create'
       ).order(:created_at).last
       expect(version).to be_present
       expect(version.whodunnit).to eq svc_principal.id

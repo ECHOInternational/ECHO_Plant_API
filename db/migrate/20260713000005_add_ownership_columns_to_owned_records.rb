@@ -29,12 +29,12 @@ class AddOwnershipColumnsToOwnedRecords < ActiveRecord::Migration[8.1]
       # Unique partial: (data_source_id, source_record_id) per-source uniqueness
       add_index table, %i[data_source_id source_record_id],
                 unique: true,
-                where: "data_source_id IS NOT NULL",
+                where: 'data_source_id IS NOT NULL',
                 name: "index_#{table}_on_data_source_and_source_record"
 
       # Partial index on deleted_at for soft-delete queries
       add_index table, :deleted_at,
-                where: "deleted_at IS NOT NULL",
+                where: 'deleted_at IS NOT NULL',
                 name: "index_#{table}_on_deleted_at_partial"
 
       # Plain btree indexes on existing legacy columns (currently unindexed)
@@ -45,26 +45,26 @@ class AddOwnershipColumnsToOwnedRecords < ActiveRecord::Migration[8.1]
     end
 
     # Also index images.visibility and images.owned_by (legacy scopes, unindexed)
-    add_index :images, :visibility,  name: "index_images_on_visibility"
-    add_index :images, :owned_by,    name: "index_images_on_owned_by"
+    add_index :images, :visibility,  name: 'index_images_on_visibility'
+    add_index :images, :owned_by,    name: 'index_images_on_owned_by'
 
     # FK constraints (deferred to separate alter statements for clarity)
     OWNED_TABLES.each do |table|
       add_foreign_key table, :organizations,
                       column: :owner_organization_id,
-                      name:   "fk_#{table}_owner_org"
+                      name: "fk_#{table}_owner_org"
       add_foreign_key table, :organizations,
                       column: :source_organization_id,
-                      name:   "fk_#{table}_source_org"
+                      name: "fk_#{table}_source_org"
       add_foreign_key table, :principals,
                       column: :created_by_principal_id,
-                      name:   "fk_#{table}_created_by_principal"
+                      name: "fk_#{table}_created_by_principal"
       add_foreign_key table, :data_sources,
                       column: :data_source_id,
-                      name:   "fk_#{table}_data_source"
+                      name: "fk_#{table}_data_source"
       add_foreign_key table, :principals,
                       column: :deleted_by_principal_id,
-                      name:   "fk_#{table}_deleted_by_principal"
+                      name: "fk_#{table}_deleted_by_principal"
     end
   end
 
@@ -100,7 +100,7 @@ class AddOwnershipColumnsToOwnedRecords < ActiveRecord::Migration[8.1]
       remove_column table, :deleted_by_principal_id
     end
 
-    remove_index :images, name: "index_images_on_visibility"
-    remove_index :images, name: "index_images_on_owned_by"
+    remove_index :images, name: 'index_images_on_visibility'
+    remove_index :images, name: 'index_images_on_owned_by'
   end
 end
