@@ -3,12 +3,40 @@
 # Ownership backfill, verify, and report rake tasks for the Phase B
 # ownership-redesign rollout (Stage S3).
 #
+# MAPPING env var accepts either a local filesystem path OR an s3:// URI.
+# When an s3:// URI is supplied the object is downloaded to a Tempfile before
+# being passed to OwnershipBackfill. The ECS task role needs s3:GetObject on
+# that URI (see .github/workflows/ops-ownership-backfill.yml prerequisites).
+#
 # Usage:
-#   rake ownership:backfill MAPPING=<path> ECHO_ORG_ID=<uuid>
+#   rake ownership:backfill MAPPING=<path-or-s3-uri> ECHO_ORG_ID=<uuid>
 #   rake ownership:backfill MAPPING=<path> ECHO_ORG_ID=<uuid> DRY_RUN=0
 #   rake ownership:backfill MAPPING=<path> ECHO_ORG_ID=<uuid> DRY_RUN=0 BATCH_SIZE=200
 #   rake ownership:verify
 #   rake ownership:report
+
+# Downloads a mapping JSON from S3 and yields the local tempfile path.
+# Used by ownership:backfill when MAPPING is an s3:// URI.
+# The tempfile is deleted after the block returns.
+def with_mapping_path(mapping_env)
+  if mapping_env.start_with?('s3://')
+    uri_path = mapping_env.sub(%r{\As3://}, '')
+    bucket, *key_parts = uri_path.split('/')
+    key = key_parts.join('/')
+    puts "  Downloading mapping from s3://#{bucket}/#{key} ..."
+    s3 = Aws::S3::Client.new
+    tmp = Tempfile.new(['ownership_mapping', '.json'])
+    begin
+      s3.get_object(bucket: bucket, key: key, response_target: tmp.path)
+      yield tmp.path
+    ensure
+      tmp.close
+      tmp.unlink
+    end
+  else
+    yield mapping_env
+  end
+end
 
 namespace :ownership do
   # ---------------------------------------------------------------------------
@@ -20,8 +48,8 @@ namespace :ownership do
     and defaults to DRY_RUN=1 -- no writes unless DRY_RUN=0.
 
     Required env vars:
-      MAPPING      Path to IdP export JSON { users:[{uid,email,name}...],
-                   organizations:[{id,name,slug}...] }
+      MAPPING      Local path OR s3:// URI to IdP export JSON
+                   { users:[{uid,email,name}...], organizations:[{id,name,slug}...] }
       ECHO_ORG_ID  IdP UUID of the ECHO organization (must be in mapping)
 
     Optional env vars:
@@ -29,30 +57,32 @@ namespace :ownership do
       BATCH_SIZE   Records per transaction batch (default 500)
   DESC
   task backfill: :environment do
-    mapping_path = ENV.fetch('MAPPING', nil)
+    mapping_env  = ENV.fetch('MAPPING', nil)
     echo_org_id  = ENV.fetch('ECHO_ORG_ID', nil)
     dry_run      = ENV.fetch('DRY_RUN', '1') != '0'
     batch_size   = ENV.fetch('BATCH_SIZE', '500').to_i
 
-    abort 'ERROR: MAPPING env var is required' if mapping_path.blank?
+    abort 'ERROR: MAPPING env var is required' if mapping_env.blank?
     abort 'ERROR: ECHO_ORG_ID env var is required' if echo_org_id.blank?
 
     puts 'ownership:backfill starting'
     puts "  DRY_RUN=#{dry_run ? '1 (no writes)' : '0 (WRITING)'}"
-    puts "  MAPPING=#{mapping_path}"
+    puts "  MAPPING=#{mapping_env}"
     puts "  ECHO_ORG_ID=#{echo_org_id}"
     puts "  BATCH_SIZE=#{batch_size}"
     puts
 
-    backfill = OwnershipBackfill.new(
-      mapping_path: mapping_path,
-      echo_org_id: echo_org_id,
-      dry_run: dry_run,
-      batch_size: batch_size
-    )
+    with_mapping_path(mapping_env) do |mapping_path|
+      backfill = OwnershipBackfill.new(
+        mapping_path: mapping_path,
+        echo_org_id: echo_org_id,
+        dry_run: dry_run,
+        batch_size: batch_size
+      )
 
-    report = backfill.run
-    puts report
+      report = backfill.run
+      puts report
+    end
   rescue ArgumentError => e
     abort "ERROR: #{e.message}"
   end
