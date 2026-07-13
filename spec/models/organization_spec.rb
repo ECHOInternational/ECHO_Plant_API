@@ -84,6 +84,29 @@ RSpec.describe Organization, type: :model do
       expect(org.external_idp_id).to eq ext_id
     end
 
+    # Regression: JWT claims carry the IdP org UUID and capability checks
+    # compare claim ids against records' owner_organization_id. The mirrored
+    # org must therefore adopt the IdP UUID as its LOCAL primary key; a
+    # generated local id would make every claim-vs-record comparison fail in
+    # production (while passing in specs that conflate the two id spaces).
+    it "adopts the IdP UUID as the local primary key" do
+      org = described_class.mirror_real!(external_id: ext_id, name: "ECHO")
+      expect(org.id).to eq ext_id
+    end
+
+    it "grants claim-based capabilities on records owned by a mirrored org" do
+      org = described_class.mirror_real!(external_id: ext_id, name: "ECHO")
+      user = User.new(
+        'uid' => SecureRandom.uuid, 'email' => 'staff@example.org',
+        'trust_levels' => { 'plant' => 2 },
+        'organizations' => [{ 'id' => ext_id, 'name' => 'ECHO',
+                              'roles' => { 'plant' => 'editor' } }]
+      )
+      record = create(:plant, owner_organization_id: org.id,
+                              owned_by: 'someoneelse@example.org')
+      expect(OwnedResourcePolicy.new(user, record).update?).to be true
+    end
+
     it "is idempotent" do
       o1 = described_class.mirror_real!(external_id: ext_id, name: "ECHO")
       o2 = described_class.mirror_real!(external_id: ext_id, name: "ECHO")

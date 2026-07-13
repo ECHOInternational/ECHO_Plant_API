@@ -31,8 +31,16 @@ class Organization < ApplicationRecord
 
   # Upserts a real (IdP-backed) organization by its IdP UUID, refreshing name
   # if it has changed.
+  #
+  # INVARIANT: a mirrored real organization adopts the IdP UUID as its LOCAL
+  # primary key (id == external_idp_id). JWT organization claims carry the IdP
+  # UUID, and every capability check compares claim ids against records'
+  # owner_organization_id; a separately generated local id would make those
+  # comparisons never match in production. Personal orgs keep their own
+  # generated UUIDs (v4 collision risk with IdP-issued UUIDs is negligible).
   def self.mirror_real!(external_id:, name:)
     org = find_or_create_by!(external_idp_id: external_id) do |o|
+      o.id = external_id
       o.name = name
       o.kind = "real"
     end
