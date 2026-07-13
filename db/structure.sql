@@ -10,6 +10,13 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
+-- Name: public; Type: SCHEMA; Schema: -; Owner: -
+--
+
+-- *not* creating schema, since initdb creates it
+
+
+--
 -- Name: pgcrypto; Type: EXTENSION; Schema: -; Owner: -
 --
 
@@ -84,8 +91,6 @@ CREATE TYPE public.unit AS ENUM (
 
 SET default_tablespace = '';
 
-SET default_with_oids = false;
-
 --
 -- Name: antinutrients; Type: TABLE; Schema: public; Owner: -
 --
@@ -147,7 +152,20 @@ CREATE TABLE public.categories (
     owned_by character varying NOT NULL,
     visibility integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    owner_organization_id uuid,
+    source_organization_id uuid,
+    created_by_principal_id uuid,
+    data_source_id uuid,
+    source_record_id character varying,
+    source_updated_at timestamp with time zone,
+    last_synced_at timestamp with time zone,
+    source_digest character varying,
+    sync_state character varying,
+    publication_state character varying,
+    access_level character varying,
+    deleted_at timestamp with time zone,
+    deleted_by_principal_id uuid
 );
 
 
@@ -175,6 +193,21 @@ CREATE TABLE public.common_names (
     location character varying,
     plant_id uuid NOT NULL,
     "primary" boolean DEFAULT false NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: data_sources; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.data_sources (
+    id uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    name character varying NOT NULL,
+    organization_id uuid NOT NULL,
+    source_system_key character varying NOT NULL,
+    notes text,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL
 );
@@ -310,7 +343,36 @@ CREATE TABLE public.locations (
     irrigated boolean DEFAULT false NOT NULL,
     notes text,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    owner_organization_id uuid,
+    source_organization_id uuid,
+    created_by_principal_id uuid,
+    data_source_id uuid,
+    source_record_id character varying,
+    source_updated_at timestamp with time zone,
+    last_synced_at timestamp with time zone,
+    source_digest character varying,
+    sync_state character varying,
+    publication_state character varying,
+    access_level character varying,
+    deleted_at timestamp with time zone,
+    deleted_by_principal_id uuid
+);
+
+
+--
+-- Name: organizations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.organizations (
+    id uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    name character varying NOT NULL,
+    kind character varying DEFAULT 'personal'::character varying NOT NULL,
+    external_idp_id uuid,
+    principal_id uuid,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT organizations_kind_shape CHECK (((((kind)::text = 'real'::text) AND (external_idp_id IS NOT NULL) AND (principal_id IS NULL)) OR (((kind)::text = 'personal'::text) AND (principal_id IS NOT NULL) AND (external_idp_id IS NULL))))
 );
 
 
@@ -339,6 +401,36 @@ CREATE TABLE public.plants (
     can_be_used_for_fodder boolean,
     early_growth_phase public.early_growth_phase,
     life_cycle public.life_cycle,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    owner_organization_id uuid,
+    source_organization_id uuid,
+    created_by_principal_id uuid,
+    data_source_id uuid,
+    source_record_id character varying,
+    source_updated_at timestamp with time zone,
+    last_synced_at timestamp with time zone,
+    source_digest character varying,
+    sync_state character varying,
+    publication_state character varying,
+    access_level character varying,
+    deleted_at timestamp with time zone,
+    deleted_by_principal_id uuid
+);
+
+
+--
+-- Name: principals; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.principals (
+    id uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    identity_issuer character varying NOT NULL,
+    external_uid character varying,
+    email character varying NOT NULL,
+    display_name character varying,
+    kind character varying DEFAULT 'human'::character varying NOT NULL,
+    last_authenticated_at timestamp with time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL
 );
@@ -374,7 +466,44 @@ CREATE TABLE public.specimens (
     visibility integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    evaluated_at timestamp without time zone
+    evaluated_at timestamp without time zone,
+    owner_organization_id uuid,
+    source_organization_id uuid,
+    created_by_principal_id uuid,
+    data_source_id uuid,
+    source_record_id character varying,
+    source_updated_at timestamp with time zone,
+    last_synced_at timestamp with time zone,
+    source_digest character varying,
+    sync_state character varying,
+    publication_state character varying,
+    access_level character varying,
+    deleted_at timestamp with time zone,
+    deleted_by_principal_id uuid
+);
+
+
+--
+-- Name: sync_conflicts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.sync_conflicts (
+    id uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    syncable_type character varying NOT NULL,
+    syncable_id uuid NOT NULL,
+    data_source_id uuid NOT NULL,
+    conflict_type character varying NOT NULL,
+    base_payload jsonb,
+    local_payload jsonb,
+    incoming_payload jsonb,
+    status character varying DEFAULT 'open'::character varying NOT NULL,
+    resolution character varying,
+    resolved_by_principal_id uuid,
+    resolved_at timestamp with time zone,
+    sync_run_id character varying,
+    metadata jsonb DEFAULT '{}'::jsonb,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
 );
 
 
@@ -439,7 +568,20 @@ CREATE TABLE public.varieties (
     has_edible_mature_fruit boolean,
     can_be_used_for_fodder boolean,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    owner_organization_id uuid,
+    source_organization_id uuid,
+    created_by_principal_id uuid,
+    data_source_id uuid,
+    source_record_id character varying,
+    source_updated_at timestamp with time zone,
+    last_synced_at timestamp with time zone,
+    source_digest character varying,
+    sync_state character varying,
+    publication_state character varying,
+    access_level character varying,
+    deleted_at timestamp with time zone,
+    deleted_by_principal_id uuid
 );
 
 
@@ -455,7 +597,8 @@ CREATE TABLE public.versions (
     object text,
     created_at timestamp without time zone,
     object_changes text,
-    item_id uuid
+    item_id uuid,
+    metadata jsonb
 );
 
 
@@ -542,6 +685,14 @@ ALTER TABLE ONLY public.common_names
 
 
 --
+-- Name: data_sources data_sources_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.data_sources
+    ADD CONSTRAINT data_sources_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: growth_habits growth_habits_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -606,11 +757,27 @@ ALTER TABLE ONLY public.locations
 
 
 --
+-- Name: organizations organizations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.organizations
+    ADD CONSTRAINT organizations_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: plants plants_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.plants
     ADD CONSTRAINT plants_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: principals principals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.principals
+    ADD CONSTRAINT principals_pkey PRIMARY KEY (id);
 
 
 --
@@ -627,6 +794,14 @@ ALTER TABLE ONLY public.schema_migrations
 
 ALTER TABLE ONLY public.specimens
     ADD CONSTRAINT specimens_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sync_conflicts sync_conflicts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sync_conflicts
+    ADD CONSTRAINT sync_conflicts_pkey PRIMARY KEY (id);
 
 
 --
@@ -712,6 +887,41 @@ CREATE INDEX index_antinutrients_varieties_on_variety_id ON public.antinutrients
 
 
 --
+-- Name: index_categories_on_data_source_and_source_record; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_categories_on_data_source_and_source_record ON public.categories USING btree (data_source_id, source_record_id) WHERE (data_source_id IS NOT NULL);
+
+
+--
+-- Name: index_categories_on_deleted_at_partial; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_categories_on_deleted_at_partial ON public.categories USING btree (deleted_at) WHERE (deleted_at IS NOT NULL);
+
+
+--
+-- Name: index_categories_on_owned_by; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_categories_on_owned_by ON public.categories USING btree (owned_by);
+
+
+--
+-- Name: index_categories_on_owner_organization_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_categories_on_owner_organization_id ON public.categories USING btree (owner_organization_id);
+
+
+--
+-- Name: index_categories_on_visibility; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_categories_on_visibility ON public.categories USING btree (visibility);
+
+
+--
 -- Name: index_categories_plants_on_category_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -737,6 +947,20 @@ CREATE INDEX index_categories_plants_on_plant_id ON public.categories_plants USI
 --
 
 CREATE INDEX index_common_names_on_plant_id ON public.common_names USING btree (plant_id);
+
+
+--
+-- Name: index_data_sources_on_organization_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_data_sources_on_organization_id ON public.data_sources USING btree (organization_id);
+
+
+--
+-- Name: index_data_sources_on_source_system_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_data_sources_on_source_system_key ON public.data_sources USING btree (source_system_key);
 
 
 --
@@ -810,6 +1034,20 @@ CREATE INDEX index_images_on_imageable_type_and_imageable_id ON public.images US
 
 
 --
+-- Name: index_images_on_owned_by; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_images_on_owned_by ON public.images USING btree (owned_by);
+
+
+--
+-- Name: index_images_on_visibility; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_images_on_visibility ON public.images USING btree (visibility);
+
+
+--
 -- Name: index_life_cycle_events_on_location_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -824,6 +1062,132 @@ CREATE INDEX index_life_cycle_events_on_specimen_id ON public.life_cycle_events 
 
 
 --
+-- Name: index_locations_on_data_source_and_source_record; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_locations_on_data_source_and_source_record ON public.locations USING btree (data_source_id, source_record_id) WHERE (data_source_id IS NOT NULL);
+
+
+--
+-- Name: index_locations_on_deleted_at_partial; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_locations_on_deleted_at_partial ON public.locations USING btree (deleted_at) WHERE (deleted_at IS NOT NULL);
+
+
+--
+-- Name: index_locations_on_owned_by; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_locations_on_owned_by ON public.locations USING btree (owned_by);
+
+
+--
+-- Name: index_locations_on_owner_organization_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_locations_on_owner_organization_id ON public.locations USING btree (owner_organization_id);
+
+
+--
+-- Name: index_locations_on_visibility; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_locations_on_visibility ON public.locations USING btree (visibility);
+
+
+--
+-- Name: index_organizations_on_external_idp_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_organizations_on_external_idp_id ON public.organizations USING btree (external_idp_id);
+
+
+--
+-- Name: index_organizations_on_principal_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_organizations_on_principal_id ON public.organizations USING btree (principal_id);
+
+
+--
+-- Name: index_plants_on_data_source_and_source_record; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_plants_on_data_source_and_source_record ON public.plants USING btree (data_source_id, source_record_id) WHERE (data_source_id IS NOT NULL);
+
+
+--
+-- Name: index_plants_on_deleted_at_partial; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_plants_on_deleted_at_partial ON public.plants USING btree (deleted_at) WHERE (deleted_at IS NOT NULL);
+
+
+--
+-- Name: index_plants_on_owned_by; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_plants_on_owned_by ON public.plants USING btree (owned_by);
+
+
+--
+-- Name: index_plants_on_owner_organization_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_plants_on_owner_organization_id ON public.plants USING btree (owner_organization_id);
+
+
+--
+-- Name: index_plants_on_visibility; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_plants_on_visibility ON public.plants USING btree (visibility);
+
+
+--
+-- Name: index_principals_on_email; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_principals_on_email ON public.principals USING btree (email);
+
+
+--
+-- Name: index_principals_on_issuer_and_uid_partial; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_principals_on_issuer_and_uid_partial ON public.principals USING btree (identity_issuer, external_uid) WHERE (external_uid IS NOT NULL);
+
+
+--
+-- Name: index_specimens_on_data_source_and_source_record; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_specimens_on_data_source_and_source_record ON public.specimens USING btree (data_source_id, source_record_id) WHERE (data_source_id IS NOT NULL);
+
+
+--
+-- Name: index_specimens_on_deleted_at_partial; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_specimens_on_deleted_at_partial ON public.specimens USING btree (deleted_at) WHERE (deleted_at IS NOT NULL);
+
+
+--
+-- Name: index_specimens_on_owned_by; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_specimens_on_owned_by ON public.specimens USING btree (owned_by);
+
+
+--
+-- Name: index_specimens_on_owner_organization_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_specimens_on_owner_organization_id ON public.specimens USING btree (owner_organization_id);
+
+
+--
 -- Name: index_specimens_on_plant_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -835,6 +1199,41 @@ CREATE INDEX index_specimens_on_plant_id ON public.specimens USING btree (plant_
 --
 
 CREATE INDEX index_specimens_on_variety_id ON public.specimens USING btree (variety_id);
+
+
+--
+-- Name: index_specimens_on_visibility; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_specimens_on_visibility ON public.specimens USING btree (visibility);
+
+
+--
+-- Name: index_sync_conflicts_on_data_source_and_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_sync_conflicts_on_data_source_and_status ON public.sync_conflicts USING btree (data_source_id, status);
+
+
+--
+-- Name: index_sync_conflicts_on_data_source_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_sync_conflicts_on_data_source_id ON public.sync_conflicts USING btree (data_source_id);
+
+
+--
+-- Name: index_sync_conflicts_on_resolved_by_principal_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_sync_conflicts_on_resolved_by_principal_id ON public.sync_conflicts USING btree (resolved_by_principal_id);
+
+
+--
+-- Name: index_sync_conflicts_on_syncable; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_sync_conflicts_on_syncable ON public.sync_conflicts USING btree (syncable_type, syncable_id);
 
 
 --
@@ -880,6 +1279,34 @@ CREATE INDEX index_tolerances_varieties_on_variety_id ON public.tolerances_varie
 
 
 --
+-- Name: index_varieties_on_data_source_and_source_record; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_varieties_on_data_source_and_source_record ON public.varieties USING btree (data_source_id, source_record_id) WHERE (data_source_id IS NOT NULL);
+
+
+--
+-- Name: index_varieties_on_deleted_at_partial; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_varieties_on_deleted_at_partial ON public.varieties USING btree (deleted_at) WHERE (deleted_at IS NOT NULL);
+
+
+--
+-- Name: index_varieties_on_owned_by; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_varieties_on_owned_by ON public.varieties USING btree (owned_by);
+
+
+--
+-- Name: index_varieties_on_owner_organization_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_varieties_on_owner_organization_id ON public.varieties USING btree (owner_organization_id);
+
+
+--
 -- Name: index_varieties_on_plant_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -887,10 +1314,137 @@ CREATE INDEX index_varieties_on_plant_id ON public.varieties USING btree (plant_
 
 
 --
+-- Name: index_varieties_on_visibility; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_varieties_on_visibility ON public.varieties USING btree (visibility);
+
+
+--
 -- Name: index_versions_on_item_type_and_item_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX index_versions_on_item_type_and_item_id ON public.versions USING btree (item_type, item_id);
+
+
+--
+-- Name: categories fk_categories_created_by_principal; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.categories
+    ADD CONSTRAINT fk_categories_created_by_principal FOREIGN KEY (created_by_principal_id) REFERENCES public.principals(id);
+
+
+--
+-- Name: categories fk_categories_data_source; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.categories
+    ADD CONSTRAINT fk_categories_data_source FOREIGN KEY (data_source_id) REFERENCES public.data_sources(id);
+
+
+--
+-- Name: categories fk_categories_deleted_by_principal; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.categories
+    ADD CONSTRAINT fk_categories_deleted_by_principal FOREIGN KEY (deleted_by_principal_id) REFERENCES public.principals(id);
+
+
+--
+-- Name: categories fk_categories_owner_org; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.categories
+    ADD CONSTRAINT fk_categories_owner_org FOREIGN KEY (owner_organization_id) REFERENCES public.organizations(id);
+
+
+--
+-- Name: categories fk_categories_source_org; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.categories
+    ADD CONSTRAINT fk_categories_source_org FOREIGN KEY (source_organization_id) REFERENCES public.organizations(id);
+
+
+--
+-- Name: locations fk_locations_created_by_principal; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.locations
+    ADD CONSTRAINT fk_locations_created_by_principal FOREIGN KEY (created_by_principal_id) REFERENCES public.principals(id);
+
+
+--
+-- Name: locations fk_locations_data_source; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.locations
+    ADD CONSTRAINT fk_locations_data_source FOREIGN KEY (data_source_id) REFERENCES public.data_sources(id);
+
+
+--
+-- Name: locations fk_locations_deleted_by_principal; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.locations
+    ADD CONSTRAINT fk_locations_deleted_by_principal FOREIGN KEY (deleted_by_principal_id) REFERENCES public.principals(id);
+
+
+--
+-- Name: locations fk_locations_owner_org; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.locations
+    ADD CONSTRAINT fk_locations_owner_org FOREIGN KEY (owner_organization_id) REFERENCES public.organizations(id);
+
+
+--
+-- Name: locations fk_locations_source_org; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.locations
+    ADD CONSTRAINT fk_locations_source_org FOREIGN KEY (source_organization_id) REFERENCES public.organizations(id);
+
+
+--
+-- Name: plants fk_plants_created_by_principal; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plants
+    ADD CONSTRAINT fk_plants_created_by_principal FOREIGN KEY (created_by_principal_id) REFERENCES public.principals(id);
+
+
+--
+-- Name: plants fk_plants_data_source; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plants
+    ADD CONSTRAINT fk_plants_data_source FOREIGN KEY (data_source_id) REFERENCES public.data_sources(id);
+
+
+--
+-- Name: plants fk_plants_deleted_by_principal; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plants
+    ADD CONSTRAINT fk_plants_deleted_by_principal FOREIGN KEY (deleted_by_principal_id) REFERENCES public.principals(id);
+
+
+--
+-- Name: plants fk_plants_owner_org; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plants
+    ADD CONSTRAINT fk_plants_owner_org FOREIGN KEY (owner_organization_id) REFERENCES public.organizations(id);
+
+
+--
+-- Name: plants fk_plants_source_org; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plants
+    ADD CONSTRAINT fk_plants_source_org FOREIGN KEY (source_organization_id) REFERENCES public.organizations(id);
 
 
 --
@@ -918,11 +1472,27 @@ ALTER TABLE ONLY public.varieties
 
 
 --
+-- Name: sync_conflicts fk_rails_1827f81176; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sync_conflicts
+    ADD CONSTRAINT fk_rails_1827f81176 FOREIGN KEY (data_source_id) REFERENCES public.data_sources(id);
+
+
+--
 -- Name: life_cycle_events fk_rails_22b3ef47ea; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.life_cycle_events
     ADD CONSTRAINT fk_rails_22b3ef47ea FOREIGN KEY (specimen_id) REFERENCES public.specimens(id);
+
+
+--
+-- Name: sync_conflicts fk_rails_3521d38c41; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sync_conflicts
+    ADD CONSTRAINT fk_rails_3521d38c41 FOREIGN KEY (resolved_by_principal_id) REFERENCES public.principals(id);
 
 
 --
@@ -998,6 +1568,14 @@ ALTER TABLE ONLY public.growth_habits_varieties
 
 
 --
+-- Name: data_sources fk_rails_99f4fec2c8; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.data_sources
+    ADD CONSTRAINT fk_rails_99f4fec2c8 FOREIGN KEY (organization_id) REFERENCES public.organizations(id);
+
+
+--
 -- Name: image_attributes_images fk_rails_9a12e7d877; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1062,11 +1640,99 @@ ALTER TABLE ONLY public.tolerances_varieties
 
 
 --
+-- Name: organizations fk_rails_efc215b305; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.organizations
+    ADD CONSTRAINT fk_rails_efc215b305 FOREIGN KEY (principal_id) REFERENCES public.principals(id);
+
+
+--
 -- Name: life_cycle_events fk_rails_fff7a9e33a; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.life_cycle_events
     ADD CONSTRAINT fk_rails_fff7a9e33a FOREIGN KEY (location_id) REFERENCES public.locations(id);
+
+
+--
+-- Name: specimens fk_specimens_created_by_principal; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.specimens
+    ADD CONSTRAINT fk_specimens_created_by_principal FOREIGN KEY (created_by_principal_id) REFERENCES public.principals(id);
+
+
+--
+-- Name: specimens fk_specimens_data_source; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.specimens
+    ADD CONSTRAINT fk_specimens_data_source FOREIGN KEY (data_source_id) REFERENCES public.data_sources(id);
+
+
+--
+-- Name: specimens fk_specimens_deleted_by_principal; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.specimens
+    ADD CONSTRAINT fk_specimens_deleted_by_principal FOREIGN KEY (deleted_by_principal_id) REFERENCES public.principals(id);
+
+
+--
+-- Name: specimens fk_specimens_owner_org; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.specimens
+    ADD CONSTRAINT fk_specimens_owner_org FOREIGN KEY (owner_organization_id) REFERENCES public.organizations(id);
+
+
+--
+-- Name: specimens fk_specimens_source_org; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.specimens
+    ADD CONSTRAINT fk_specimens_source_org FOREIGN KEY (source_organization_id) REFERENCES public.organizations(id);
+
+
+--
+-- Name: varieties fk_varieties_created_by_principal; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.varieties
+    ADD CONSTRAINT fk_varieties_created_by_principal FOREIGN KEY (created_by_principal_id) REFERENCES public.principals(id);
+
+
+--
+-- Name: varieties fk_varieties_data_source; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.varieties
+    ADD CONSTRAINT fk_varieties_data_source FOREIGN KEY (data_source_id) REFERENCES public.data_sources(id);
+
+
+--
+-- Name: varieties fk_varieties_deleted_by_principal; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.varieties
+    ADD CONSTRAINT fk_varieties_deleted_by_principal FOREIGN KEY (deleted_by_principal_id) REFERENCES public.principals(id);
+
+
+--
+-- Name: varieties fk_varieties_owner_org; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.varieties
+    ADD CONSTRAINT fk_varieties_owner_org FOREIGN KEY (owner_organization_id) REFERENCES public.organizations(id);
+
+
+--
+-- Name: varieties fk_varieties_source_org; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.varieties
+    ADD CONSTRAINT fk_varieties_source_org FOREIGN KEY (source_organization_id) REFERENCES public.organizations(id);
 
 
 --
@@ -1076,29 +1742,35 @@ ALTER TABLE ONLY public.life_cycle_events
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
-('20200702173418'),
-('20200702173419'),
-('20200702191256'),
-('20200725194221'),
-('20200801021051'),
-('20200802015638'),
-('20200802233703'),
-('20200814173300'),
-('20200814173311'),
-('20200814173322'),
-('20200817142731'),
-('20200817173929'),
-('20200817180807'),
-('20200817182822'),
-('20200817184430'),
-('20200817193432'),
-('20200819084701'),
-('20200819224857'),
-('20200820130907'),
-('20200820213248'),
-('20201124141213'),
-('20201215144824'),
-('20260710000000'),
+('20260713000006'),
+('20260713000005'),
+('20260713000004'),
+('20260713000003'),
+('20260713000002'),
+('20260713000001'),
+('20260712000000'),
 ('20260710000001'),
-('20260712000000');
+('20260710000000'),
+('20201215144824'),
+('20201124141213'),
+('20200820213248'),
+('20200820130907'),
+('20200819224857'),
+('20200819084701'),
+('20200817193432'),
+('20200817184430'),
+('20200817182822'),
+('20200817180807'),
+('20200817173929'),
+('20200817142731'),
+('20200814173322'),
+('20200814173311'),
+('20200814173300'),
+('20200802233703'),
+('20200802015638'),
+('20200801021051'),
+('20200725194221'),
+('20200702191256'),
+('20200702173419'),
+('20200702173418');
 
