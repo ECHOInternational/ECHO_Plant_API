@@ -44,6 +44,7 @@ module Mutations
         .except!(:primary_common_name)
         .merge!(created_by: context[:current_user].email)
         .merge!(owned_by: context[:current_user].email)
+        .merge!(ownership_stamp)
 
       Mobility.with_locale(language) do
         plant = Plant.new(attributes)

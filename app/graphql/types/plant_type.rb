@@ -226,13 +226,10 @@ module Types
 
     # In-Ruby mirror of OwnedResourcePolicy::Scope#resolve for a loaded array.
     def policy_scope_loaded(user, records)
-      if user&.admin?
-        records
-      elsif user
-        records.select { |r| r.visibility_public? || r.owned_by == user.email }
-      else
-        records.select(&:visibility_public?)
-      end
+      return records if user&.admin?
+      return records.select(&:visibility_public?) unless user
+
+      records.select { |r| r.visibility_public? || user.reads_owned_record?(r) }
     end
 
     # def versions

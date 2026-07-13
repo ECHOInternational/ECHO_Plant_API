@@ -16,7 +16,7 @@ module Mutations
     field :errors, [Types::MutationError], null: false
 
     def authorized?(variety:, **_attributes)
-      authorize variety, :update?
+      authorize variety, :soft_delete?
     end
 
     def visible_dependency_errors(variety)
@@ -42,7 +42,8 @@ module Mutations
       dependency_errors = visible_dependency_errors(variety)
       
       if force == true || dependency_errors.empty?
-        variety.update(visibility: :deleted)
+        variety.update(visibility: :deleted,
+                       deleted_by_principal_id: context[:current_user]&.principal&.id)
       end
       
       errors = errors_from_active_record(variety.errors) + dependency_errors

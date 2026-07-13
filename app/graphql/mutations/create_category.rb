@@ -30,6 +30,7 @@ module Mutations
         .except!(:language)
         .merge!(created_by: context[:current_user].email)
         .merge!(owned_by: context[:current_user].email)
+        .merge!(ownership_stamp)
 
       Mobility.with_locale(language) do
         category = Category.new(attributes)

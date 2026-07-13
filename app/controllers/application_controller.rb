@@ -10,6 +10,8 @@ class ApplicationController < ActionController::API
 
   attr_reader :current_user
 
+  DEFAULT_IDENTITY_ISSUER = 'https://www.echocommunity.org'
+
   private
 
   def set_locale
@@ -23,13 +25,7 @@ class ApplicationController < ActionController::API
     @current_user = nil
     return if set_sandbox_user
 
-    pub_key = <<~SECRET
-      -----BEGIN PUBLIC KEY-----
-      #{ENV['APPLICATION_JWT_SECRET']}
-      -----END PUBLIC KEY-----
-    SECRET
-
-    public_key = OpenSSL::PKey::RSA.new(pub_key)
+    public_key = jwt_public_key
 
     authenticate_with_http_token do |token, _options|
       jwt_payload = JWT.decode(
@@ -39,9 +35,47 @@ class ApplicationController < ActionController::API
         { algorithm: ENV['APPLICATION_JWT_ALGORITHM'] }
       )
       @current_user = User.new(jwt_payload[0]['user'])
+      resolve_actor(@current_user, jwt_payload[0]['iss'] || DEFAULT_IDENTITY_ISSUER)
     rescue JWT::DecodeError => e
       render json: JSON.pretty_generate(create_error_body(e.message, 401)), status: 401
     end
+  end
+
+  def jwt_public_key
+    pub_key = <<~SECRET
+      -----BEGIN PUBLIC KEY-----
+      #{ENV['APPLICATION_JWT_SECRET']}
+      -----END PUBLIC KEY-----
+    SECRET
+
+    OpenSSL::PKey::RSA.new(pub_key)
+  end
+
+  # Resolves the durable Principal for this request's user, provisions the
+  # personal organization shim, and refreshes the local mirror rows for any
+  # real organizations named in the token claim. All operations are
+  # idempotent upserts on indexed lookups.
+  def resolve_actor(user, issuer)
+    return unless user&.id
+
+    principal = Principal.resolve!(
+      issuer: issuer,
+      external_uid: user.id,
+      email: user.email
+    )
+    user.principal = principal
+    user.personal_organization = Organization.personal_for!(principal)
+    user.organization_claims.each do |claim|
+      Organization.mirror_real!(external_id: claim['id'], name: claim['name'])
+    end
+  end
+
+  # Attached to every PaperTrail version created in this request
+  # (versions.metadata jsonb). whodunnit already carries the JWT uid.
+  def info_for_paper_trail
+    meta = { origin: 'api' }
+    meta[:principal_id] = @current_user.principal.id if @current_user&.principal
+    { metadata: meta }
   end
 
   def set_sandbox_user
@@ -52,6 +86,7 @@ class ApplicationController < ActionController::API
       { 'uid' => 'sandbox', 'email' => 'sandbox@sandbox.com',
         'trust_levels' => { 'plant' => sandbox_trust_level } }
     )
+    resolve_actor(@current_user, 'sandbox')
     true
   end
 end

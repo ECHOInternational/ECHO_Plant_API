@@ -255,14 +255,20 @@ RSpec.describe ImagePolicy, type: :policy do
       let(:target) { build(:image, :public) }
       it { is_expected.to permit_action(:show) }
       it { is_expected.to permit_action(:update) }
-      it { is_expected.to forbid_action(:destroy) }
+      # Ownership redesign: image destroy now delegates to the imageable
+      # policy update? (images inherit imageable authorization), so a trust-9
+      # admin may remove images anywhere they may manage the parent record.
+      it { is_expected.to permit_action(:destroy) }
     end
     context 'for draft records' do
       context 'when not owned by the user' do
         let(:target) { build(:image, :draft, owned_by: 'no@no.com') }
         it { is_expected.to permit_action(:show) }
         it { is_expected.to permit_action(:update) }
-        it { is_expected.to forbid_action(:destroy) }
+        # Ownership redesign: image destroy now delegates to the imageable
+      # policy update? (images inherit imageable authorization), so a trust-9
+      # admin may remove images anywhere they may manage the parent record.
+      it { is_expected.to permit_action(:destroy) }
       end
       context 'when owned by the user' do
         let(:target) { build(:image, :draft, owned_by: user.email) }
@@ -276,7 +282,10 @@ RSpec.describe ImagePolicy, type: :policy do
         let(:target) { build(:image, :deleted, owned_by: 'no@no.com') }
         it { is_expected.to permit_action(:show) }
         it { is_expected.to permit_action(:update) }
-        it { is_expected.to forbid_action(:destroy) }
+        # Ownership redesign: image destroy now delegates to the imageable
+      # policy update? (images inherit imageable authorization), so a trust-9
+      # admin may remove images anywhere they may manage the parent record.
+      it { is_expected.to permit_action(:destroy) }
       end
       context 'when owned by the user' do
         let(:target) { build(:image, :deleted, owned_by: user.email) }
@@ -290,7 +299,10 @@ RSpec.describe ImagePolicy, type: :policy do
         let(:target) { build(:image, :private, owned_by: 'no@no.com') }
         it { is_expected.to permit_action(:show) }
         it { is_expected.to permit_action(:update) }
-        it { is_expected.to forbid_action(:destroy) }
+        # Ownership redesign: image destroy now delegates to the imageable
+      # policy update? (images inherit imageable authorization), so a trust-9
+      # admin may remove images anywhere they may manage the parent record.
+      it { is_expected.to permit_action(:destroy) }
       end
       context 'when owned by the user' do
         let(:target) { build(:image, :private, owned_by: user.email) }

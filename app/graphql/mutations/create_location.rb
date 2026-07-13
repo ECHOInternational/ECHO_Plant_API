@@ -51,6 +51,7 @@ module Mutations
       attributes
         .merge!(created_by: context[:current_user].email)
         .merge!(owned_by: context[:current_user].email)
+        .merge!(ownership_stamp)
 
       location = Location.new(attributes)
       result = location.save

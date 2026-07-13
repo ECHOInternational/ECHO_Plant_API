@@ -53,6 +53,7 @@ module Mutations
         .except!(:plant_id, :variety_id)
         .merge!(created_by: context[:current_user].email)
         .merge!(owned_by: context[:current_user].email)
+        .merge!(ownership_stamp)
 
       specimen = Specimen.new(attributes)
       specimen.plant = plant
