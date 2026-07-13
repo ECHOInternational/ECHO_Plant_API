@@ -212,13 +212,7 @@ RSpec.describe User, type: :model do
       expect(user.created_record?(record)).to be false
     end
 
-    # BUG: created_record? returns nil (not false) when user.principal is nil
-    # because the expression is `principal && ...` and short-circuits to nil.
-    # The method should return false for any falsey result to avoid surprising
-    # truthy/nil confusion in callers. See app/models/user.rb #created_record?.
     it 'returns false when user has no principal' do
-      pending 'BUG app/models/user.rb: created_record? returns nil instead of false ' \
-              'when principal is nil (short-circuit of &&-chain)'
       user   = build_user_with_claims(trust_level: 2)
       record = build(:plant, created_by_principal_id: SecureRandom.uuid)
       expect(user.created_record?(record)).to be false

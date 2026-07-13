@@ -57,24 +57,10 @@ RSpec.describe 'Principal resolution via sandbox', type: :request do
       GRAPHQL
     end
 
-    # BUG: versions.metadata contains only {"origin"=>"api"} but NOT
-    # "principal_id". Root cause: PaperTrail::Rails::Controller registers
-    # set_paper_trail_controller_info as a before_action via module inclusion.
-    # That before_action fires BEFORE ApplicationController's require_token
-    # before_action, so when info_for_paper_trail is called @current_user is
-    # still nil and the `if @current_user&.principal` guard skips the
-    # principal_id assignment. The fix is to ensure info_for_paper_trail is
-    # called after resolve_actor runs, e.g. by overriding
-    # set_paper_trail_controller_info in ApplicationController and calling it
-    # explicitly after require_token, or by using the :meta option on
-    # has_paper_trail with a proc/lambda instead of controller_info.
-    # File: app/controllers/application_controller.rb, method info_for_paper_trail.
+    # PaperTrail's own set_paper_trail_controller_info before_action fires
+    # before require_token; ApplicationController re-registers it after
+    # require_token so controller_info carries the resolved principal.
     it 'populates versions.metadata with origin=api and the principal id' do
-      pending 'BUG app/controllers/application_controller.rb#info_for_paper_trail: ' \
-              'principal_id is never stored in versions.metadata because ' \
-              'set_paper_trail_controller_info before_action fires before require_token, ' \
-              'so @current_user is nil when info_for_paper_trail is invoked'
-
       post '/graphql',
            params: {
              query: create_plant_query,

@@ -108,9 +108,10 @@ class User
   # Stable-creator check backing the contributor "update records they
   # created" capability. Email strings are never consulted here.
   def created_record?(record)
-    principal &&
-      record.respond_to?(:created_by_principal_id) &&
-      record.created_by_principal_id.present? &&
+    return false unless principal
+    return false unless record.respond_to?(:created_by_principal_id)
+
+    record.created_by_principal_id.present? &&
       record.created_by_principal_id == principal.id
   end
 

@@ -7,6 +7,12 @@ class ApplicationController < ActionController::API
   before_action :set_locale
   before_action :require_token
   before_action :set_paper_trail_whodunnit
+  # PaperTrail::Rails::Controller registers its own set_paper_trail_controller_info
+  # before_action at include time, which runs BEFORE require_token resolves the
+  # principal, so controller_info would never carry principal_id. Re-running it
+  # here (after require_token) refreshes PaperTrail.request.controller_info with
+  # the resolved actor. The earlier invocation is harmless.
+  before_action :set_paper_trail_controller_info
 
   attr_reader :current_user
 
