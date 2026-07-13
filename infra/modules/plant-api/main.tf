@@ -32,7 +32,15 @@ locals {
     { name = "DATABASE_PORT", value = tostring(var.database_port) },
   ]
 
-  container_environment = local.base_env
+  # Rollout stage S6: divergence-logging toggle. When org_authz_cutover is set
+  # (e.g. "log_only"), inject ORG_AUTHZ_CUTOVER so OwnedResourcePolicy emits
+  # authz.legacy_divergence events. Omitted from the env entirely when empty so
+  # the flag is fully off by default.
+  cutover_env = var.org_authz_cutover != "" ? [
+    { name = "ORG_AUTHZ_CUTOVER", value = var.org_authz_cutover },
+  ] : []
+
+  container_environment = concat(local.base_env, local.cutover_env)
 
   # -------------------------------------------------------------------------
   # Secrets Manager ARNs for the task secrets block.

@@ -28,6 +28,9 @@ module "plant_api" {
   aws_region     = var.aws_region
   aws_account_id = var.aws_account_id
 
+  # Rollout stage S6 divergence logging ("log_only" to enable; empty = off).
+  org_authz_cutover = var.org_authz_cutover
+
   # Container image (updated by CI/CD pipeline)
   image = var.image
 
