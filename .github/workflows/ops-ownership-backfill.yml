@@ -28,17 +28,18 @@ name: Ops - Ownership Backfill
 #
 # IAM PREREQUISITES
 # -----------------
-# The plant-API ECS *task* role (plant-api-<env>-task-role) ALREADY grants
-# s3:GetObject/PutObject/ListBucket on the whole images bucket
-# (arn:aws:s3:::images-us-east-1.echocommunity.org and /*), per
-# infra/modules/plant-api/main.tf (data.aws_iam_policy_document.task_s3). So when
-# mapping_s3_uri points at that images bucket (the default the ECHOcommunity
-# export workflow writes to), THIS side needs NO IAM change.
+# The mapping file is PII (user emails), so it MUST live in a PRIVATE bucket --
+# never the public images CDN bucket (images-us-east-1.echocommunity.org is
+# public-read). Use the dedicated private bucket:
 #
-# The only grant to apply lives on the ECHOcommunity side: letting the
-# ECHOcommunity export task WRITE the mapping into this bucket -- documented in
-# ECHOcommunity's ops-plant-identity-export.yml. If you point mapping_s3_uri at
-# a DIFFERENT bucket, grant this task role s3:GetObject on that bucket first.
+#   echo-ownership-backfill-382724554857  (Block Public Access ON)
+#
+# Its bucket policy already grants this env's plant-api task role s3:GetObject
+# (statement "BackfillRead" covers plant-api-production-task-role and
+# plant-api-staging-task-role), and grants the ECHOcommunity export task
+# s3:PutObject. So no IAM change is needed to run this workflow against that
+# bucket. If you point mapping_s3_uri at some OTHER bucket, it must (a) be
+# private and (b) grant this env's plant-api task role s3:GetObject first.
 #
 # The report and verify tasks do NOT require a mapping file -- only backfill
 # needs the MAPPING env var.
@@ -68,7 +69,7 @@ on:
         type: boolean
         default: true
       mapping_s3_uri:
-        description: "S3 URI for the identity mapping file (required for backfill, e.g. s3://images-us-east-1.echocommunity.org/ownership-backfill/mapping.json)"
+        description: "S3 URI of the identity mapping in the PRIVATE bucket (required for backfill), e.g. s3://echo-ownership-backfill-382724554857/mapping.json. Do NOT use the public images bucket."
         required: false
         type: string
         default: ""
