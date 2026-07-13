@@ -56,7 +56,9 @@ class SourceSynchronizer
     :created,
     :invalid,
     :unknown_deleted,
+    :errored,
     :invalid_details,
+    :error_details,
     keyword_init: true
   ) do
     def initialize(**)
@@ -71,7 +73,9 @@ class SourceSynchronizer
       self.created                  ||= 0
       self.invalid                  ||= 0
       self.unknown_deleted          ||= 0
+      self.errored                  ||= 0
       self.invalid_details          ||= []
+      self.error_details            ||= []
     end
   end
 
@@ -89,10 +93,12 @@ class SourceSynchronizer
   # Returns a RunReport.
   def apply(incoming)
     report = RunReport.new
-    svc_principal = @data_source.service_principal!
+    # Memoize once per apply invocation so all per-row calls share the same
+    # principal (avoids repeated find_or_create_by! round-trips).
+    @service_principal = @data_source.service_principal!
 
     PaperTrail.request(
-      whodunnit: svc_principal.id,
+      whodunnit: @service_principal.id,
       controller_info: {
         metadata: {
           origin: 'sync',
@@ -103,6 +109,16 @@ class SourceSynchronizer
     ) do
       incoming.each do |row|
         process_row(row, report)
+      rescue StandardError => e
+        # Unexpected error: record it and continue so one bad row does not
+        # abort the whole batch. Note: ArgumentError from the DENY_LIST guard
+        # is raised at construction time (before apply is called) and is
+        # intentionally not rescued here.
+        report.errored += 1
+        report.error_details << {
+          source_record_id: row[:source_record_id],
+          message: e.message
+        }
       end
     end
 
@@ -308,7 +324,7 @@ class SourceSynchronizer
   end
 
   def create_record(src_id, incoming_attrs, src_at, report)
-    svc_principal = @data_source.service_principal!
+    svc_principal = @service_principal
     incoming_digest = canonical_digest(incoming_attrs)
     org_id = @data_source.organization_id
 

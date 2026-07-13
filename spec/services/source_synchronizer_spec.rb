@@ -339,6 +339,77 @@ RSpec.describe SourceSynchronizer, type: :service do
   end
 
   # ---------------------------------------------------------------------------
+  # Fix 4: per-row exception isolation
+  # ---------------------------------------------------------------------------
+  describe 'per-row exception isolation' do
+    it 'continues processing remaining rows when one row raises an unexpected error' do
+      synced_plant(src_id: 'iso-ok-1')
+      synced_plant(src_id: 'iso-boom')
+      synced_plant(src_id: 'iso-ok-2')
+
+      s = sync
+
+      # Stub find_record to raise only for the bad source_record_id, using
+      # and_wrap_original so the other rows still resolve normally.
+      allow(s).to receive(:find_record).and_wrap_original do |orig, src_id|
+        raise RuntimeError, 'injected failure' if src_id == 'iso-boom'
+
+        orig.call(src_id)
+      end
+
+      batch = [
+        row(source_record_id: 'iso-ok-1'),
+        row(source_record_id: 'iso-boom'),
+        row(source_record_id: 'iso-ok-2')
+      ]
+
+      report = s.apply(batch)
+
+      # The errored row is counted
+      expect(report.errored).to eq 1
+      expect(report.error_details.first[:source_record_id]).to eq 'iso-boom'
+      expect(report.error_details.first[:message]).to be_present
+
+      # The other two rows were still processed (synced/applied/etc.)
+      expect(report.synced + report.applied + report.locally_modified).to eq 2
+    end
+
+    it 'does not swallow ArgumentError raised at construction time (DENY_LIST guard)' do
+      expect do
+        SourceSynchronizer.new(
+          data_source:       data_source,
+          model:             Plant,
+          source_attributes: %w[visibility],
+          run_id:            run_id
+        )
+      end.to raise_error(ArgumentError, /deny-list/)
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # Fix 5: service_principal! is memoized across apply
+  # ---------------------------------------------------------------------------
+  describe 'service_principal! memoization' do
+    it 'calls service_principal! exactly once per apply regardless of row count' do
+      synced_plant(src_id: 'memo-1')
+      synced_plant(src_id: 'memo-2')
+
+      call_count = 0
+      allow(data_source).to receive(:service_principal!).and_wrap_original do |orig|
+        call_count += 1
+        orig.call
+      end
+
+      sync.apply([
+        row(source_record_id: 'memo-1'),
+        row(source_record_id: 'memo-2')
+      ])
+
+      expect(call_count).to eq 1
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # Idempotent re-run
   # ---------------------------------------------------------------------------
   describe 'idempotency' do

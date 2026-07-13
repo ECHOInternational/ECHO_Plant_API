@@ -258,7 +258,7 @@ class OwnershipBackfill
 
   def resolve_service_principal(email)
     if @dry_run
-      existing = Principal.find_by(identity_issuer: 'legacy-shared', email: email) ||
+      existing = Principal.find_by(identity_issuer: Principal::SHARED_ISSUER, email: email) ||
                  Principal.where(kind: 'service', email: email).first
       return existing if existing
 
@@ -268,7 +268,7 @@ class OwnershipBackfill
 
     created = false
     principal = Principal.find_or_create_by!(
-      identity_issuer: 'legacy-shared',
+      identity_issuer: Principal::SHARED_ISSUER,
       email: email
     ) do |p|
       p.kind         = 'service'
@@ -279,7 +279,7 @@ class OwnershipBackfill
     @report.principals_created_service += 1 if created
     principal
   rescue ActiveRecord::RecordNotUnique
-    Principal.find_by!(identity_issuer: 'legacy-shared', email: email)
+    Principal.find_by!(identity_issuer: Principal::SHARED_ISSUER, email: email)
   end
 
   def resolve_human_principal(email, uid, uid_to_entry)
@@ -351,7 +351,7 @@ class OwnershipBackfill
     @report.table_stats[table_name] = stats
   end
 
-  def process_batch!(batch, model, principal_cache, echo_org, stats) # rubocop:disable Metrics/MethodLength
+  def process_batch!(batch, model, principal_cache, echo_org, stats)
     rows_to_write = []
 
     batch.each do |record|
@@ -381,10 +381,13 @@ class OwnershipBackfill
       end
 
       rows_to_write << [record, attrs]
-      stats[:filled] += 1
     end
 
+    # In live mode, write first; count after the transaction commits.
+    # In dry-run mode the write is skipped but the count still reflects
+    # what WOULD be filled.
     write_batch!(rows_to_write) unless @dry_run
+    stats[:filled] += rows_to_write.size
   end
 
   def build_ownership_attrs(record, principal_cache, echo_org)

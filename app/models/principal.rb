@@ -11,6 +11,7 @@ class Principal < ApplicationRecord
   validates :kind,            presence: true, inclusion: { in: %w[human service] }
 
   LEGACY_ISSUER = "legacy-email"
+  SHARED_ISSUER = 'legacy-shared'
 
   # Resolves or creates a principal by (issuer, uid), refreshing mutable
   # profile fields only when they change or last_authenticated_at is stale.

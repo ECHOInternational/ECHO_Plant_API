@@ -635,6 +635,108 @@ RSpec.describe OwnershipBackfill, type: :service do
   end
 
   # ---------------------------------------------------------------------------
+  # Fix 1: filled count only increments AFTER write_batch! succeeds
+  # ---------------------------------------------------------------------------
+  describe 'filled count is not incremented for failed batches' do
+    let(:user_uid)   { SecureRandom.uuid }
+    let(:user_email) { 'henry@example.com' }
+
+    before do
+      # Two plants so the second batch can be made to fail
+      create(:plant, owned_by: user_email, created_by: user_email, visibility: :public)
+      create(:plant, owned_by: user_email, created_by: user_email, visibility: :private)
+    end
+
+    it 'does not count rows from a batch whose write_batch! raises' do
+      # Use a tiny batch_size of 1 so we get two separate batches.
+      m = build_mapping(
+        users: [{ 'uid' => user_uid, 'email' => user_email, 'name' => 'Henry' }],
+        echo_org_id: echo_org_id
+      )
+      write_mapping(m)
+      svc = OwnershipBackfill.new(
+        mapping_path: mapping_path.to_s,
+        echo_org_id: echo_org_id,
+        dry_run: false,
+        batch_size: 1
+      )
+
+      call_count = 0
+      allow(svc).to receive(:write_batch!).and_wrap_original do |original, *args|
+        call_count += 1
+        raise ActiveRecord::StatementInvalid, 'simulated DB error' if call_count == 2
+
+        original.call(*args)
+      end
+
+      expect { svc.run }.to raise_error(ActiveRecord::StatementInvalid)
+
+      # Only the first batch (1 row) committed; the second batch raised before
+      # incrementing filled. Total filled must be <= 1 across all tables.
+      total_filled = svc.instance_variable_get(:@report).table_stats.values.sum { |s| s[:filled] }
+      expect(total_filled).to be <= 1
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # Fix 2: verify flags visibility=deleted rows with deleted_at IS NULL
+  # ---------------------------------------------------------------------------
+  describe 'verify deleted_at invariant' do
+    let(:user_uid)   { SecureRandom.uuid }
+    let(:user_email) { 'ivan@example.com' }
+
+    it 'flags a deleted row whose deleted_at is NULL as a violation' do
+      plant = create(:plant, owned_by: user_email, created_by: user_email, visibility: :public)
+      # Simulate a corrupted/un-backfilled deleted row: visibility=3 but deleted_at nil
+      plant.update_columns(visibility: 3, deleted_at: nil)
+
+      violations = collect_deleted_at_violations([Plant])
+      expect(violations.any? { |v| v.include?('deleted_at IS NULL') }).to be true
+    end
+
+    it 'does not flag a deleted row that has deleted_at set' do
+      plant = create(:plant, owned_by: user_email, created_by: user_email, visibility: :public)
+      plant.update_columns(visibility: 3, deleted_at: Time.current)
+
+      violations = collect_deleted_at_violations([Plant])
+      expect(violations).to be_empty
+    end
+
+    # Mirrors the new deleted_at check added to ownership:verify
+    def collect_deleted_at_violations(models)
+      violations = []
+      models.each do |model|
+        count = model.where(visibility: 3).where(deleted_at: nil).count
+        if count.positive?
+          sample_ids = model.where(visibility: 3).where(deleted_at: nil).limit(5).pluck(:id)
+          violations << "#{model.table_name}: #{count} rows have visibility=deleted " \
+                        "but deleted_at IS NULL (first 5: #{sample_ids.join(', ')})"
+        end
+      end
+      violations
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # Fix 3: SHARED_ISSUER constant referenced from Principal
+  # ---------------------------------------------------------------------------
+  describe 'Principal::SHARED_ISSUER constant' do
+    it 'is defined on Principal and equals "legacy-shared"' do
+      expect(Principal::SHARED_ISSUER).to eq 'legacy-shared'
+    end
+
+    it 'is used for service principal lookup/creation in backfill' do
+      create(:category, owned_by: 'echo@echonet.org', created_by: 'echo@echonet.org',
+                        visibility: :public)
+      svc = run_backfill(dry_run: false)
+      svc.run
+
+      p = Principal.find_by(identity_issuer: Principal::SHARED_ISSUER, email: 'echo@echonet.org')
+      expect(p).to be_present
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # Helper
   # ---------------------------------------------------------------------------
   def capture_stdout

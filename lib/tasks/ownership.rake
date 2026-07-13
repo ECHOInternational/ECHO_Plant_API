@@ -82,7 +82,17 @@ namespace :ownership do
         end
       end
 
-      # 2. Facade/column disagreement: VisibilityBridge.visibility_for(trio) != stored visibility
+      # 2. deleted_at invariant: rows with visibility=deleted (integer 3) must
+      #    have deleted_at set. A NULL deleted_at on a deleted row means the
+      #    backfill never ran or was corrupted -- flag it explicitly.
+      missing_deleted_at = model.where(visibility: 3).where(deleted_at: nil).count
+      if missing_deleted_at.positive?
+        sample_ids = model.where(visibility: 3).where(deleted_at: nil).limit(5).pluck(:id)
+        violations << "#{model.table_name}: #{missing_deleted_at} rows have visibility=deleted " \
+                      "but deleted_at IS NULL (first 5: #{sample_ids.join(', ')})"
+      end
+
+      # 3. Facade/column disagreement: VisibilityBridge.visibility_for(trio) != stored visibility
       disagreements = []
       model.where.not(publication_state: nil).find_each do |record|
         derived = VisibilityBridge.visibility_for(
@@ -98,7 +108,7 @@ namespace :ownership do
       end
     end
 
-    # 3. Organization kind shape invariant check (raw SQL mirrors the CHECK constraint)
+    # 4. Organization kind shape invariant check (raw SQL mirrors the CHECK constraint)
     #    kind='real' requires external_idp_id NOT NULL and principal_id IS NULL
     #    kind='personal' requires principal_id NOT NULL and external_idp_id IS NULL
     invalid_real = Organization.where(kind: 'real')
@@ -111,16 +121,16 @@ namespace :ownership do
                                    .count
     violations << "organizations: #{invalid_personal} 'personal' orgs violate kind shape" if invalid_personal.positive?
 
-    # 4. Records whose owner_organization_id points at a missing org
+    # 5. Records whose owner_organization_id points at a missing org
     #    (FK constraint makes this impossible in practice -- noted in output)
     puts '  NOTE: FK constraint on owner_organization_id -> organizations prevents orphaned org refs.'
 
-    # 5. Principals with duplicate (issuer, external_uid)
+    # 6. Principals with duplicate (issuer, external_uid)
     #    (unique partial index makes this impossible -- noted in output)
     puts '  NOTE: Unique partial index on (identity_issuer, external_uid) WHERE external_uid IS NOT NULL'
     puts '        prevents duplicate principal entries.'
 
-    # 6. Owned records whose owner_organization_id refers to an org with kind=nil
+    # 7. Owned records whose owner_organization_id refers to an org with kind=nil
     #    (sanity check: count service-principal orgs, which don't exist by design)
     service_owned = 0
     owned_models.each do |model|
