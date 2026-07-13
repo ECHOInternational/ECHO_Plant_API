@@ -12,17 +12,18 @@
 
 ## Stage S2 — API: additive schema + shadow identity (commits through Phase B)
 
-**Deploy:** normal pipeline (build → staging auto → production gate). The `-migrate` one-off task applies migrations `20260713000001..6` (all additive; small tables; new indexes on visibility/owned_by are plain CREATE INDEX — table sizes make lock time negligible; if plants ever grows large, switch to CONCURRENTLY).
+**Deploy:** normal pipeline (build → staging auto → production gate). The `-migrate` one-off task applies migrations `20260713000001..7` (1–6 = principals/organizations/data_sources/sync_conflicts/ownership columns/versions.metadata; 7 = `source_snapshot`; all additive; small tables; new indexes on visibility/owned_by are plain CREATE INDEX — table sizes make lock time negligible; if plants ever grows large, switch to CONCURRENTLY). All migrations are safe to apply while the old code version is still serving (new columns are nullable, new tables inert to old code); the pipeline runs the migrate task before the service update.
 **Behavior change surface:** principal/personal-org upsert per authenticated request; PaperTrail versions gain metadata; soft-delete mutations authorize `:soft_delete?` (legacy owner/admin behavior identical); admins may now hard-delete images (documented intentional widening); org capabilities are live but inert until records carry owner_organization_id (S3) and tokens carry claims (S1).
 **Verify on staging:** full suite in CI; smoke: anonymous plants query, authenticated create (check principals/organizations rows appear), soft-delete + restore round-trip, mobile contract specs.
 **Rollback:** redeploy previous image. New tables/columns are ignored by the old code. Do NOT roll back migrations (additive; leave in place).
 
 ## Stage S3 — Backfill (rake, human-run per environment)
 
-1. On IdP production: `bundle exec rake plant_identity:export OUTPUT=...` → transfer JSON to the API task environment.
-2. Staging rehearsal first (staging has a prod-shape dump): `rake ownership:backfill MAPPING=... ECHO_ORG_ID=<uuid>` in DRY_RUN (default), review the report (unmapped emails, counts), then `DRY_RUN=0`, then `rake ownership:verify`.
-3. Production: same sequence. Idempotent and resumable; re-runs skip completed rows.
-**Rollback:** none needed — backfill writes only the new nullable columns and new tables; legacy authorization ignores them entirely. A bad backfill is corrected by re-running with a fixed mapping.
+1. On IdP production: `bundle exec rake plant_identity:export OUTPUT=...`. The export JSON contains **PII** (emails, display names). Transfer it over an encrypted channel only — e.g. write to a private S3 path the API migrate task can read via IAM, or an SSM SecureString — never SCP to a laptop, email, or a public bucket. Delete the file from both ends after the backfill.
+2. **Before DRY_RUN=0, check for stray `sandbox@sandbox.com`-owned rows in the target DB** (`SELECT count(*) FROM plants WHERE owned_by = 'sandbox@sandbox.com'` and likewise for the other four tables). `sandbox@sandbox.com` is in `SHARED_EMAILS` and maps to the ECHO org; production should have none (sandbox is a dev-only guard), but a promoted dev dump could carry some. Confirm the count is zero or intended.
+3. Staging rehearsal first (staging has a prod-shape dump): `rake ownership:backfill MAPPING=... ECHO_ORG_ID=<uuid>` in DRY_RUN (default), review the report (unmapped emails, counts), then `DRY_RUN=0`, then `rake ownership:verify` (exit 0 = clean; exit 1 lists violations, including any `visibility=deleted` row with a null `deleted_at`).
+4. Production: same sequence. Idempotent and resumable; re-runs skip already-filled rows.
+**Rollback:** none needed — backfill writes only the new nullable columns and new tables; legacy authorization ignores them entirely. **Caveat:** re-running only fills rows whose `owner_organization_id` is still null; a row backfilled with an *incorrect* owner is NOT corrected by a re-run (the resumability filter skips it). To fix mis-mapped rows, null their `owner_organization_id`/`source_organization_id`/`created_by_principal_id` for the affected set (a targeted script) and re-run, or correct them directly.
 
 ## Stage S4 — API: new GraphQL surface + transition gates (Phase C+)
 
@@ -34,10 +35,11 @@
 
 Codegen against the deployed staging schema; capabilities replace `owns()`; org display; acting-org picker (only shown for multi-org users). Deploys on push to main (no gate!) — merge only after S4 is in production.
 **Rollback:** re-sync previous build from the S3 versioned history / redeploy prior commit.
+**POINT OF NO RETURN:** once S5 is live, the SPA queries capability fields (`canEdit`/`canDelete`/`canRestore`) and the new org/publication fields that exist only on the S4+ schema. **Do NOT roll S4 back while S5 is deployed** — the SPA would break on missing-field errors. If S4 must be reverted, revert S5 (re-sync the prior SPA build) first. This is why S5 merges only after S4 is confirmed stable in production.
 
-## Stage S6 — Cutover (flagged)
+## Stage S6 — Cutover observation (flagged)
 
-Set `ORG_AUTHZ_CUTOVER=log_only` on the API: legacy email/trust-9 authorization branches keep enforcing but every decision that would differ is logged (`authz.legacy_divergence`). After a quiet soak window, this stage ends with legacy branches demoted per the cleanup plan (S7) — the enforcement flip itself is part of cleanup, not this release train, because the mobile fleet keeps depending on legacy owner behavior until each user's records live in their personal org (which the backfill guarantees). In practice S6 is observation, not behavior change.
+Set `ORG_AUTHZ_CUTOVER=log_only` on the API. This does NOT change enforcement: the legacy email/trust-9 branches keep granting access exactly as before. What it adds is a structured `authz.legacy_divergence` log event (implemented in `OwnedResourcePolicy#log_legacy_divergence`) emitted whenever an access is granted **only** by a legacy branch and would be denied once legacy authorization is removed (fields: action, record type/id, principal id, owner org id — no PII). A soak window with **zero** such events is the evidence gate for S7. The enforcement flip (removing the legacy branches) is part of S7 cleanup, not this stage, because the mobile fleet keeps depending on legacy owner behavior until each user's records live in their personal org (which the backfill guarantees). In practice S6 is observation, not behavior change.
 
 ## Stage S7 — Deferred cleanup (separate change, later)
 

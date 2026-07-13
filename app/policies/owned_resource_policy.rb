@@ -67,16 +67,19 @@ class OwnedResourcePolicy < ApplicationPolicy
   end
 
   def update?
-    return true if legacy_manage?
-
-    organization_capability?(:update_any) ||
-      (organization_capability?(:update_own) && user&.created_record?(record))
+    org_granted = organization_capability?(:update_any) ||
+                  (organization_capability?(:update_own) && user&.created_record?(record))
+    legacy = legacy_manage?
+    log_legacy_divergence(:update, legacy, org_granted)
+    legacy || org_granted
   end
 
   def destroy?
     return false unless user&.can_write?
 
-    user.super_admin? || record.owned_by == user.email
+    legacy = user.super_admin? || record.owned_by == user.email
+    log_legacy_divergence(:destroy, legacy, false)
+    legacy
   end
 
   # Soft deletion and restoration are steward-level capabilities in the new
@@ -84,14 +87,42 @@ class OwnedResourcePolicy < ApplicationPolicy
   # every owner may soft-delete (and restore) their own records and that must
   # not regress for existing clients.
   def soft_delete?
-    legacy_manage? || organization_capability?(:soft_delete)
+    legacy = legacy_manage?
+    org_granted = organization_capability?(:soft_delete)
+    log_legacy_divergence(:soft_delete, legacy, org_granted)
+    legacy || org_granted
   end
 
   def restore?
-    legacy_manage? || organization_capability?(:restore)
+    legacy = legacy_manage?
+    org_granted = organization_capability?(:restore)
+    log_legacy_divergence(:restore, legacy, org_granted)
+    legacy || org_granted
   end
 
   private
+
+  # Rollout observability (runbook stage S6). When ORG_AUTHZ_CUTOVER=log_only,
+  # emit a structured event whenever access is granted ONLY by a legacy branch
+  # (email ownership or the trust-9/10 override) and would be DENIED once legacy
+  # authorization is removed. A quiet window of zero such events is the evidence
+  # gate for the S7 cleanup that drops the legacy branches. No PII is logged
+  # (principal id + org id + action only), and logging never affects the
+  # authorization outcome.
+  def log_legacy_divergence(action, legacy_granted, org_granted)
+    return unless ENV['ORG_AUTHZ_CUTOVER'] == 'log_only'
+    return unless legacy_granted && !org_granted
+
+    Rails.logger.info({
+      event: 'authz.legacy_divergence',
+      action: action,
+      record_type: record.class.name,
+      record_id: record.try(:id),
+      principal_id: user&.principal&.id,
+      owner_organization_id: record.try(:owner_organization_id),
+      decision: 'granted_by_legacy_only'
+    }.to_json)
+  end
 
   # The pre-redesign update/soft-delete rule: a writer who owns the record by
   # email, or a trust-9 admin (D3 compatibility window).
