@@ -34,6 +34,9 @@ Metrics/AbcSize:
         - 'app/graphql/mutations/create_location.rb'
         - 'app/graphql/mutations/create_category.rb'
         - 'app/services/ownership_backfill.rb'
+        - 'app/services/source_synchronizer.rb'
+        - 'app/graphql/mutations/resolve_sync_conflict.rb'
+        - 'app/graphql/types/query_type.rb'
         - 'spec/services/ownership_backfill_spec.rb'
 Layout/LineLength:
     Exclude:

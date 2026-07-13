@@ -165,7 +165,8 @@ CREATE TABLE public.categories (
     publication_state character varying,
     access_level character varying,
     deleted_at timestamp with time zone,
-    deleted_by_principal_id uuid
+    deleted_by_principal_id uuid,
+    source_snapshot jsonb
 );
 
 
@@ -356,7 +357,8 @@ CREATE TABLE public.locations (
     publication_state character varying,
     access_level character varying,
     deleted_at timestamp with time zone,
-    deleted_by_principal_id uuid
+    deleted_by_principal_id uuid,
+    source_snapshot jsonb
 );
 
 
@@ -415,7 +417,8 @@ CREATE TABLE public.plants (
     publication_state character varying,
     access_level character varying,
     deleted_at timestamp with time zone,
-    deleted_by_principal_id uuid
+    deleted_by_principal_id uuid,
+    source_snapshot jsonb
 );
 
 
@@ -479,7 +482,8 @@ CREATE TABLE public.specimens (
     publication_state character varying,
     access_level character varying,
     deleted_at timestamp with time zone,
-    deleted_by_principal_id uuid
+    deleted_by_principal_id uuid,
+    source_snapshot jsonb
 );
 
 
@@ -581,7 +585,8 @@ CREATE TABLE public.varieties (
     publication_state character varying,
     access_level character varying,
     deleted_at timestamp with time zone,
-    deleted_by_principal_id uuid
+    deleted_by_principal_id uuid,
+    source_snapshot jsonb
 );
 
 
@@ -1742,6 +1747,7 @@ ALTER TABLE ONLY public.varieties
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260713000007'),
 ('20260713000006'),
 ('20260713000005'),
 ('20260713000004'),
