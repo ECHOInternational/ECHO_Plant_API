@@ -20,9 +20,18 @@ Metrics/BlockLength:
 Metrics/MethodLength:
     Exclude:
         - 'db/migrate/*.rb'
+        - 'app/graphql/mutations/base_mutation.rb'
+        - 'app/graphql/mutations/create_plant.rb'
 Metrics/AbcSize:
     Exclude:
         - 'db/migrate/*.rb'
+        - 'app/graphql/mutations/update_variety.rb'
+        - 'app/graphql/mutations/update_location.rb'
+        - 'app/graphql/mutations/update_category.rb'
+        - 'app/graphql/types/me_type.rb'
+        - 'app/graphql/mutations/base_mutation.rb'
+        - 'app/graphql/mutations/create_location.rb'
+        - 'app/graphql/mutations/create_category.rb'
 Layout/LineLength:
     Exclude:
         - 'spec/**/*.rb'

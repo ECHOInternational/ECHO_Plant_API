@@ -15,6 +15,9 @@ module Mutations
     argument :visibility, Types::VisibilityEnum,
              required: false,
              description: 'The visibility of the category'
+    argument :organization_id, ID,
+             required: false,
+             description: 'Relay global ID of the organization on whose behalf this category is created. Defaults to the personal organization.'
 
     field :category, Types::CategoryType, null: true
     field :errors, [Types::MutationError], null: false
@@ -26,11 +29,21 @@ module Mutations
     def resolve(**attributes)
       language = attributes[:language] || I18n.locale
 
+      org_id_arg = attributes.delete(:organization_id)
+      if org_id_arg
+        stamp, err = acting_organization_stamp(org_id_arg)
+        return { category: nil, errors: [err] } if err
+
+        org_stamp = stamp
+      else
+        org_stamp = ownership_stamp
+      end
+
       attributes
         .except!(:language)
         .merge!(created_by: context[:current_user].email)
         .merge!(owned_by: context[:current_user].email)
-        .merge!(ownership_stamp)
+        .merge!(org_stamp)
 
       Mobility.with_locale(language) do
         category = Category.new(attributes)
