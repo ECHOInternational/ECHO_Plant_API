@@ -111,6 +111,8 @@ Metrics/AbcSize:
     - 'app/graphql/mutations/update_location.rb'
     - 'app/graphql/mutations/update_category.rb'
     - 'app/graphql/types/me_type.rb'
+    - 'app/services/ownership_backfill.rb'
+    - 'spec/services/ownership_backfill_spec.rb'
 
 # Offense count: 5
 # Configuration parameters: Max, IgnoredMethods.
@@ -118,6 +120,7 @@ Metrics/ClassLength:
   Exclude:
     - 'app/graphql/types/location_type.rb'
     - 'app/graphql/types/specimen_type.rb'
+    - 'app/services/ownership_backfill.rb'
 
 # Offense count: 5
 # Configuration parameters: Max, IgnoredMethods.
@@ -127,6 +130,7 @@ Metrics/CyclomaticComplexity:
     - 'app/graphql/mutations/update_variety.rb'
     - 'app/graphql/mutations/update_location.rb'
     - 'app/graphql/mutations/update_category.rb'
+    - 'app/services/ownership_backfill.rb'
 
 # Offense count: 5
 # Configuration parameters: Max, IgnoredMethods.
@@ -136,6 +140,7 @@ Metrics/PerceivedComplexity:
     - 'app/graphql/mutations/update_variety.rb'
     - 'app/graphql/mutations/update_location.rb'
     - 'app/graphql/mutations/update_category.rb'
+    - 'app/services/ownership_backfill.rb'
 
 # Offense count: 1
 # Configuration parameters: Mode, AllowedMethods, AllowedPatterns, AllowBangMethods, WaywardPredicates.

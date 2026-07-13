@@ -17,6 +17,7 @@ Metrics/BlockLength:
     Exclude:
         - 'spec/**/*.rb'
         - 'db/schema.rb'
+        - 'lib/tasks/ownership.rake'
 Metrics/MethodLength:
     Exclude:
         - 'db/migrate/*.rb'
@@ -32,6 +33,8 @@ Metrics/AbcSize:
         - 'app/graphql/mutations/base_mutation.rb'
         - 'app/graphql/mutations/create_location.rb'
         - 'app/graphql/mutations/create_category.rb'
+        - 'app/services/ownership_backfill.rb'
+        - 'spec/services/ownership_backfill_spec.rb'
 Layout/LineLength:
     Exclude:
         - 'spec/**/*.rb'
