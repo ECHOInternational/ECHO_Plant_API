@@ -2,6 +2,8 @@
 
 # Specimens are individual (eg. tree) or groups (eg. row) of plants/vareities
 class Specimen < ApplicationRecord
+  include OrganizedResource
+
   belongs_to :plant
   belongs_to :variety, optional: true
   validates :name, :owned_by, :created_by, :visibility, presence: true

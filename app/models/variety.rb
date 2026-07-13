@@ -2,6 +2,8 @@
 
 # Defines the Variety object type
 class Variety < ApplicationRecord
+  include OrganizedResource
+
   validates :owned_by, :created_by, :visibility, :name, :plant, presence: true
   enum :visibility, { private: 0, public: 1, draft: 2, deleted: 3 }, prefix: :visibility
   has_many :images, as: :imageable, dependent: :destroy

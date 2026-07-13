@@ -2,6 +2,8 @@
 
 # Defines the Plant object type
 class Plant < ApplicationRecord # rubocop:disable Metrics/ClassLength
+  include OrganizedResource
+
   # Rails 7.2 deprecates the keyword-definition form (enum name: {...}, removed
   # in Rails 8.0); the positional form is the supported syntax on Ruby 3.3.
   enum :early_growth_phase, { slow: 'slow', intermediate: 'intermediate', fast: 'fast' }
