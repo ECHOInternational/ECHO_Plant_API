@@ -79,6 +79,10 @@ class PlantApiSchema < GraphQL::Schema
       Types::CategoryType
     when Image
       Types::ImageType
+    when Organization
+      Types::OrganizationType
+    when Principal
+      Types::PrincipalType
     when ImageAttribute
       Types::ImageAttributeType
     when Antinutrient

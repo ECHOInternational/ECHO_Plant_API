@@ -11,6 +11,10 @@ module Types
     # Fetches a list of objects given a list of IDs
     include GraphQL::Types::Relay::HasNodesField
 
+    # Identity query: the currently authenticated user, or null for anonymous.
+    field :me, Types::MeType, null: true,
+                              description: 'The currently authenticated user. Null when the request is anonymous.'
+
     # Collection Queries
     field :categories, resolver: Resolvers::CategoriesResolver, connection: true
     field :image_attributes, resolver: Resolvers::ImageAttributesResolver, connection: true
@@ -174,6 +178,10 @@ module Types
       item_id = decode_global_id(id)
       Mobility.locale = language || I18n.locale
       GrowthHabit.find(item_id)
+    end
+
+    def me
+      context[:current_user]
     end
 
     private

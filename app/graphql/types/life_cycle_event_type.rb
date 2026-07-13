@@ -35,6 +35,16 @@ module Types
           description: 'Indicates if the lifecycle event has been soft-deleted.',
           null: false
 
+    field :can_edit, Boolean,
+          null: false,
+          description: 'True when the current user may update this life cycle event.'
+
+    # Default implementation: delegates to LifeCycleEventPolicy#update? via Pundit.
+    # Concrete event types inherit this through the interface module.
+    def can_edit
+      Pundit.policy(context[:current_user], @object).update?
+    end
+
     field :created_at, GraphQL::Types::ISO8601DateTime,
           description: 'The date and time that the record was created',
           null: false
