@@ -294,5 +294,8 @@ module Types
     field :transfer_record_ownership,
           mutation: Mutations::TransferRecordOwnership,
           description: 'Transfers ownership of an independently-owned record to a different organization'
+    field :resolve_sync_conflict,
+          mutation: Mutations::ResolveSyncConflict,
+          description: 'Resolves a sync conflict by keeping local or accepting incoming values'
   end
 end

@@ -180,6 +180,34 @@ module Types
       GrowthHabit.find(item_id)
     end
 
+    field :sync_conflicts, [Types::SyncConflictType], null: false do
+      description "List sync conflicts. Scoped to the current user's organizations."
+      argument :status, Types::SyncConflictStatusEnum, required: false
+    end
+    def sync_conflicts(status: nil)
+      user = context[:current_user]
+      base = SyncConflict.all
+      base = base.where(status: status.downcase) if status
+
+      if user&.admin?
+        base.includes(:data_source, :syncable)
+      elsif user
+        org_ids = user.readable_organization_ids
+        conflict_ids = []
+        base.includes(:syncable).find_each do |conflict|
+          syncable = conflict.syncable
+          next unless syncable
+          next unless org_ids.include?(syncable.owner_organization_id)
+          next unless user.organization_capability?(syncable.owner_organization_id, :resolve_conflicts)
+
+          conflict_ids << conflict.id
+        end
+        SyncConflict.where(id: conflict_ids).includes(:data_source, :syncable)
+      else
+        SyncConflict.none
+      end
+    end
+
     def me
       context[:current_user]
     end
