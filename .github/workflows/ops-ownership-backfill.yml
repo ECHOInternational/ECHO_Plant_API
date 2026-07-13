@@ -1,0 +1,358 @@
+name: Ops - Ownership Backfill
+
+# ============================================================================
+# One-shot ops workflow: runs ownership:report, ownership:verify, or
+# ownership:backfill inside the deployed ECHO Plant API ECS container.
+#
+# PURPOSE
+# -------
+# This is the Stage S3 operator interface from the ownership-redesign rollout
+# (docs/ownership-redesign/rollout.md). It runs the three rake tasks in the
+# deployed ECS environment so the operator can review the dry-run report in
+# the GitHub Actions UI before committing to a live write.
+#
+# STANDARD OPERATING PROCEDURE
+#   1. Run action=report to see current fill status (no MAPPING/ECHO_ORG_ID needed).
+#   2. Run action=backfill, dry_run=TRUE to review the report (default -- safe).
+#   3. Review the task output in GITHUB_STEP_SUMMARY.
+#   4. For a live run: action=backfill, dry_run=FALSE, confirm_real_run=RUN-REAL-BACKFILL.
+#   5. Run action=verify to confirm invariants after the live backfill.
+#
+# NEVER TRIGGERS ITSELF -- only workflow_dispatch (manual).
+#
+# SAFETY GATE
+# -----------
+# If action=backfill AND dry_run=FALSE, the workflow FAILS immediately unless
+# confirm_real_run is the literal string "RUN-REAL-BACKFILL". This prevents
+# accidental live writes.
+#
+# IAM PREREQUISITES
+# -----------------
+# The plant-API ECS *task* role (plant-api-<env>-task-role) ALREADY grants
+# s3:GetObject/PutObject/ListBucket on the whole images bucket
+# (arn:aws:s3:::images-us-east-1.echocommunity.org and /*), per
+# infra/modules/plant-api/main.tf (data.aws_iam_policy_document.task_s3). So when
+# mapping_s3_uri points at that images bucket (the default the ECHOcommunity
+# export workflow writes to), THIS side needs NO IAM change.
+#
+# The only grant to apply lives on the ECHOcommunity side: letting the
+# ECHOcommunity export task WRITE the mapping into this bucket -- documented in
+# ECHOcommunity's ops-plant-identity-export.yml. If you point mapping_s3_uri at
+# a DIFFERENT bucket, grant this task role s3:GetObject on that bucket first.
+#
+# The report and verify tasks do NOT require a mapping file -- only backfill
+# needs the MAPPING env var.
+# ============================================================================
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      action:
+        description: "Rake task to run (report=read-only stats, verify=invariant check, backfill=fill columns)"
+        required: true
+        type: choice
+        options:
+          - report
+          - verify
+          - backfill
+      dry_run:
+        description: "DRY_RUN=1 (default TRUE -- no DB writes). Set FALSE only with confirm_real_run."
+        required: true
+        type: boolean
+        default: true
+      mapping_s3_uri:
+        description: "S3 URI for the identity mapping file (required for backfill, e.g. s3://images-us-east-1.echocommunity.org/ownership-backfill/mapping.json)"
+        required: false
+        type: string
+        default: ""
+      echo_org_id:
+        description: "ECHO organization UUID from the IdP (required for backfill)"
+        required: false
+        type: string
+        default: ""
+      confirm_real_run:
+        description: "Type exactly 'RUN-REAL-BACKFILL' to allow a non-dry-run backfill. Leave empty for dry runs."
+        required: false
+        type: string
+        default: ""
+
+# Never run two ops tasks against the same environment at once.
+concurrency:
+  group: ops-ownership-backfill-${{ inputs.environment }}
+  cancel-in-progress: false
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  # Log group name pattern: /ecs/plant-api-<env>
+  # Web task stream prefix: web  (container name: web)
+
+jobs:
+  safety-gate:
+    name: Safety gate check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if real backfill requested without confirmation
+        if: inputs.action == 'backfill' && inputs.dry_run == false
+        run: |
+          if [ "${{ inputs.confirm_real_run }}" != "RUN-REAL-BACKFILL" ]; then
+            echo "::error::SAFETY GATE: action=backfill with dry_run=FALSE requires"
+            echo "::error::  confirm_real_run to equal exactly 'RUN-REAL-BACKFILL'."
+            echo "::error::  Got: '${{ inputs.confirm_real_run }}'"
+            echo "::error::  Re-run the workflow and type RUN-REAL-BACKFILL in that field."
+            exit 1
+          fi
+          echo "Safety gate passed: confirm_real_run is 'RUN-REAL-BACKFILL'."
+
+      - name: Validate required inputs for backfill
+        if: inputs.action == 'backfill'
+        run: |
+          if [ -z "${{ inputs.mapping_s3_uri }}" ]; then
+            echo "::error::action=backfill requires mapping_s3_uri."
+            exit 1
+          fi
+          if [ -z "${{ inputs.echo_org_id }}" ]; then
+            echo "::error::action=backfill requires echo_org_id."
+            exit 1
+          fi
+
+  run-task:
+    name: Run ownership:${{ inputs.action }} (${{ inputs.environment }})
+    needs: safety-gate
+    runs-on: ubuntu-latest
+
+    # Scope the OIDC role to the chosen environment. Required-reviewer gate for
+    # production is configured in repo Settings -> Environments.
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+        env:
+          DEPLOY_ROLE_ARN: arn:aws:iam::382724554857:role/gha-plant-api-deploy
+
+      # ------------------------------------------------------------------
+      # Build the rake command from inputs.
+      # ------------------------------------------------------------------
+      - name: Build rake command
+        id: cmd
+        run: |
+          ACTION="${{ inputs.action }}"
+          DRY_RUN="${{ inputs.dry_run }}"
+          MAPPING="${{ inputs.mapping_s3_uri }}"
+          ECHO_ORG_ID="${{ inputs.echo_org_id }}"
+
+          case "$ACTION" in
+            report)
+              RAKE_CMD="bundle exec rake ownership:report"
+              ;;
+            verify)
+              RAKE_CMD="bundle exec rake ownership:verify"
+              ;;
+            backfill)
+              DR_FLAG="DRY_RUN=1"
+              if [ "$DRY_RUN" = "false" ]; then
+                DR_FLAG="DRY_RUN=0"
+              fi
+              RAKE_CMD="bundle exec rake ownership:backfill MAPPING=${MAPPING} ECHO_ORG_ID=${ECHO_ORG_ID} ${DR_FLAG}"
+              ;;
+          esac
+
+          echo "rake_cmd=${RAKE_CMD}" >> "$GITHUB_OUTPUT"
+          echo "Built rake command: ${RAKE_CMD}"
+
+      # ------------------------------------------------------------------
+      # Resolve environment-specific ECS names.
+      # ------------------------------------------------------------------
+      - name: Set ECS names
+        id: ecs
+        run: |
+          if [ "${{ inputs.environment }}" = "production" ]; then
+            echo "cluster=plant-api-production"       >> "$GITHUB_OUTPUT"
+            echo "service=plant-api-production-web"   >> "$GITHUB_OUTPUT"
+            echo "taskdef=plant-api-production-web"   >> "$GITHUB_OUTPUT"
+            echo "container=web"                      >> "$GITHUB_OUTPUT"
+            echo "log_group=/ecs/plant-api-production" >> "$GITHUB_OUTPUT"
+          else
+            echo "cluster=plant-api-staging"          >> "$GITHUB_OUTPUT"
+            echo "service=plant-api-staging-web"      >> "$GITHUB_OUTPUT"
+            echo "taskdef=plant-api-staging-web"      >> "$GITHUB_OUTPUT"
+            echo "container=web"                      >> "$GITHUB_OUTPUT"
+            echo "log_group=/ecs/plant-api-staging"   >> "$GITHUB_OUTPUT"
+          fi
+
+      # ------------------------------------------------------------------
+      # Run the rake task via run-migration.sh (re-using the same pattern
+      # as the deploy workflow's migrate step). Capture the task ARN from
+      # stderr so we can fetch CloudWatch logs afterward.
+      # run-migration.sh prints "Task: <arn>" to stderr; we tee stderr to
+      # a file so the operator still sees it in the Actions log.
+      # ------------------------------------------------------------------
+      - name: Run rake task via ECS one-off task
+        id: run_task
+        run: |
+          CLUSTER="${{ steps.ecs.outputs.cluster }}"
+          SERVICE="${{ steps.ecs.outputs.service }}"
+          TASKDEF="${{ steps.ecs.outputs.taskdef }}"
+          CONTAINER="${{ steps.ecs.outputs.container }}"
+
+          # run-migration.sh is in the ECHOcommunity repo; for the plant-API we
+          # replicate the same one-off task pattern inline here.
+          REGION="${{ env.AWS_REGION }}"
+
+          # Build the container override.
+          RAKE_CMD="${{ steps.cmd.outputs.rake_cmd }}"
+          CMD_JSON="$(echo "$RAKE_CMD" | xargs printf '%s\n' | jq -R . | jq -cs .)"
+          OVERRIDES="$(jq -cn --arg name "$CONTAINER" --argjson cmd "$CMD_JSON" \
+            '{containerOverrides:[{name:$name, command:$cmd}]}')"
+
+          # Borrow the live service's awsvpc network config.
+          NETCFG="$(aws ecs describe-services --region "$REGION" --cluster "$CLUSTER" \
+            --services "$SERVICE" \
+            --query 'services[0].networkConfiguration.awsvpcConfiguration' --output json)"
+
+          NETWORK="$(echo "$NETCFG" | jq -c '{awsvpcConfiguration:{
+            subnets: .subnets,
+            securityGroups: .securityGroups,
+            assignPublicIp: (.assignPublicIp // "DISABLED")
+          }}')"
+
+          echo "Starting one-off ECS task on ${CLUSTER}/${TASKDEF} ..."
+          TASK_ARN="$(aws ecs run-task --region "$REGION" --cluster "$CLUSTER" \
+            --task-definition "$TASKDEF" --launch-type FARGATE \
+            --network-configuration "$NETWORK" \
+            --overrides "$OVERRIDES" \
+            --started-by "gha-ops-backfill" \
+            --query 'tasks[0].taskArn' --output text)"
+
+          if [ -z "$TASK_ARN" ] || [ "$TASK_ARN" = "None" ]; then
+            echo "::error::run-task returned no task ARN. Check IAM or capacity."
+            exit 1
+          fi
+          echo "Task ARN: $TASK_ARN"
+          echo "task_arn=${TASK_ARN}" >> "$GITHUB_OUTPUT"
+
+          # Extract short task ID for CloudWatch log stream name.
+          TASK_ID="${TASK_ARN##*/}"
+          echo "task_id=${TASK_ID}" >> "$GITHUB_OUTPUT"
+
+          echo "Waiting for task to stop ..."
+          aws ecs wait tasks-stopped --region "$REGION" --cluster "$CLUSTER" --tasks "$TASK_ARN"
+
+          EXIT_CODE="$(aws ecs describe-tasks --region "$REGION" --cluster "$CLUSTER" \
+            --tasks "$TASK_ARN" \
+            --query "tasks[0].containers[?name=='${CONTAINER}'].exitCode | [0]" \
+            --output text)"
+          REASON="$(aws ecs describe-tasks --region "$REGION" --cluster "$CLUSTER" \
+            --tasks "$TASK_ARN" \
+            --query 'tasks[0].stoppedReason' --output text)"
+
+          echo "Container '${CONTAINER}' exitCode=${EXIT_CODE} stoppedReason=${REASON}"
+          echo "exit_code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
+
+          if [ -z "$EXIT_CODE" ] || [ "$EXIT_CODE" = "None" ]; then
+            echo "::error::No exit code -- the container likely never started."
+            echo "::error::Check CloudWatch log group ${{ steps.ecs.outputs.log_group }}"
+            exit 1
+          fi
+          exit "$EXIT_CODE"
+
+      # ------------------------------------------------------------------
+      # Fetch CloudWatch logs for the one-off task and echo them into
+      # $GITHUB_STEP_SUMMARY so the operator can review the rake output
+      # (report/dry-run report) without leaving the Actions UI.
+      #
+      # Log stream name: web/<container-name>/<short-task-id>
+      # ------------------------------------------------------------------
+      - name: Fetch CloudWatch task logs
+        if: always() && steps.run_task.outputs.task_id != ''
+        run: |
+          REGION="${{ env.AWS_REGION }}"
+          LOG_GROUP="${{ steps.ecs.outputs.log_group }}"
+          CONTAINER="${{ steps.ecs.outputs.container }}"
+          TASK_ID="${{ steps.run_task.outputs.task_id }}"
+          LOG_STREAM="${CONTAINER}/${CONTAINER}/${TASK_ID}"
+
+          echo "Fetching logs from ${LOG_GROUP}/${LOG_STREAM} ..."
+
+          # Wait up to 30s for the log stream to become available.
+          for i in $(seq 1 6); do
+            if aws logs describe-log-streams --region "$REGION" \
+              --log-group-name "$LOG_GROUP" \
+              --log-stream-name-prefix "${CONTAINER}/${CONTAINER}/${TASK_ID}" \
+              --query 'logStreams[0].logStreamName' --output text 2>/dev/null | grep -q "${TASK_ID}"; then
+              break
+            fi
+            echo "  Log stream not yet available; waiting 5s (attempt ${i}/6) ..."
+            sleep 5
+          done
+
+          LOGS="$(aws logs get-log-events --region "$REGION" \
+            --log-group-name "$LOG_GROUP" \
+            --log-stream-name "$LOG_STREAM" \
+            --start-from-head \
+            --query 'events[*].message' \
+            --output text 2>/dev/null || echo '(log stream unavailable or empty)')"
+
+          echo "TASK_LOGS<<LOGS_EOF" >> "$GITHUB_ENV"
+          echo "$LOGS" >> "$GITHUB_ENV"
+          echo "LOGS_EOF" >> "$GITHUB_ENV"
+
+      - name: Write step summary
+        if: always()
+        run: |
+          {
+            echo "## Ownership Backfill -- \`ownership:${{ inputs.action }}\`"
+            echo ""
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| Environment | \`${{ inputs.environment }}\` |"
+            echo "| Action | \`ownership:${{ inputs.action }}\` |"
+            if [ "${{ inputs.action }}" = "backfill" ]; then
+              if [ "${{ inputs.dry_run }}" = "true" ]; then
+                echo "| DRY_RUN | \`1\` (no DB writes) |"
+              else
+                echo "| DRY_RUN | \`0\` (DATA WRITTEN) |"
+              fi
+              echo "| MAPPING | \`${{ inputs.mapping_s3_uri }}\` |"
+              echo "| ECHO_ORG_ID | \`${{ inputs.echo_org_id }}\` |"
+            fi
+            echo "| Task ARN | \`${{ steps.run_task.outputs.task_arn }}\` |"
+            echo "| Exit code | \`${{ steps.run_task.outputs.exit_code }}\` |"
+            echo ""
+            if [ "${{ steps.run_task.outputs.exit_code }}" = "0" ]; then
+              echo "**Status: SUCCEEDED**"
+            else
+              echo "**Status: FAILED** (exit code \`${{ steps.run_task.outputs.exit_code }}\`)"
+            fi
+            echo ""
+            echo "### Task output (CloudWatch logs)"
+            echo '```'
+            echo "$TASK_LOGS"
+            echo '```'
+            echo ""
+            echo "### How to view full logs"
+            echo ""
+            echo "If log output is truncated, open CloudWatch Logs directly:"
+            echo ""
+            echo '```'
+            echo "aws logs tail ${{ steps.ecs.outputs.log_group }} --follow \\"
+            echo "  --log-stream-names ${{ steps.ecs.outputs.container }}/${{ steps.ecs.outputs.container }}/${{ steps.run_task.outputs.task_id }}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
