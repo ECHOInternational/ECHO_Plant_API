@@ -191,6 +191,19 @@ RSpec.describe OwnershipBackfill, type: :service do
       svc.run
       expect(Principal.count).to eq initial_count
     end
+
+    it 'projects the personal-org count a real run would create (not 0)' do
+      # alice is a mapped human -> a real run creates 1 personal org for her.
+      # echo@echonet.org is a shared email -> service principal, no personal org.
+      # The dry-run must PROJECT this count so the review is trustworthy.
+      svc = run_backfill(
+        dry_run: true,
+        extra_users: [{ 'uid' => user_uid, 'email' => user_email, 'name' => 'Alice' }]
+      )
+      report = svc.run
+      expect(report.orgs_created_personal).to eq 1
+      expect(Organization.where(kind: 'personal').count).to eq 0 # still nothing written
+    end
   end
 
   # ---------------------------------------------------------------------------
