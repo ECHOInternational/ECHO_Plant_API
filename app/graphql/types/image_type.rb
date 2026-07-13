@@ -6,6 +6,8 @@ module Types
     global_id_field :id
     implements GraphQL::Types::Relay::Node
 
+    include Types::Concerns::CapabilityFields
+
     description 'Images can be associated with most data types in the Plant API'
 
     field :uuid, ID,
@@ -29,13 +31,16 @@ module Types
           null: false
     field :created_by, String,
           description: "The user ID of an image's creator",
-          null: true
+          null: true,
+          deprecation_reason: 'Use ownerOrganization on the imageable; email-based ownership is being retired.'
     field :owned_by, String,
           description: "The user ID of an image's owner",
-          null: true
+          null: true,
+          deprecation_reason: 'Use ownerOrganization on the imageable; email-based ownership is being retired.'
     field :visibility, Types::VisibilityEnum,
           description: 'The visibility of the image. Can be: PUBLIC, PRIVATE, DRAFT, DELETED',
-          null: false
+          null: false,
+          deprecation_reason: 'Use publicationState/accessLevel/deletedAt.'
     field :translations, [Types::CategoryType::CategoryTranslationType],
           description: 'Translations of translatable category fields',
           null: false,
@@ -43,6 +48,15 @@ module Types
 
     def visibility
       @object.visibility.to_sym
+    end
+
+    # CapabilityFields overrides: Image uses destroy? for delete; no restore.
+    def delete_policy_method
+      :destroy?
+    end
+
+    def restore_policy_method
+      nil
     end
   end
 end

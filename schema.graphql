@@ -1,4 +1,19 @@
 """
+Whether a record is visible to the owning organization only or to the public.
+"""
+enum AccessLevelEnum {
+  """
+  Visible only to members of the owning organization.
+  """
+  ORGANIZATION
+
+  """
+  Publicly visible to any reader.
+  """
+  PUBLIC
+}
+
+"""
 Creates a Acquire Life Cycle Event attached to the specified specimen
 """
 type AcquireEvent implements LifeCycleEvent & Node {
@@ -7,6 +22,11 @@ type AcquireEvent implements LifeCycleEvent & Node {
   collected at one time from a specific location
   """
   accession: String
+
+  """
+  True when the current user may update this life cycle event.
+  """
+  canEdit: Boolean!
 
   """
   Describes the quality or condition of germplasm on receipt - good,fair,poor
@@ -1139,9 +1159,39 @@ A category contains a group of plant objects.
 """
 type Category implements Node {
   """
+  Whether this category is visible to the owning organization only or publicly.
+  """
+  accessLevel: AccessLevelEnum
+
+  """
+  True when the current user may delete this record.
+  """
+  canDelete: Boolean!
+
+  """
+  True when the current user may update this record.
+  """
+  canEdit: Boolean!
+
+  """
+  True when the current user may restore this soft-deleted record.
+  """
+  canRestore: Boolean!
+
+  """
   The user ID of a category's creator
   """
-  createdBy: String
+  createdBy: String @deprecated(reason: "Use createdByPrincipal; email-based ownership is being retired.")
+
+  """
+  The principal that created this category.
+  """
+  createdByPrincipal: Principal
+
+  """
+  When this category was soft-deleted, or null if not deleted.
+  """
+  deletedAt: ISO8601DateTime
 
   """
   A translated description of a category
@@ -1182,7 +1232,12 @@ type Category implements Node {
   """
   The user ID of a category's owner
   """
-  ownedBy: String
+  ownedBy: String @deprecated(reason: "Use ownerOrganization; email-based ownership is being retired.")
+
+  """
+  The organization that owns this category.
+  """
+  ownerOrganization: Organization
 
   """
   The plants that belong to this category
@@ -1210,6 +1265,16 @@ type Category implements Node {
   ): PlantConnectionWithTotalCount
 
   """
+  Whether this category is a draft or published.
+  """
+  publicationState: PublicationStateEnum
+
+  """
+  The organization that originally sourced this category.
+  """
+  sourceOrganization: Organization
+
+  """
   Translations of translatable category fields
   """
   translations: [CategoryTranslation!]!
@@ -1222,7 +1287,7 @@ type Category implements Node {
   """
   The visibility of the category. Can be: PUBLIC, PRIVATE, DRAFT, DELETED
   """
-  visibility: Visibility!
+  visibility: Visibility! @deprecated(reason: "Use publicationState/accessLevel/deletedAt.")
 }
 
 """
@@ -1353,6 +1418,11 @@ Actions taken to add organic material to soil
 """
 type CompostingEvent implements LifeCycleEvent & Node {
   """
+  True when the current user may update this life cycle event.
+  """
+  canEdit: Boolean!
+
+  """
   The date and time that the record was created
   """
   createdAt: ISO8601DateTime!
@@ -1479,6 +1549,11 @@ input CreateCategoryInput {
   The translatable name of the category
   """
   name: String!
+
+  """
+  Relay global ID of the organization on whose behalf this category is created. Defaults to the personal organization.
+  """
+  organizationId: ID
 
   """
   The visibility of the category
@@ -1690,6 +1765,11 @@ input CreateLocationInput {
   notes: String
 
   """
+  Relay global ID of the organization on whose behalf this location is created. Defaults to the personal organization.
+  """
+  organizationId: ID
+
+  """
   The slope of the land in degrees of the location
   """
   slope: Int
@@ -1863,6 +1943,11 @@ input CreatePlantInput {
   optimalTemperatureRange: String
 
   """
+  Relay global ID of the organization on whose behalf this plant is created. Defaults to the personal organization.
+  """
+  organizationId: ID
+
+  """
   The translatable origin of the plant
   """
   origin: String
@@ -1958,6 +2043,11 @@ input CreateSpecimenInput {
   The user assigned name of the specimen
   """
   name: String!
+
+  """
+  Relay global ID of the organization on whose behalf this specimen is created. Defaults to the personal organization.
+  """
+  organizationId: ID
 
   """
   The id of the plant to which this specimen is related
@@ -2195,6 +2285,11 @@ input CreateVarietyInput {
   optimalTemperatureRange: String
 
   """
+  Relay global ID of the organization on whose behalf this variety is created. Defaults to the personal organization.
+  """
+  organizationId: ID
+
+  """
   The translatable origin of the variety
   """
   origin: String
@@ -2277,6 +2372,11 @@ Actions taken to cultivate
 """
 type CultivatingEvent implements LifeCycleEvent & Node {
   """
+  True when the current user may update this life cycle event.
+  """
+  canEdit: Boolean!
+
+  """
   The date and time that the record was created
   """
   createdAt: ISO8601DateTime!
@@ -2336,6 +2436,13 @@ type CultivatingEvent implements LifeCycleEvent & Node {
   The internal database ID for all life cycle events
   """
   uuid: ID!
+}
+
+type DataSource implements Node {
+  id: ID!
+  name: String!
+  organization: Organization!
+  sourceSystemKey: String!
 }
 
 """
@@ -2665,6 +2772,11 @@ Actions taken when disease is observed
 """
 type DiseaseEvent implements LifeCycleEvent & Node {
   """
+  True when the current user may update this life cycle event.
+  """
+  canEdit: Boolean!
+
+  """
   The date and time that the record was created
   """
   createdAt: ISO8601DateTime!
@@ -2746,6 +2858,11 @@ enum EarlyGrowthPhaseSpeed {
 Actions taken when plant(s) stop producing - at least notation of such
 """
 type EndOfLifeEvent implements LifeCycleEvent & Node {
+  """
+  True when the current user may update this life cycle event.
+  """
+  canEdit: Boolean!
+
   """
   The date and time that the record was created
   """
@@ -2866,6 +2983,11 @@ Actions taken when applying fertilizer
 """
 type FertilizingEvent implements LifeCycleEvent & Node {
   """
+  True when the current user may update this life cycle event.
+  """
+  canEdit: Boolean!
+
+  """
   The date and time that the record was created
   """
   createdAt: ISO8601DateTime!
@@ -2931,6 +3053,11 @@ type FertilizingEvent implements LifeCycleEvent & Node {
 Days to 50% Flowering
 """
 type FloweringEvent implements LifeCycleEvent & Node {
+  """
+  True when the current user may update this life cycle event.
+  """
+  canEdit: Boolean!
+
   """
   The date and time that the record was created
   """
@@ -3003,6 +3130,11 @@ type FloweringEvent implements LifeCycleEvent & Node {
 Creates a Germination Life Cycle Event attached to the specified specimen
 """
 type GerminationEvent implements LifeCycleEvent & Node {
+  """
+  True when the current user may update this life cycle event.
+  """
+  canEdit: Boolean!
+
   """
   The date and time that the record was created
   """
@@ -3138,6 +3270,11 @@ Creates a Harvest Life Cycle Event attached to the specified specimen
 """
 type HarvestEvent implements LifeCycleEvent & Node {
   """
+  True when the current user may update this life cycle event.
+  """
+  canEdit: Boolean!
+
+  """
   The date and time that the record was created
   """
   createdAt: ISO8601DateTime!
@@ -3234,9 +3371,24 @@ type Image implements Node {
   baseUrl: String!
 
   """
+  True when the current user may delete this record.
+  """
+  canDelete: Boolean!
+
+  """
+  True when the current user may update this record.
+  """
+  canEdit: Boolean!
+
+  """
+  True when the current user may restore this soft-deleted record.
+  """
+  canRestore: Boolean!
+
+  """
   The user ID of an image's creator
   """
-  createdBy: String
+  createdBy: String @deprecated(reason: "Use ownerOrganization on the imageable; email-based ownership is being retired.")
 
   """
   A translated description of an image
@@ -3257,7 +3409,7 @@ type Image implements Node {
   """
   The user ID of an image's owner
   """
-  ownedBy: String
+  ownedBy: String @deprecated(reason: "Use ownerOrganization on the imageable; email-based ownership is being retired.")
 
   """
   Translations of translatable category fields
@@ -3272,7 +3424,7 @@ type Image implements Node {
   """
   The visibility of the image. Can be: PUBLIC, PRIVATE, DRAFT, DELETED
   """
-  visibility: Visibility!
+  visibility: Visibility! @deprecated(reason: "Use publicationState/accessLevel/deletedAt.")
 }
 
 """
@@ -3372,6 +3524,11 @@ type ImageEdge {
 Notation of Plant Lifecycle Events from planting to end-of-life
 """
 interface LifeCycleEvent {
+  """
+  True when the current user may update this life cycle event.
+  """
+  canEdit: Boolean!
+
   """
   The date and time that the record was created
   """
@@ -3495,6 +3652,11 @@ A location is an instance of a plant or a single group planting.
 """
 type Location implements Node {
   """
+  Whether this location is visible to the owning organization only or publicly.
+  """
+  accessLevel: AccessLevelEnum
+
+  """
   The altitude in meters of the location
   """
   altitude: Int
@@ -3515,6 +3677,21 @@ type Location implements Node {
   averageTemperature: Int
 
   """
+  True when the current user may delete this record.
+  """
+  canDelete: Boolean!
+
+  """
+  True when the current user may update this record.
+  """
+  canEdit: Boolean!
+
+  """
+  True when the current user may restore this soft-deleted record.
+  """
+  canRestore: Boolean!
+
+  """
   The date and time that the record was created
   """
   createdAt: ISO8601DateTime!
@@ -3522,7 +3699,17 @@ type Location implements Node {
   """
   The user ID of a location's creator
   """
-  createdBy: String
+  createdBy: String @deprecated(reason: "Use createdByPrincipal; email-based ownership is being retired.")
+
+  """
+  The principal that created this location.
+  """
+  createdByPrincipal: Principal
+
+  """
+  When this location was soft-deleted, or null if not deleted.
+  """
+  deletedAt: ISO8601DateTime
   id: ID!
 
   """
@@ -3578,7 +3765,17 @@ type Location implements Node {
   """
   The user ID of a location's owner
   """
-  ownedBy: String
+  ownedBy: String @deprecated(reason: "Use ownerOrganization; email-based ownership is being retired.")
+
+  """
+  The organization that owns this location.
+  """
+  ownerOrganization: Organization
+
+  """
+  Whether this location is a draft or published.
+  """
+  publicationState: PublicationStateEnum
 
   """
   The slope of the land in degrees of the location
@@ -3589,6 +3786,11 @@ type Location implements Node {
   The general soil quality at the location
   """
   soilQuality: Condition
+
+  """
+  The organization that originally sourced this location.
+  """
+  sourceOrganization: Organization
 
   """
   The date and time that the record was last updated
@@ -3603,7 +3805,7 @@ type Location implements Node {
   """
   The visibility of the location. Can be: PUBLIC, PRIVATE, DRAFT, DELETED
   """
-  visibility: Visibility!
+  visibility: Visibility! @deprecated(reason: "Use publicationState/accessLevel/deletedAt.")
 }
 
 """
@@ -3643,6 +3845,46 @@ type LocationEdge {
 }
 
 """
+The currently authenticated user.
+"""
+type Me {
+  """
+  Human-readable display name from the resolved principal.
+  """
+  displayName: String
+
+  """
+  The email address from the JWT claim.
+  """
+  email: String!
+
+  """
+  Organizations the user belongs to, including their personal organization.
+  """
+  organizations: [MeOrganization!]!
+
+  """
+  Relay global ID of the resolved Principal record, if available.
+  """
+  principalId: ID
+}
+
+"""
+An organization the current user belongs to, with their role in the plant domain.
+"""
+type MeOrganization {
+  """
+  The organization.
+  """
+  organization: Organization!
+
+  """
+  The role the user holds in this organization for the plant domain.
+  """
+  role: String!
+}
+
+"""
 Creates a Movement Life Cycle Event attached to the specified specimen
 """
 type MovementEvent implements LifeCycleEvent & Node {
@@ -3650,6 +3892,11 @@ type MovementEvent implements LifeCycleEvent & Node {
   cm between rows
   """
   betweenRowSpacing: Int
+
+  """
+  True when the current user may update this life cycle event.
+  """
+  canEdit: Boolean!
 
   """
   The date and time that the record was created
@@ -3737,6 +3984,11 @@ type MovementEvent implements LifeCycleEvent & Node {
 Actions taken to apply a protective covering on the soil to preserve moisture/fertility 
 """
 type MulchingEvent implements LifeCycleEvent & Node {
+  """
+  True when the current user may update this life cycle event.
+  """
+  canEdit: Boolean!
+
   """
   The date and time that the record was created
   """
@@ -4291,6 +4543,46 @@ type Mutation {
   ): RemoveImageAttributesFromImagePayload!
 
   """
+  Resolves a sync conflict by keeping local or accepting incoming values
+  """
+  resolveSyncConflict(
+    """
+    Parameters for ResolveSyncConflict
+    """
+    input: ResolveSyncConflictInput!
+  ): ResolveSyncConflictPayload!
+
+  """
+  Restores a soft-deleted location
+  """
+  restoreLocation(
+    """
+    Parameters for RestoreLocation
+    """
+    input: RestoreLocationInput!
+  ): RestoreLocationPayload!
+
+  """
+  Restores a soft-deleted plant
+  """
+  restorePlant(
+    """
+    Parameters for RestorePlant
+    """
+    input: RestorePlantInput!
+  ): RestorePlantPayload!
+
+  """
+  Restores a soft-deleted variety
+  """
+  restoreVariety(
+    """
+    Parameters for RestoreVariety
+    """
+    input: RestoreVarietyInput!
+  ): RestoreVarietyPayload!
+
+  """
   Makes a common name the primary for its plant and language
   """
   setPrimaryCommonName(
@@ -4335,6 +4627,16 @@ type Mutation {
     """
     input: SoftDeleteVarietyInput!
   ): SoftDeleteVarietyPayload!
+
+  """
+  Transfers ownership of an independently-owned record to a different organization
+  """
+  transferRecordOwnership(
+    """
+    Parameters for TransferRecordOwnership
+    """
+    input: TransferRecordOwnershipInput!
+  ): TransferRecordOwnershipPayload!
 
   """
   Updates an acquire life cycle event
@@ -4774,6 +5076,11 @@ Actions taken when nutrient deficiencies are observed
 """
 type NutrientDeficiencyEvent implements LifeCycleEvent & Node {
   """
+  True when the current user may update this life cycle event.
+  """
+  canEdit: Boolean!
+
+  """
   The date and time that the record was created
   """
   createdAt: ISO8601DateTime!
@@ -4833,6 +5140,23 @@ type NutrientDeficiencyEvent implements LifeCycleEvent & Node {
   The internal database ID for all life cycle events
   """
   uuid: ID!
+}
+
+"""
+A local mirror of an IdP organization, or a personal organization shim.
+"""
+type Organization implements Node {
+  id: ID!
+
+  """
+  Either real (IdP-backed) or personal (single-principal shim).
+  """
+  kind: String!
+
+  """
+  Human-readable organization name.
+  """
+  name: String!
 }
 
 """
@@ -4840,6 +5164,11 @@ Actions taken concerning Lifecycle Events not in the list
 """
 type OtherEvent implements LifeCycleEvent & Node {
   """
+  True when the current user may update this life cycle event.
+  """
+  canEdit: Boolean!
+
+  """
   The date and time that the record was created
   """
   createdAt: ISO8601DateTime!
@@ -4900,6 +5229,11 @@ type OtherEvent implements LifeCycleEvent & Node {
   """
   uuid: ID!
 }
+
+"""
+Any independently-owned record: Plant, Variety, Specimen, Location, or Category.
+"""
+union OwnedRecordUnion = Category | Location | Plant | Specimen | Variety
 
 """
 Information about pagination in a connection.
@@ -4930,6 +5264,11 @@ type PageInfo {
 Actions taken when insects or other pests are observed
 """
 type PestEvent implements LifeCycleEvent & Node {
+  """
+  True when the current user may update this life cycle event.
+  """
+  canEdit: Boolean!
+
   """
   The date and time that the record was created
   """
@@ -4997,6 +5336,11 @@ A plant is a crop species available through the Plant API.
 """
 type Plant implements Node {
   """
+  Whether this plant is visible to the owning organization only or publicly.
+  """
+  accessLevel: AccessLevelEnum
+
+  """
   Translated full text description of the altitude attributes of a plant
   """
   altitudeNote: String
@@ -5055,6 +5399,21 @@ type Plant implements Node {
   Indicates whether or not a plant can be used for fodder
   """
   canBeUsedForFodder: Boolean
+
+  """
+  True when the current user may delete this record.
+  """
+  canDelete: Boolean!
+
+  """
+  True when the current user may update this record.
+  """
+  canEdit: Boolean!
+
+  """
+  True when the current user may restore this soft-deleted record.
+  """
+  canRestore: Boolean!
 
   """
   A list of categories to which a plant belongs
@@ -5119,12 +5478,22 @@ type Plant implements Node {
   """
   The user ID of a plant's creator
   """
-  createdBy: String
+  createdBy: String @deprecated(reason: "Use createdByPrincipal; email-based ownership is being retired.")
+
+  """
+  The principal that created this plant.
+  """
+  createdByPrincipal: Principal
 
   """
   A translated set of instructions for the cultivation of a plant
   """
   cultivation: String
+
+  """
+  When this plant was soft-deleted, or null if not deleted.
+  """
+  deletedAt: ISO8601DateTime
 
   """
   A translated description of a plant
@@ -5300,7 +5669,12 @@ type Plant implements Node {
   """
   The user ID of a plant's owner
   """
-  ownedBy: String
+  ownedBy: String @deprecated(reason: "Use ownerOrganization; email-based ownership is being retired.")
+
+  """
+  The organization that owns this plant.
+  """
+  ownerOrganization: Organization
 
   """
   A translated description of common pests and diseases of a plant
@@ -5328,6 +5702,11 @@ type Plant implements Node {
   primaryCommonName: String
 
   """
+  Whether this plant is a draft or published.
+  """
+  publicationState: PublicationStateEnum
+
+  """
   The scientific name for a plant (always render italicized)
   """
   scientificName: String
@@ -5346,6 +5725,11 @@ type Plant implements Node {
   Translated information about the seeding rate for a plant
   """
   seedingRate: String
+
+  """
+  The organization that originally sourced this plant.
+  """
+  sourceOrganization: Organization
 
   """
   Translated full text description of tolerances related to a plant
@@ -5426,7 +5810,7 @@ type Plant implements Node {
   """
   The visibility of the plant. Can be: PUBLIC, PRIVATE, DRAFT, DELETED
   """
-  visibility: Visibility!
+  visibility: Visibility! @deprecated(reason: "Use publicationState/accessLevel/deletedAt.")
 }
 
 """
@@ -5625,6 +6009,11 @@ type PlantingEvent implements LifeCycleEvent & Node {
   betweenRowSpacing: Int
 
   """
+  True when the current user may update this life cycle event.
+  """
+  canEdit: Boolean!
+
+  """
   The date and time that the record was created
   """
   createdAt: ISO8601DateTime!
@@ -5707,9 +6096,30 @@ type PlantingEvent implements LifeCycleEvent & Node {
 }
 
 """
+A durable identity resolved from a JWT claim or synthesized for a legacy actor.
+"""
+type Principal implements Node {
+  """
+  Human-readable name from the identity provider.
+  """
+  displayName: String
+
+  """
+  Mutable profile email. Mirrors the legacy createdBy/ownedBy strings.
+  """
+  email: String
+  id: ID!
+}
+
+"""
 Actions taken to prune plants for better production
 """
 type PruningEvent implements LifeCycleEvent & Node {
+  """
+  True when the current user may update this life cycle event.
+  """
+  canEdit: Boolean!
+
   """
   The date and time that the record was created
   """
@@ -5770,6 +6180,21 @@ type PruningEvent implements LifeCycleEvent & Node {
   The internal database ID for all life cycle events
   """
   uuid: ID!
+}
+
+"""
+Whether a record is a working draft or published.
+"""
+enum PublicationStateEnum {
+  """
+  Record is a working draft not yet published.
+  """
+  DRAFT
+
+  """
+  Record is published.
+  """
+  PUBLISHED
 }
 
 type Query {
@@ -6036,6 +6461,11 @@ type Query {
   ): LocationConnectionWithTotalCount!
 
   """
+  The currently authenticated user. Null when the request is anonymous.
+  """
+  me: Me
+
+  """
   Fetches an object given its ID.
   """
   node(
@@ -6182,6 +6612,11 @@ type Query {
   ): SpecimenConnectionWithTotalCount!
 
   """
+  List sync conflicts. Scoped to the current user's organizations.
+  """
+  syncConflicts(status: SyncConflictStatusEnum): [SyncConflict!]!
+
+  """
   Find a tolerance by ID
   """
   tolerance(
@@ -6317,6 +6752,119 @@ type RemoveImageAttributesFromImagePayload {
   clientMutationId: String
   errors: [MutationError!]!
   image: Image
+}
+
+"""
+Autogenerated input type of ResolveSyncConflict
+"""
+input ResolveSyncConflictInput {
+  """
+  A unique identifier for the client performing the mutation.
+  """
+  clientMutationId: String
+
+  """
+  Relay global ID of the SyncConflict to resolve.
+  """
+  conflictId: ID!
+
+  """
+  How to resolve the conflict.
+  """
+  resolution: SyncConflictResolutionEnum!
+}
+
+"""
+Autogenerated return type of ResolveSyncConflict.
+"""
+type ResolveSyncConflictPayload {
+  """
+  A unique identifier for the client performing the mutation.
+  """
+  clientMutationId: String
+  errors: [MutationError!]!
+  syncConflict: SyncConflict
+}
+
+"""
+Autogenerated input type of RestoreLocation
+"""
+input RestoreLocationInput {
+  """
+  A unique identifier for the client performing the mutation.
+  """
+  clientMutationId: String
+
+  """
+  The location to be restored.
+  """
+  locationId: ID!
+}
+
+"""
+Autogenerated return type of RestoreLocation.
+"""
+type RestoreLocationPayload {
+  """
+  A unique identifier for the client performing the mutation.
+  """
+  clientMutationId: String
+  errors: [MutationError!]!
+  location: Location
+}
+
+"""
+Autogenerated input type of RestorePlant
+"""
+input RestorePlantInput {
+  """
+  A unique identifier for the client performing the mutation.
+  """
+  clientMutationId: String
+
+  """
+  The plant to be restored.
+  """
+  plantId: ID!
+}
+
+"""
+Autogenerated return type of RestorePlant.
+"""
+type RestorePlantPayload {
+  """
+  A unique identifier for the client performing the mutation.
+  """
+  clientMutationId: String
+  errors: [MutationError!]!
+  plant: Plant
+}
+
+"""
+Autogenerated input type of RestoreVariety
+"""
+input RestoreVarietyInput {
+  """
+  A unique identifier for the client performing the mutation.
+  """
+  clientMutationId: String
+
+  """
+  The variety to be restored.
+  """
+  varietyId: ID!
+}
+
+"""
+Autogenerated return type of RestoreVariety.
+"""
+type RestoreVarietyPayload {
+  """
+  A unique identifier for the client performing the mutation.
+  """
+  clientMutationId: String
+  errors: [MutationError!]!
+  variety: Variety
 }
 
 """
@@ -6457,6 +7005,11 @@ Describes actions taken to prepare for planting
 """
 type SoilPreparationEvent implements LifeCycleEvent & Node {
   """
+  True when the current user may update this life cycle event.
+  """
+  canEdit: Boolean!
+
+  """
   The date and time that the record was created
   """
   createdAt: ISO8601DateTime!
@@ -6543,6 +7096,26 @@ A specimen is an instance of a plant or a single group planting.
 """
 type Specimen implements Node {
   """
+  Whether this specimen is visible to the owning organization only or publicly.
+  """
+  accessLevel: AccessLevelEnum
+
+  """
+  True when the current user may delete this record.
+  """
+  canDelete: Boolean!
+
+  """
+  True when the current user may update this record.
+  """
+  canEdit: Boolean!
+
+  """
+  True when the current user may restore this soft-deleted record.
+  """
+  canRestore: Boolean!
+
+  """
   The date and time that the record was created
   """
   createdAt: ISO8601DateTime!
@@ -6550,7 +7123,17 @@ type Specimen implements Node {
   """
   The user ID of a specimen's creator
   """
-  createdBy: String
+  createdBy: String @deprecated(reason: "Use createdByPrincipal; email-based ownership is being retired.")
+
+  """
+  The principal that created this specimen.
+  """
+  createdByPrincipal: Principal
+
+  """
+  When this specimen was soft-deleted, or null if not deleted.
+  """
+  deletedAt: ISO8601DateTime
 
   """
   The date and time that the specimen was last evaluated
@@ -6621,12 +7204,22 @@ type Specimen implements Node {
   """
   The user ID of a specimen's owner
   """
-  ownedBy: String
+  ownedBy: String @deprecated(reason: "Use ownerOrganization; email-based ownership is being retired.")
+
+  """
+  The organization that owns this specimen.
+  """
+  ownerOrganization: Organization
 
   """
   The kind of plant this specimen is
   """
   plant: Plant!
+
+  """
+  Whether this specimen is a draft or published.
+  """
+  publicationState: PublicationStateEnum
 
   """
   Indicates if the user would recommend this to others
@@ -6637,6 +7230,11 @@ type Specimen implements Node {
   Indicates if the user saved seeds collected from this specimen
   """
   savedSeed: Boolean
+
+  """
+  The organization that originally sourced this specimen.
+  """
+  sourceOrganization: Organization
 
   """
   Indicates if the user believes this was successful
@@ -6666,7 +7264,7 @@ type Specimen implements Node {
   """
   The visibility of the specimen. Can be: PUBLIC, PRIVATE, DRAFT, DELETED
   """
-  visibility: Visibility!
+  visibility: Visibility! @deprecated(reason: "Use publicationState/accessLevel/deletedAt.")
 
   """
   Indicates if the user plans to plant this again
@@ -6719,6 +7317,11 @@ type SpecimenEdge {
 Actions taken to support the plants with stakes
 """
 type StakingEvent implements LifeCycleEvent & Node {
+  """
+  True when the current user may update this life cycle event.
+  """
+  canEdit: Boolean!
+
   """
   The date and time that the record was created
   """
@@ -6781,10 +7384,59 @@ type StakingEvent implements LifeCycleEvent & Node {
   uuid: ID!
 }
 
+type SyncConflict implements Node {
+  """
+  JSON-encoded base payload
+  """
+  basePayload: String
+  conflictType: String!
+  createdAt: ISO8601DateTime!
+  dataSource: DataSource!
+  id: ID!
+
+  """
+  JSON-encoded incoming payload
+  """
+  incomingPayload: String
+
+  """
+  JSON-encoded local payload
+  """
+  localPayload: String
+  resolution: String
+  resolvedAt: ISO8601DateTime
+  status: String!
+  syncRunId: String
+  syncable: OwnedRecordUnion
+}
+
+enum SyncConflictResolutionEnum {
+  """
+  Accept the incoming source values, or accept the upstream deletion
+  """
+  ACCEPT_INCOMING
+
+  """
+  Keep local values as canonical; adopt them as the new sync base
+  """
+  KEEP_LOCAL
+}
+
+enum SyncConflictStatusEnum {
+  dismissed
+  open
+  resolved
+}
+
 """
 Actions taken to thin the # of plants for better production
 """
 type ThinningEvent implements LifeCycleEvent & Node {
+  """
+  True when the current user may update this life cycle event.
+  """
+  canEdit: Boolean!
+
   """
   The date and time that the record was created
   """
@@ -6921,9 +7573,50 @@ type ToleranceTranslation {
 }
 
 """
+Autogenerated input type of TransferRecordOwnership
+"""
+input TransferRecordOwnershipInput {
+  """
+  A unique identifier for the client performing the mutation.
+  """
+  clientMutationId: String
+
+  """
+  Relay global ID of the record to transfer (Plant, Variety, Specimen, Location, or Category).
+  """
+  recordId: ID!
+
+  """
+  Relay global ID of the organization that will become the new owner.
+  """
+  toOrganizationId: ID!
+}
+
+"""
+Autogenerated return type of TransferRecordOwnership.
+"""
+type TransferRecordOwnershipPayload {
+  """
+  A unique identifier for the client performing the mutation.
+  """
+  clientMutationId: String
+  errors: [MutationError!]!
+
+  """
+  The transferred record with updated ownerOrganization.
+  """
+  record: OwnedRecordUnion
+}
+
+"""
 Actions taken to support the plants with trellis structure
 """
 type TrellisingEvent implements LifeCycleEvent & Node {
+  """
+  True when the current user may update this life cycle event.
+  """
+  canEdit: Boolean!
+
   """
   The date and time that the record was created
   """
@@ -7095,6 +7788,10 @@ type UpdateAntinutrientPayload {
 Autogenerated input type of UpdateCategory
 """
 input UpdateCategoryInput {
+  """
+  New access level (ORGANIZATION or PUBLIC).
+  """
+  accessLevel: AccessLevelEnum
   categoryId: ID!
 
   """
@@ -7104,6 +7801,11 @@ input UpdateCategoryInput {
   description: String
   language: String
   name: String
+
+  """
+  New publication state (DRAFT or PUBLISHED).
+  """
+  publicationState: PublicationStateEnum
   visibility: Visibility
 }
 
@@ -7627,6 +8329,11 @@ Autogenerated input type of UpdateLocation
 """
 input UpdateLocationInput {
   """
+  New access level (ORGANIZATION or PUBLIC).
+  """
+  accessLevel: AccessLevelEnum
+
+  """
   The altitude in meters of the location
   """
   altitude: Int
@@ -7676,6 +8383,11 @@ input UpdateLocationInput {
   Description and notes about the location
   """
   notes: String
+
+  """
+  New publication state (DRAFT or PUBLISHED).
+  """
+  publicationState: PublicationStateEnum
 
   """
   The slope of the land in degrees of the location
@@ -8029,6 +8741,11 @@ Autogenerated input type of UpdatePlant
 """
 input UpdatePlantInput {
   """
+  New access level (ORGANIZATION or PUBLIC).
+  """
+  accessLevel: AccessLevelEnum
+
+  """
   The translatable altitude note of the plant
   """
   altitudeNote: String
@@ -8183,6 +8900,11 @@ input UpdatePlantInput {
   """
   plantingInstructions: String
   primaryCommonName: String
+
+  """
+  New publication state (DRAFT or PUBLISHED).
+  """
+  publicationState: PublicationStateEnum
   scientificName: String
 
   """
@@ -8418,6 +9140,11 @@ Autogenerated input type of UpdateSpecimen
 """
 input UpdateSpecimenInput {
   """
+  New access level (ORGANIZATION or PUBLIC).
+  """
+  accessLevel: AccessLevelEnum
+
+  """
   A unique identifier for the client performing the mutation.
   """
   clientMutationId: String
@@ -8436,6 +9163,11 @@ input UpdateSpecimenInput {
   The id of the plant to which this specimen is related
   """
   plantId: ID
+
+  """
+  New publication state (DRAFT or PUBLISHED).
+  """
+  publicationState: PublicationStateEnum
 
   """
   Indicates if the user would recommend this to others
@@ -8707,6 +9439,11 @@ Autogenerated input type of UpdateVariety
 """
 input UpdateVarietyInput {
   """
+  New access level (ORGANIZATION or PUBLIC).
+  """
+  accessLevel: AccessLevelEnum
+
+  """
   The translatable altitude note of the variety
   """
   altitudeNote: String
@@ -8858,6 +9595,11 @@ input UpdateVarietyInput {
   The translatable planting instructions of the variety
   """
   plantingInstructions: String
+
+  """
+  New publication state (DRAFT or PUBLISHED).
+  """
+  publicationState: PublicationStateEnum
 
   """
   Postgres range literal, e.g. "[0,10]"
@@ -9051,6 +9793,11 @@ A variety represents a more precisely defined subgroup of plants with a common s
 """
 type Variety implements Node {
   """
+  Whether this variety is visible to the owning organization only or publicly.
+  """
+  accessLevel: AccessLevelEnum
+
+  """
   Translated full text description of the altitude attributes of a variety
   """
   altitudeNote: String
@@ -9111,6 +9858,21 @@ type Variety implements Node {
   canBeUsedForFodder: Boolean
 
   """
+  True when the current user may delete this record.
+  """
+  canDelete: Boolean!
+
+  """
+  True when the current user may update this record.
+  """
+  canEdit: Boolean!
+
+  """
+  True when the current user may restore this soft-deleted record.
+  """
+  canRestore: Boolean!
+
+  """
   A translated description of cooking and nutrition data for a variety
   """
   cookingAndNutrition: String
@@ -9123,12 +9885,22 @@ type Variety implements Node {
   """
   The user ID of a variety's creator
   """
-  createdBy: String
+  createdBy: String @deprecated(reason: "Use createdByPrincipal; email-based ownership is being retired.")
+
+  """
+  The principal that created this variety.
+  """
+  createdByPrincipal: Principal
 
   """
   A translated set of instructions for the cultivation of a variety
   """
   cultivation: String
+
+  """
+  When this variety was soft-deleted, or null if not deleted.
+  """
+  deletedAt: ISO8601DateTime
 
   """
   A translated description of a variety
@@ -9299,7 +10071,12 @@ type Variety implements Node {
   """
   The user ID of a variety's owner
   """
-  ownedBy: String
+  ownedBy: String @deprecated(reason: "Use ownerOrganization; email-based ownership is being retired.")
+
+  """
+  The organization that owns this variety.
+  """
+  ownerOrganization: Organization
 
   """
   A translated description of common pests and diseases of a variety
@@ -9327,6 +10104,11 @@ type Variety implements Node {
   plantingInstructions: String
 
   """
+  Whether this variety is a draft or published.
+  """
+  publicationState: PublicationStateEnum
+
+  """
   Describes a range of the number of days to maturity or havest
   """
   seasonalityDaysRange: String
@@ -9340,6 +10122,11 @@ type Variety implements Node {
   Translated information about the seeding rate for a variety
   """
   seedingRate: String
+
+  """
+  The organization that originally sourced this variety.
+  """
+  sourceOrganization: Organization
 
   """
   Translated full text description of tolerances related to a variety
@@ -9399,7 +10186,7 @@ type Variety implements Node {
   """
   The visibility of the variety. Can be: PUBLIC, PRIVATE, DRAFT, DELETED
   """
-  visibility: Visibility!
+  visibility: Visibility! @deprecated(reason: "Use publicationState/accessLevel/deletedAt.")
 }
 
 """
@@ -9629,6 +10416,11 @@ Notation of unique weather events affecting plants or planting
 """
 type WeatherEvent implements LifeCycleEvent & Node {
   """
+  True when the current user may update this life cycle event.
+  """
+  canEdit: Boolean!
+
+  """
   Describes the quality or condition of weather for plants or planting - good,fair,poor
   """
   condition: Condition
@@ -9699,6 +10491,11 @@ type WeatherEvent implements LifeCycleEvent & Node {
 Actions taken to manage weeds
 """
 type WeedManagementEvent implements LifeCycleEvent & Node {
+  """
+  True when the current user may update this life cycle event.
+  """
+  canEdit: Boolean!
+
   """
   The date and time that the record was created
   """

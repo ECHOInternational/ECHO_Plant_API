@@ -26,11 +26,19 @@ module Mutations
     field :image, Types::ImageType, null: true
     field :errors, [Types::MutationError], null: false
 
-    def authorized?(image:, **_attributes)
+    def authorized?(image:, **attributes)
       authorize image, :update?
+      authorize_visibility_transition(image, attributes[:visibility])
+      true
     end
 
     def resolve(image:, **attributes)
+      if attributes.key?(:visibility)
+        Rails.logger.info(
+          "legacy_contract.visibility_arg mutation=UpdateImage image_id=#{image.id}"
+        )
+      end
+
       language = attributes[:language] || I18n.locale
 
       Mobility.with_locale(language) do

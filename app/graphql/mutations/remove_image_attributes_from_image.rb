@@ -18,7 +18,7 @@ module Mutations
       authorize image, :update?
     end
 
-    def resolve(image:, **attributes) # rubocop:disable Metrics/MethodLength
+    def resolve(image:, **attributes)
       errors = []
       attributes[:image_attribute_ids]&.each do |attribute_id|
         begin

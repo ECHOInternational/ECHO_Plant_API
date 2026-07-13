@@ -16,7 +16,7 @@ module Mutations
     field :errors, [Types::MutationError], null: false
 
     def authorized?(location:, **_attributes)
-      authorize location, :update?
+      authorize location, :soft_delete?
     end
 
     def visible_dependency_errors(location)
@@ -49,7 +49,8 @@ module Mutations
       dependency_errors = visible_dependency_errors(location)
       
       if force == true || dependency_errors.empty?
-        location.update(visibility: :deleted)
+        location.update(visibility: :deleted,
+                        deleted_by_principal_id: context[:current_user]&.principal&.id)
       end
       
       errors = errors_from_active_record(location.errors) + dependency_errors

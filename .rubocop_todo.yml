@@ -62,12 +62,13 @@ Layout/TrailingWhitespace:
     - 'app/graphql/mutations/soft_delete_plant.rb'
     - 'app/graphql/mutations/soft_delete_variety.rb'
 
-# Offense count: 1
+# Offense count: 2
 # Configuration parameters: AllowedMethods.
 # AllowedMethods: enums
 Lint/ConstantDefinitionInBlock:
   Exclude:
     - 'spec/contracts/serialization_contract_spec.rb'
+    - 'spec/services/source_synchronizer_spec.rb'
 
 # Offense count: 2
 Lint/CopDirectiveSyntax:
@@ -98,10 +99,78 @@ Lint/UselessAssignment:
     - 'app/graphql/mutations/soft_delete_plant.rb'
     - 'app/graphql/mutations/soft_delete_variety.rb'
 
-# Offense count: 25
+# Offense count: 26
 # Configuration parameters: CountComments, CountAsOne, AllowedMethods, AllowedPatterns.
 Metrics/MethodLength:
-  Max: 24
+  Max: 29
+  Exclude:
+    - 'app/models/concerns/organized_resource.rb'
+
+# Offense count: 7
+# Configuration parameters: Max, IgnoredMethods.
+Metrics/AbcSize:
+  Exclude:
+    - 'app/graphql/mutations/update_variety.rb'
+    - 'app/graphql/mutations/update_location.rb'
+    - 'app/graphql/mutations/update_category.rb'
+    - 'app/graphql/types/me_type.rb'
+    - 'app/services/ownership_backfill.rb'
+    - 'app/services/source_synchronizer.rb'
+    - 'app/graphql/mutations/resolve_sync_conflict.rb'
+    - 'app/graphql/types/query_type.rb'
+    - 'spec/services/ownership_backfill_spec.rb'
+    - 'app/models/concerns/organized_resource.rb'
+
+# Offense count: 1
+# Configuration parameters: Max.
+Metrics/BlockNesting:
+  Exclude:
+    - 'app/models/concerns/organized_resource.rb'
+
+# Offense count: 5
+# Configuration parameters: Max, IgnoredMethods.
+Metrics/ClassLength:
+  Exclude:
+    - 'app/graphql/types/location_type.rb'
+    - 'app/graphql/types/specimen_type.rb'
+    - 'app/services/ownership_backfill.rb'
+    - 'app/services/source_synchronizer.rb'
+    - 'app/graphql/mutations/resolve_sync_conflict.rb'
+
+# Offense count: 7
+# Configuration parameters: Max, IgnoredMethods.
+Metrics/CyclomaticComplexity:
+  Exclude:
+    - 'app/graphql/mutations/update_plant.rb'
+    - 'app/graphql/mutations/update_variety.rb'
+    - 'app/graphql/mutations/update_location.rb'
+    - 'app/graphql/mutations/update_category.rb'
+    - 'app/services/ownership_backfill.rb'
+    - 'app/services/source_synchronizer.rb'
+    - 'app/graphql/mutations/resolve_sync_conflict.rb'
+    - 'app/graphql/types/query_type.rb'
+    - 'app/models/concerns/organized_resource.rb'
+
+# Offense count: 7
+# Configuration parameters: Max, IgnoredMethods.
+Metrics/PerceivedComplexity:
+  Exclude:
+    - 'app/graphql/mutations/update_plant.rb'
+    - 'app/graphql/mutations/update_variety.rb'
+    - 'app/graphql/mutations/update_location.rb'
+    - 'app/graphql/mutations/update_category.rb'
+    - 'app/services/ownership_backfill.rb'
+    - 'app/services/source_synchronizer.rb'
+    - 'app/graphql/mutations/resolve_sync_conflict.rb'
+    - 'app/graphql/types/query_type.rb'
+    - 'app/models/concerns/organized_resource.rb'
+
+# Offense count: 1
+# Configuration parameters: MinNameLength, AllowNamesEndingInNumbers, AllowedNames, ForbiddenNames.
+# AllowedNames: io, id, to, by, on, in, at, ip, db, os, pp, tv
+Naming/MethodParameterName:
+  Exclude:
+    - 'spec/services/source_synchronizer_spec.rb'
 
 # Offense count: 1
 # Configuration parameters: Mode, AllowedMethods, AllowedPatterns, AllowBangMethods, WaywardPredicates.
@@ -110,6 +179,8 @@ Metrics/MethodLength:
 Naming/PredicateMethod:
   Exclude:
     - 'app/controllers/application_controller.rb'
+    - 'app/graphql/types/concerns/capability_fields.rb'
+    - 'app/graphql/types/life_cycle_event_type.rb'
 
 # Offense count: 2
 # This cop supports unsafe autocorrection (--autocorrect-all).
@@ -152,6 +223,10 @@ Style/IfUnlessModifier:
     - 'app/graphql/mutations/soft_delete_plant.rb'
     - 'app/graphql/mutations/soft_delete_variety.rb'
     - 'app/graphql/mutations/update_plant.rb'
+    - 'app/graphql/mutations/update_variety.rb'
+    - 'app/graphql/mutations/update_specimen.rb'
+    - 'app/graphql/mutations/update_location.rb'
+    - 'app/graphql/mutations/update_category.rb'
     - 'config/puma.rb'
 
 # Offense count: 4

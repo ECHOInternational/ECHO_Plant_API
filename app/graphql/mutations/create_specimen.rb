@@ -15,6 +15,9 @@ module Mutations
     argument :variety_id, ID,
              required: false,
              description: 'The id of the variety to which this specimen is related'
+    argument :organization_id, ID,
+             required: false,
+             description: 'Relay global ID of the organization on whose behalf this specimen is created. Defaults to the personal organization.'
 
     field :specimen, Types::SpecimenType, null: true
     field :errors, [Types::MutationError], null: false
@@ -27,7 +30,12 @@ module Mutations
       errors = []
       begin
         plant = PlantApiSchema.object_from_id(attributes[:plant_id], {})
+        # design.md section 6: referencing a parent requires read access to it.
+        # A record the caller cannot see is reported as not-found (no existence
+        # oracle), matching the missing-record shape.
+        raise ActiveRecord::RecordNotFound unless Pundit.policy(context[:current_user], plant).show?
       rescue ActiveRecord::RecordNotFound
+        plant = nil
         errors << {
           field: 'plantId',
           value: attributes[:plant_id],
@@ -39,7 +47,9 @@ module Mutations
       if attributes[:variety_id]
         begin
           variety = PlantApiSchema.object_from_id(attributes[:variety_id], {})
+          raise ActiveRecord::RecordNotFound unless Pundit.policy(context[:current_user], variety).show?
         rescue ActiveRecord::RecordNotFound
+          variety = nil
           errors << {
             field: 'varietyId',
             value: attributes[:variety_id],
@@ -49,10 +59,23 @@ module Mutations
         end
       end
 
+      return { specimen: nil, errors: errors } if errors.any?
+
+      org_id_arg = attributes.delete(:organization_id)
+      if org_id_arg
+        stamp, err = acting_organization_stamp(org_id_arg)
+        return { specimen: nil, errors: [err] } if err
+
+        org_stamp = stamp
+      else
+        org_stamp = ownership_stamp
+      end
+
       attributes
         .except!(:plant_id, :variety_id)
         .merge!(created_by: context[:current_user].email)
         .merge!(owned_by: context[:current_user].email)
+        .merge!(org_stamp)
 
       specimen = Specimen.new(attributes)
       specimen.plant = plant

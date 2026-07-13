@@ -38,15 +38,29 @@ module Mutations
     argument :notes, String,
              description: 'User supplied notes about the experience with this specimen',
              required: false
+    argument :publication_state, Types::PublicationStateEnum,
+             required: false,
+             description: 'New publication state (DRAFT or PUBLISHED).'
+    argument :access_level, Types::AccessLevelEnum,
+             required: false,
+             description: 'New access level (ORGANIZATION or PUBLIC).'
 
     field :specimen, Types::SpecimenType, null: true
     field :errors, [Types::MutationError], null: false
 
-    def authorized?(specimen:, **_attributes)
+    def authorized?(specimen:, **attributes)
       authorize specimen, :update?
+      authorize_visibility_transition(specimen, attributes[:visibility])
+      true
     end
 
     def resolve(specimen:, **attributes) # rubocop:disable all
+      if attributes.key?(:visibility)
+        Rails.logger.info(
+          "legacy_contract.visibility_arg mutation=UpdateSpecimen specimen_id=#{specimen.id}"
+        )
+      end
+
       errors = []
       if attributes[:plant_id]
         begin
@@ -72,6 +86,12 @@ module Mutations
             message: "Variety #{attributes[:variety_id]} not found."
           }
         end
+      end
+
+      # When transitioning to deleted, stamp deleted_by_principal_id.
+      vis = attributes[:visibility]
+      if vis && vis.to_s.casecmp('deleted').zero? && specimen.visibility.to_s != 'deleted'
+        attributes[:deleted_by_principal_id] = context[:current_user]&.principal&.id
       end
 
       attributes.except!(:plant_id, :variety_id)

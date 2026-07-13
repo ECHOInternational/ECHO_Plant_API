@@ -282,5 +282,20 @@ module Types
     field :set_primary_common_name,
           mutation: Mutations::CommonNames::SetPrimaryCommonName,
           description: 'Makes a common name the primary for its plant and language'
+    field :restore_plant,
+          mutation: Mutations::RestorePlant,
+          description: 'Restores a soft-deleted plant'
+    field :restore_variety,
+          mutation: Mutations::RestoreVariety,
+          description: 'Restores a soft-deleted variety'
+    field :restore_location,
+          mutation: Mutations::RestoreLocation,
+          description: 'Restores a soft-deleted location'
+    field :transfer_record_ownership,
+          mutation: Mutations::TransferRecordOwnership,
+          description: 'Transfers ownership of an independently-owned record to a different organization'
+    field :resolve_sync_conflict,
+          mutation: Mutations::ResolveSyncConflict,
+          description: 'Resolves a sync conflict by keeping local or accepting incoming values'
   end
 end

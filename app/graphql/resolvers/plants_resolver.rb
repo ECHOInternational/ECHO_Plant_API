@@ -54,7 +54,17 @@ module Resolvers
     end
 
     def apply_visibility_with_private(scope)
-      scope.visibility_private
+      # The legacy PRIVATE filter historically meant "my own private records"
+      # (pre-redesign the policy scope was public-or-owned, so private records a
+      # user could see were only their own). The organization scope union would
+      # otherwise inject org-owned private records here, which the frozen mobile
+      # client treats as personal and would sync/edit. Preserve the historical
+      # contract: own-only for non-admins; admins keep the all-private view.
+      user = context[:current_user]
+      scoped = scope.visibility_private
+      return scoped if user.nil? || user.admin?
+
+      scoped.where(owned_by: user.email)
     end
 
     def apply_visibility_with_public(scope)

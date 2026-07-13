@@ -6,10 +6,31 @@ module Types
     # Add root-level fields here.
     # They will be entry points for queries on your schema.
 
-    # Used by Relay to lookup objects by UUID:
-    include GraphQL::Types::Relay::HasNodeField
-    # Fetches a list of objects given a list of IDs
-    include GraphQL::Types::Relay::HasNodesField
+    # Relay node lookups. We do NOT include HasNodeField/HasNodesField: their
+    # default resolver calls object_from_id (a raw find) and would return any
+    # record by global ID, bypassing OwnedResourcePolicy::Scope and leaking
+    # private/cross-org records (and enumerating principal emails / org names).
+    # These custom resolvers authorize every lookup through the same policy
+    # scope the single-object queries use.
+    field :node, GraphQL::Types::Relay::Node, null: true,
+                                              description: 'Fetches an object given its ID.' do
+      argument :id, ID, required: true, description: 'ID of the object.'
+    end
+    def node(id:)
+      authorized_node(id)
+    end
+
+    field :nodes, [GraphQL::Types::Relay::Node, { null: true }], null: false,
+                                                                 description: 'Fetches a list of objects given a list of IDs.' do
+      argument :ids, [ID], required: true, description: 'IDs of the objects.'
+    end
+    def nodes(ids:)
+      ids.map { |id| authorized_node(id) }
+    end
+
+    # Identity query: the currently authenticated user, or null for anonymous.
+    field :me, Types::MeType, null: true,
+                              description: 'The currently authenticated user. Null when the request is anonymous.'
 
     # Collection Queries
     field :categories, resolver: Resolvers::CategoriesResolver, connection: true
@@ -176,7 +197,82 @@ module Types
       GrowthHabit.find(item_id)
     end
 
+    field :sync_conflicts, [Types::SyncConflictType], null: false do
+      description "List sync conflicts. Scoped to the current user's organizations."
+      argument :status, Types::SyncConflictStatusEnum, required: false
+    end
+    def sync_conflicts(status: nil)
+      user = context[:current_user]
+      base = SyncConflict.all
+      base = base.where(status: status.downcase) if status
+
+      if user&.admin?
+        base.includes(:data_source, :syncable)
+      elsif user
+        org_ids = user.readable_organization_ids
+        conflict_ids = []
+        base.includes(:syncable).find_each do |conflict|
+          syncable = conflict.syncable
+          next unless syncable
+          next unless org_ids.include?(syncable.owner_organization_id)
+          next unless user.organization_capability?(syncable.owner_organization_id, :resolve_conflicts)
+
+          conflict_ids << conflict.id
+        end
+        SyncConflict.where(id: conflict_ids).includes(:data_source, :syncable)
+      else
+        SyncConflict.none
+      end
+    end
+
+    def me
+      context[:current_user]
+    end
+
+    # Policy-governed models reachable by global ID. Resolved through their
+    # Pundit scope so node()/nodes() cannot see records the single-object
+    # queries would hide.
+    NODE_POLICY_SCOPED = {
+      'Plant' => Plant, 'Variety' => Variety, 'Specimen' => Specimen,
+      'Location' => Location, 'Category' => Category, 'Image' => Image,
+      'LifeCycleEvent' => LifeCycleEvent
+    }.freeze
+
     private
+
+    # Authorized Relay node lookup shared by node()/nodes(). Identity/provenance
+    # types are never node-addressable (would enumerate emails/org names);
+    # policy-governed types resolve through their scope (missing OR invisible ->
+    # coded 404 via the schema rescue, indistinguishable, no existence oracle);
+    # lookups resolve directly.
+    def authorized_node(id)
+      type_name, item_id = decode_node_id(id)
+      raise not_found_error(id) if PlantApiSchema::NODE_FORBIDDEN_TYPES.include?(type_name)
+
+      klass = NODE_POLICY_SCOPED[type_name]
+      return PlantApiSchema.object_from_id(id, context) if klass.nil?
+
+      Pundit.policy_scope(context[:current_user], klass).find(item_id)
+    rescue ActiveRecord::RecordNotFound
+      # Missing OR invisible -> same coded 404, no existence oracle.
+      raise not_found_error(id)
+    end
+
+    # Decodes a node global id, converting the decoder's version-dependent
+    # error (ArgumentError or a bare GraphQL::ExecutionError with no code) into
+    # our coded 404 contract for a malformed id.
+    def decode_node_id(id)
+      GraphQL::Schema::UniqueWithinType.decode(id)
+    rescue ArgumentError, GraphQL::ExecutionError
+      raise GraphQL::ExecutionError.new(
+        "Not Found: #{id} not found. The provided ID is in an invalid format.",
+        extensions: { 'code' => 404 }
+      )
+    end
+
+    def not_found_error(id)
+      GraphQL::ExecutionError.new("Not Found: #{id} not found.", extensions: { 'code' => 404 })
+    end
 
     # Decodes a Relay global ID, matching the error shape of PlantApiSchema.object_from_id
     # so that malformed IDs on single-object queries yield the same coded 404 as the node()

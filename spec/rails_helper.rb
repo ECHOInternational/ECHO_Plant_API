@@ -49,6 +49,23 @@ RSpec.configure do |config|
   # instead of true.
   config.use_transactional_fixtures = true
 
+  # Deterministic clean start. Examples run in transactions (above), but a few
+  # specs exercise code that commits outside the example transaction (rake-task
+  # invocations, and request specs that resolve a principal/personal-org on the
+  # first authenticated hit). Those can leave a stray row that breaks the
+  # count-sensitive query/pagination/backfill specs on a re-run against a dirty
+  # database. Truncating the affected tables once before the suite makes the run
+  # reproducible from any prior state (CI already starts fresh).
+  config.before(:suite) do
+    [
+      PaperTrail::Version, SyncConflict, DataSource, Image, LifeCycleEvent,
+      CommonName, Specimen, Variety, Location, Category, Plant,
+      Organization, Principal
+    ].each { |model| model.delete_all if model.table_exists? }
+  rescue StandardError => e
+    warn "before(:suite) cleanup skipped: #{e.class}: #{e.message}"
+  end
+
   # You can uncomment this line to turn off ActiveRecord support entirely.
   # config.use_active_record = false
 

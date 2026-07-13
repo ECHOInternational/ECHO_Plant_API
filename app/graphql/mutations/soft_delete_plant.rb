@@ -15,7 +15,7 @@ module Mutations
     field :errors, [Types::MutationError], null: false
 
     def authorized?(plant:, **_attributes)
-      authorize plant, :update?
+      authorize plant, :soft_delete?
     end
 
     def visible_dependency_errors(plant)
@@ -52,7 +52,8 @@ module Mutations
       dependency_errors = visible_dependency_errors(plant)
       
       if force == true || dependency_errors.empty?
-        plant.update(visibility: :deleted)
+        plant.update(visibility: :deleted,
+                     deleted_by_principal_id: context[:current_user]&.principal&.id)
       end
       
       errors = errors_from_active_record(plant.errors) + dependency_errors

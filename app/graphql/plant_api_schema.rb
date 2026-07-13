@@ -48,7 +48,18 @@ class PlantApiSchema < GraphQL::Schema
     GraphQL::Schema::UniqueWithinType.encode(type_name, object.id)
   end
 
-  # Given a string UUID, find the object
+  # Identity/provenance models must never be addressable by a top-level Relay
+  # node(id:) probe: they are exposed only as nested fields of an already-
+  # authorized parent (ownerOrganization, createdByPrincipal) or through their
+  # own scoped query (syncConflicts). Enforced in QueryType's node/nodes
+  # resolvers, which also apply Pundit show? to policy-governed records.
+  NODE_FORBIDDEN_TYPES = %w[Principal Organization DataSource SyncConflict].freeze
+
+  # Given a string UUID, find the object. NOTE: this is a raw lookup with no
+  # authorization -- callers are responsible for authorizing the result.
+  # Mutation `loads:` arguments and manual loads authorize via the mutation's
+  # own `authorized?`/`authorize` calls; the Relay node/nodes fields authorize
+  # in QueryType (they must not leak records the caller cannot see).
   def self.object_from_id(id, _query_ctx)
     begin
       type_name, item_id = GraphQL::Schema::UniqueWithinType.decode(id)
@@ -79,6 +90,10 @@ class PlantApiSchema < GraphQL::Schema
       Types::CategoryType
     when Image
       Types::ImageType
+    when Organization
+      Types::OrganizationType
+    when Principal
+      Types::PrincipalType
     when ImageAttribute
       Types::ImageAttributeType
     when Antinutrient

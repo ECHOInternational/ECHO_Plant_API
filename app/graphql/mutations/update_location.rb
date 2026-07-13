@@ -41,15 +41,35 @@ module Mutations
     argument :notes, String,
              description: 'Description and notes about the location',
              required: false
+    argument :publication_state, Types::PublicationStateEnum,
+             required: false,
+             description: 'New publication state (DRAFT or PUBLISHED).'
+    argument :access_level, Types::AccessLevelEnum,
+             required: false,
+             description: 'New access level (ORGANIZATION or PUBLIC).'
 
     field :location, Types::LocationType, null: true
     field :errors, [Types::MutationError], null: false
 
-    def authorized?(location:, **_attributes)
+    def authorized?(location:, **attributes)
       authorize location, :update?
+      authorize_visibility_transition(location, attributes[:visibility])
+      true
     end
 
     def resolve(location:, **attributes)
+      if attributes.key?(:visibility)
+        Rails.logger.info(
+          "legacy_contract.visibility_arg mutation=UpdateLocation location_id=#{location.id}"
+        )
+      end
+
+      # When transitioning to deleted, stamp deleted_by_principal_id.
+      vis = attributes[:visibility]
+      if vis && vis.to_s.casecmp('deleted').zero? && location.visibility.to_s != 'deleted'
+        attributes[:deleted_by_principal_id] = context[:current_user]&.principal&.id
+      end
+
       coord_errors = apply_coordinates(location, attributes)
       return { location: location, errors: coord_errors } if coord_errors
 

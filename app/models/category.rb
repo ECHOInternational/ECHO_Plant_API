@@ -2,6 +2,8 @@
 
 # Categories are groupings of plant objects
 class Category < ApplicationRecord
+  include OrganizedResource
+
   extend Mobility
   translates :name, :description
   validates :name, :owned_by, :created_by, :visibility, presence: true
