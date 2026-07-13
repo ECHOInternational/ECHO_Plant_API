@@ -64,13 +64,22 @@ class ApplicationController < ActionController::API
   def resolve_actor(user, issuer)
     return unless user&.id
 
-    principal = Principal.resolve!(
-      issuer: issuer,
-      external_uid: user.id,
-      email: user.email
-    )
+    principal = Principal.resolve!(issuer: issuer, external_uid: user.id, email: user.email)
     user.principal = principal
     user.personal_organization = Organization.personal_for!(principal)
+    mirror_claimed_organizations(user)
+  rescue ActiveRecord::ActiveRecordError, Organization::MirrorConflictError => e
+    # Identity resolution performs DB writes on the hot path (upserting the
+    # principal, personal org, and mirrored org rows). A write failure must
+    # never turn an otherwise-valid request into a 500: degrade to legacy
+    # email-based authorization (principal/personal_organization stay nil,
+    # which every policy branch still supports) and let the request proceed.
+    Rails.logger.warn("resolve_actor failed, degrading to legacy authz: #{e.class}: #{e.message}")
+    user.principal = nil
+    user.personal_organization = nil
+  end
+
+  def mirror_claimed_organizations(user)
     user.organization_claims.each do |claim|
       Organization.mirror_real!(external_id: claim['id'], name: claim['name'])
     end

@@ -30,7 +30,12 @@ module Mutations
       errors = []
       begin
         plant = PlantApiSchema.object_from_id(attributes[:plant_id], {})
+        # design.md section 6: referencing a parent requires read access to it.
+        # A record the caller cannot see is reported as not-found (no existence
+        # oracle), matching the missing-record shape.
+        raise ActiveRecord::RecordNotFound unless Pundit.policy(context[:current_user], plant).show?
       rescue ActiveRecord::RecordNotFound
+        plant = nil
         errors << {
           field: 'plantId',
           value: attributes[:plant_id],
@@ -42,7 +47,9 @@ module Mutations
       if attributes[:variety_id]
         begin
           variety = PlantApiSchema.object_from_id(attributes[:variety_id], {})
+          raise ActiveRecord::RecordNotFound unless Pundit.policy(context[:current_user], variety).show?
         rescue ActiveRecord::RecordNotFound
+          variety = nil
           errors << {
             field: 'varietyId',
             value: attributes[:variety_id],
@@ -51,6 +58,8 @@ module Mutations
           }
         end
       end
+
+      return { specimen: nil, errors: errors } if errors.any?
 
       org_id_arg = attributes.delete(:organization_id)
       if org_id_arg

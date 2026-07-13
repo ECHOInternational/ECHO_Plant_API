@@ -29,7 +29,11 @@ module Mutations
     field :variety, Types::VarietyType, null: true
     field :errors, [Types::MutationError], null: false
 
-    def authorized?(**_attributes)
+    def authorized?(plant:, **_attributes)
+      # Creating a child requires read access to the referenced parent
+      # (design.md section 6): you may build on another organization's
+      # public/readable plant, but not reference one you cannot see.
+      authorize plant, :show?
       authorize Variety, :create?
     end
 

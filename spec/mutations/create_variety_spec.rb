@@ -85,10 +85,27 @@ RSpec.describe 'Create Variety Mutation', type: :graphql_mutation do
     end
   end
 
+  context 'when the referenced parent plant is not visible to the user' do
+    # design.md section 6: a child may reference a public/readable parent, but
+    # not one the caller cannot see. The private plant below is owned by someone
+    # else, so a writer without read access is denied (403), and cannot use the
+    # mutation as an existence oracle for hidden plants.
+    let(:current_user) { build(:user, :readwrite) }
+    it 'is forbidden' do
+      hidden_plant = create(:plant, :private, owned_by: 'someone_else@example.org')
+      hidden_id = PlantApiSchema.id_from_object(hidden_plant, Plant, {})
+      result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
+                                        input: { plantId: hidden_id, name: 'sneaky', language: 'en' }
+                                      })
+      expect(result['data']).to be_nil
+      expect(result['errors'][0]['extensions']['code']).to eq 403
+    end
+  end
+
   context 'when user is authenticated' do
     let(:current_user) { build(:user, :readwrite) }
     before :each do
-      @plant = create(:plant)
+      @plant = create(:plant, :public)
       @plant_id = PlantApiSchema.id_from_object(@plant, Plant, {})
       @result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
                                          input: {
@@ -136,7 +153,7 @@ RSpec.describe 'Create Variety Mutation', type: :graphql_mutation do
   end
   describe 'parameters' do
     let(:current_user) { build(:user, :readwrite) }
-    let(:plant) { create(:plant) }
+    let(:plant) { create(:plant, :public) }
     describe 'language' do
       it 'sets the language' do
         plant_id = PlantApiSchema.id_from_object(plant, Plant, {})

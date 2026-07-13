@@ -154,7 +154,7 @@ RSpec.describe 'Protected ownership fields', type: :graphql_mutation do
   # CreateSpecimen
   # -------------------------------------------------------------------------
   describe 'createSpecimen' do
-    let(:plant) { create(:plant) }
+    let(:plant) { create(:plant, :public) }
     let(:plant_gid) { PlantApiSchema.id_from_object(plant, Plant, {}) }
 
     let(:query_string) do
