@@ -225,3 +225,9 @@ variable "alb_zone_id" {
   type        = string
   default     = ""
 }
+
+variable "org_authz_cutover" {
+  description = "Rollout stage S6 divergence logging. Set to \"log_only\" to emit authz.legacy_divergence events (observation only, no enforcement change). Empty (default) leaves the flag unset/off."
+  type        = string
+  default     = ""
+}
