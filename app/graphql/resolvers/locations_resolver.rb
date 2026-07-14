@@ -31,11 +31,24 @@ module Resolvers
            type: String,
            with: :apply_owned_by_filter,
            description: 'Returns only records owned by the specified user'
+    option :owned_by_organization_id,
+           type: GraphQL::Types::ID,
+           with: :apply_owned_by_organization_id_filter,
+           description: 'Returns only records owned by the specified organization (Relay global ID).'
 
     def apply_owned_by_filter(scope, value)
       return scope if value.blank?
 
       scope.where(owned_by: value)
+    end
+
+    def apply_owned_by_organization_id_filter(scope, value)
+      return scope if value.blank?
+
+      uuid = decode_organization_id(value)
+      return scope.none if uuid.nil?
+
+      scope.where(owner_organization_id: uuid)
     end
 
     def apply_visibility_with_private(scope)

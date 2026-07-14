@@ -197,6 +197,23 @@ module Types
       GrowthHabit.find(item_id)
     end
 
+    field :organization, Types::OrganizationType, null: true do
+      description 'Look up an organization by ID. Requires authentication.'
+      argument :id,
+               type: ID,
+               required: true
+    end
+    def organization(id:)
+      # Authenticated-only: a nil current_user raises NotAuthorizedError, which
+      # the schema rescue maps to a 401 (403 for an authenticated-but-forbidden
+      # user, which cannot happen here). Any authenticated user may resolve an
+      # org by id -- names/kinds are not sensitive; membership lives on `me`.
+      raise Pundit::NotAuthorizedError, 'authentication required' unless context[:current_user]
+
+      item_id = decode_global_id(id)
+      Organization.find(item_id)
+    end
+
     field :sync_conflicts, [Types::SyncConflictType], null: false do
       description "List sync conflicts. Scoped to the current user's organizations."
       argument :status, Types::SyncConflictStatusEnum, required: false
