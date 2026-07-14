@@ -5,8 +5,18 @@
 aws_region     = "us-east-1"
 aws_account_id = "382724554857"
 
-# Image: updated by CI/CD pipeline on each deploy.
-image = "382724554857.dkr.ecr.us-east-1.amazonaws.com/plant-api:d9115dc0d3bb"
+# Image: the live service image is managed by the CI deploy script
+# (.github/scripts/deploy-ecs.sh registers ECS task-def revisions directly and
+# does NOT write back here), so this pin is only the value Terraform bakes into
+# the revisions it registers. It is kept in sync with the live image so that a
+# Terraform-registered revision is never a rollback hazard. Live prod as of
+# 2026-07-14 = e4997021317e (plant-api-production-web:10).
+image = "382724554857.dkr.ecr.us-east-1.amazonaws.com/plant-api:e4997021317e"
+
+# Rollout stage S6 — divergence-logging toggle. "log_only" injects
+# ORG_AUTHZ_CUTOVER=log_only so OwnedResourcePolicy emits authz.legacy_divergence
+# events (observation only; enforcement is unchanged). Set back to "" for S7.
+org_authz_cutover = "log_only"
 
 # ECS sizing (production: 2 tasks minimum)
 cpu           = 1024
