@@ -99,7 +99,10 @@ class ApplicationController < ActionController::API
     sandbox_trust_level = (ENV['SANDBOX_TRUST_LEVEL'] || '2').to_i
     @current_user = User.new(
       { 'uid' => 'sandbox', 'email' => 'sandbox@sandbox.com',
-        'trust_levels' => { 'plant' => sandbox_trust_level } }
+        'trust_levels' => { 'plant' => sandbox_trust_level },
+        # Optional local org memberships (see SandboxOrganizations). The mirror
+        # upsert in resolve_actor creates the rows, so no seeding is needed.
+        'organizations' => SandboxOrganizations.claims }
     )
     resolve_actor(@current_user, 'sandbox')
     true
