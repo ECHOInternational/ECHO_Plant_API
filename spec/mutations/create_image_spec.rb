@@ -39,9 +39,9 @@ RSpec.describe 'Create Image Mutation', type: :graphql_mutation do
 
   context 'when user is not authenticated' do
     let(:current_user) { nil }
-    let(:imageable) { create(:category) }
+    let(:imageable) { create(:plant) }
     it 'returns an error when called' do
-      imageable_id = PlantApiSchema.id_from_object(imageable, Category, {})
+      imageable_id = PlantApiSchema.id_from_object(imageable, Plant, {})
 
       result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
                                         input: {
@@ -63,9 +63,9 @@ RSpec.describe 'Create Image Mutation', type: :graphql_mutation do
 
   context 'when user is read only' do
     let(:current_user) { build(:user, :readonly) }
-    let(:imageable) { create(:category) }
+    let(:imageable) { create(:plant) }
     it 'returns an error when called' do
-      imageable_id = PlantApiSchema.id_from_object(imageable, Category, {})
+      imageable_id = PlantApiSchema.id_from_object(imageable, Plant, {})
       result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
                                         input: {
                                           imageId: 'da5818be-da49-428f-87e6-e944dbb502f9',
@@ -86,9 +86,9 @@ RSpec.describe 'Create Image Mutation', type: :graphql_mutation do
 
   context 'when user is authenticated' do
     let(:current_user) { build(:user, :readwrite) }
-    let(:imageable) { create(:category, owned_by: current_user.email) }
+    let(:imageable) { create(:plant, owned_by: current_user.email) }
     before :each do
-      imageable_id = PlantApiSchema.id_from_object(imageable, Category, {})
+      imageable_id = PlantApiSchema.id_from_object(imageable, Plant, {})
       @result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
                                          input: {
                                            imageId: 'da5818be-da49-428f-87e6-e944dbb502f9',
@@ -127,11 +127,11 @@ RSpec.describe 'Create Image Mutation', type: :graphql_mutation do
   end
   describe 'parameters' do
     let(:current_user) { build(:user, :readwrite) }
-    let(:imageable) { create(:category, owned_by: current_user.email) }
+    let(:imageable) { create(:plant, owned_by: current_user.email) }
 
     describe 'image_attributes' do
       it 'adds an array of provided attributes' do
-        imageable_id = PlantApiSchema.id_from_object(imageable, Category, {})
+        imageable_id = PlantApiSchema.id_from_object(imageable, Plant, {})
         attr_a = create(:image_attribute)
         attr_b = create(:image_attribute)
         attr_a_id = PlantApiSchema.id_from_object(attr_a, ImageAttribute, {})
@@ -156,7 +156,7 @@ RSpec.describe 'Create Image Mutation', type: :graphql_mutation do
         expect(created_image.image_attributes).to include attr_b
       end
       it "succeeds with included errors when the provided attribute doesn't exist" do
-        imageable_id = PlantApiSchema.id_from_object(imageable, Category, {})
+        imageable_id = PlantApiSchema.id_from_object(imageable, Plant, {})
         attr_a = create(:image_attribute)
         attr_a_id = PlantApiSchema.id_from_object(attr_a, ImageAttribute, {})
         attr_b_id = "#{attr_a_id[0...-4]}fake"
@@ -190,7 +190,7 @@ RSpec.describe 'Create Image Mutation', type: :graphql_mutation do
 
     describe 'language' do
       it 'sets the language' do
-        imageable_id = PlantApiSchema.id_from_object(imageable, Category, {})
+        imageable_id = PlantApiSchema.id_from_object(imageable, Plant, {})
         es_result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
                                              input: {
                                                imageId: 'da5818be-da49-428f-87e6-e944dbb502f9',
@@ -211,7 +211,7 @@ RSpec.describe 'Create Image Mutation', type: :graphql_mutation do
     end
     describe 'visibility' do
       it 'sets the visibility' do
-        imageable_id = PlantApiSchema.id_from_object(imageable, Category, {})
+        imageable_id = PlantApiSchema.id_from_object(imageable, Plant, {})
         result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
                                           input: {
                                             name: 'a public record',
@@ -231,7 +231,7 @@ RSpec.describe 'Create Image Mutation', type: :graphql_mutation do
       end
 
       it 'exposes visibility as PRIVATE by default' do
-        imageable_id = PlantApiSchema.id_from_object(imageable, Category, {})
+        imageable_id = PlantApiSchema.id_from_object(imageable, Plant, {})
         result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
                                           input: {
                                             name: 'a private record',

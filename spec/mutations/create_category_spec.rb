@@ -73,8 +73,31 @@ RSpec.describe 'Create Category Mutation', type: :graphql_mutation do
     end
   end
 
-  context 'when user is authenticated' do
+  # Categories are a curated taxonomy: ordinary writers may categorize their own
+  # records but may not add to the taxonomy itself (see CategoryPolicy).
+  context 'when user has ordinary write access' do
     let(:current_user) { build(:user, :readwrite) }
+    it 'returns a forbidden error' do
+      result = PlantApiSchema.execute(
+        query_string,
+        context: { current_user: current_user },
+        variables: {
+          input: {
+            name: 'newly created record',
+            description: 'with an attached description',
+            language: 'en'
+          }
+        }
+      )
+      expect(result['data']).to be_nil
+      expect(result['errors']).to_not be_nil
+      expect(result['errors'].count).to eq 1
+      expect(result['errors'][0]['extensions']['code']).to eq 403
+    end
+  end
+
+  context 'when user is a superadmin' do
+    let(:current_user) { build(:user, :superadmin) }
     before :each do
       @result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
                                          input: {
@@ -109,7 +132,7 @@ RSpec.describe 'Create Category Mutation', type: :graphql_mutation do
     end
   end
   describe 'parameters' do
-    let(:current_user) { build(:user, :readwrite) }
+    let(:current_user) { build(:user, :superadmin) }
     describe 'language' do
       it 'sets the language' do
         es_result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
