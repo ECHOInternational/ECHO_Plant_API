@@ -371,9 +371,9 @@ RSpec.describe ImagePolicy, type: :policy do
 
   context 'when the user owns the associated record' do
     let(:user) { build(:user, :readwrite) }
-    let(:category) { create(:category, owned_by: user.email) }
+    let(:parent_record) { create(:plant, owned_by: user.email) }
     context 'when the user does not own the image' do
-      let(:target) { build(:image, :private, owned_by: 'someone else', imageable: category) }
+      let(:target) { build(:image, :private, owned_by: 'someone else', imageable: parent_record) }
       it { is_expected.to permit_action(:show) }
       it { is_expected.to permit_action(:update) }
       it { is_expected.to permit_action(:destroy) }

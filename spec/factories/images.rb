@@ -10,7 +10,12 @@ FactoryBot.define do
     attribution { Faker::Lorem.paragraph }
     s3_bucket { 'images-us-east-1.echocommunity.org' }
     sequence('s3_key') { |n| "image#{n}.jpg" }
-    imageable { create(:category) }
+    # A plant is the representative parent: an ordinary owned record whose
+    # :update? follows the normal ownership rules. Do NOT use a category here --
+    # CategoryPolicy restricts every write to superusers, and ImagePolicy
+    # delegates to the imageable's :update?, so a category parent would silently
+    # make these specs assert category gating rather than image inheritance.
+    imageable { create(:plant) }
     trait :public do
       visibility { :public }
     end

@@ -71,7 +71,7 @@ RSpec.describe 'Mutation Error' do
     context 'when a record fails persistence' do
       let(:current_user) { build(:user) }
       let(:existing_record) { create(:image, owned_by: current_user.email) }
-      let(:imageable) { create(:category, owned_by: current_user.email) }
+      let(:imageable) { create(:plant, owned_by: current_user.email) }
       let(:query_string) {
         <<-GRAPHQL
         mutation($input: CreateImageInput!){
@@ -97,7 +97,7 @@ RSpec.describe 'Mutation Error' do
       }
       before :each do
         image_id = existing_record.id
-        imageable_id = PlantApiSchema.id_from_object(imageable, Category, {})
+        imageable_id = PlantApiSchema.id_from_object(imageable, Plant, {})
         @result = PlantApiSchema.execute(query_string, context: { current_user: current_user }, variables: {
                                            input: {
                                              imageId: image_id,
@@ -134,7 +134,7 @@ RSpec.describe 'Mutation Error' do
     context 'when there are multiple errors' do
       let(:current_user) { build(:user) }
       let(:existing_record) { create(:image, owned_by: current_user.email) }
-      let(:imageable) { create(:category, owned_by: current_user.email) }
+      let(:imageable) { create(:plant, owned_by: current_user.email) }
       let(:query_string) {
         <<-GRAPHQL
         mutation($input: CreateImageInput!){
@@ -160,7 +160,7 @@ RSpec.describe 'Mutation Error' do
       }
       before :each do
         image_id = existing_record.id
-        imageable_id = PlantApiSchema.id_from_object(imageable, Category, {})
+        imageable_id = PlantApiSchema.id_from_object(imageable, Plant, {})
         attr_a = create(:image_attribute)
         attr_a_id = PlantApiSchema.id_from_object(attr_a, ImageAttribute, {})
         @attr_b_id = "#{attr_a_id[0...-4]}fake"

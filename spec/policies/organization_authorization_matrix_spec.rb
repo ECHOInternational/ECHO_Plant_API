@@ -464,6 +464,87 @@ RSpec.describe LocationPolicy, type: :policy do
   include_examples 'organization authorization matrix', :location, LocationPolicy
 end
 
+# Categories are deliberately OUTSIDE the organization capability model. They
+# are a curated taxonomy that the mobile app's top-down navigation depends on,
+# so every write requires a system superuser and NO org role -- not even
+# org_admin in the owning organization -- confers write access. The shared
+# matrix above is therefore intentionally not applied here; these examples pin
+# that exclusion so the matrix cannot be silently reinstated for categories.
 RSpec.describe CategoryPolicy, type: :policy do
-  include_examples 'organization authorization matrix', :category, CategoryPolicy
+  let(:org) { create(:organization, :real) }
+
+  let(:record) do
+    create(:category, :private,
+           owned_by: 'legacy-owner@example.org',
+           owner_organization_id: org.id,
+           source_organization_id: org.id)
+  end
+
+  def actor_with_role(org, role, trust: 2)
+    principal    = create(:principal)
+    personal_org = Organization.personal_for!(principal)
+    User.new(
+      'uid' => principal.external_uid,
+      'email' => principal.email,
+      'trust_levels' => { 'plant' => trust },
+      'organizations' => [{ 'id' => org.id, 'name' => org.name, 'roles' => { 'plant' => role } }]
+    ).tap do |u|
+      u.principal = principal
+      u.personal_organization = personal_org
+    end
+  end
+
+  %w[member contributor editor steward org_admin].each do |role|
+    context "when the actor is #{role} in the owning organization" do
+      subject(:policy) { described_class.new(actor_with_role(org, role), record) }
+
+      it 'can still show? the record (reads follow the org model)' do
+        expect(policy.show?).to be true
+      end
+
+      it 'cannot create?' do
+        expect(policy.create?).to be false
+      end
+
+      it 'cannot update?' do
+        expect(policy.update?).to be false
+      end
+
+      it 'cannot soft_delete?' do
+        expect(policy.soft_delete?).to be false
+      end
+
+      it 'cannot restore?' do
+        expect(policy.restore?).to be false
+      end
+
+      it 'cannot destroy?' do
+        expect(policy.destroy?).to be false
+      end
+    end
+  end
+
+  context 'when the actor is a system superuser' do
+    subject(:policy) { described_class.new(actor_with_role(org, 'member', trust: 10), record) }
+
+    it 'can create?' do
+      expect(policy.create?).to be true
+    end
+
+    it 'can update?' do
+      expect(policy.update?).to be true
+    end
+
+    it 'can soft_delete?' do
+      expect(policy.soft_delete?).to be true
+    end
+
+    it 'can restore?' do
+      expect(policy.restore?).to be true
+    end
+
+    it 'can destroy?' do
+      expect(policy.destroy?).to be true
+    end
+  end
 end
