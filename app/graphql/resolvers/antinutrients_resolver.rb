@@ -10,7 +10,10 @@ module Resolvers
     type Types::AntinutrientType::AntinutrientConnectionWithTotalCountType, null: false
     description 'Returns a list of Antinutrients'
 
-    scope { Antinutrient.all.i18n.order(name: :asc) }
+    # id breaks ties so the offset-paginated connection cannot skip or repeat a
+    # row between pages (see PlantsResolver). Chained, not a second key in the
+    # same hash: .i18n rewrites the translated key and drops the rest.
+    scope { Antinutrient.all.i18n.order(name: :asc).order(id: :asc) }
 
     option :language,
            type: String,

@@ -97,11 +97,17 @@ module Resolvers
     end
 
     def apply_sort_direction_with_asc(scope)
-      scope.order(scientific_name: :asc)
+      # The id tiebreaker is not cosmetic. The Relay connection paginates by
+      # OFFSET, so page 2 is a second query with OFFSET 25 rather than a
+      # continuation of the first. Postgres gives no stable order for rows that
+      # tie on the sort key, so without a deterministic final term two equal
+      # rows can swap between those queries and a record is skipped or repeated
+      # across a page boundary. Production has 13 duplicated scientific names.
+      scope.order(scientific_name: :asc, id: :asc)
     end
 
     def apply_sort_direction_with_desc(scope)
-      scope.order(scientific_name: :desc)
+      scope.order(scientific_name: :desc, id: :desc)
     end
 
     def apply_name_filter(scope, value)
