@@ -34,7 +34,7 @@ end
 # ---------------------------------------------------------------------------
 # Shared examples: parameterised per independently-owned model
 # ---------------------------------------------------------------------------
-RSpec.shared_examples 'organization authorization matrix' do |factory_name, policy_class|
+RSpec.shared_examples 'organization authorization matrix' do |factory_name, policy_class, org_can_destroy: false|
   let(:org) { create(:organization, :real) }
   let(:org_b) { create(:organization, :real) }
 
@@ -202,8 +202,16 @@ RSpec.shared_examples 'organization authorization matrix' do |factory_name, poli
       expect(policy.restore?).to be true
     end
 
-    it 'cannot destroy? (hard delete stays superuser/legacy-owner only)' do
-      expect(policy.destroy?).to be false
+    # Same rule as org_admin below: destroy? has no capability of its own, so a
+    # role that can soft-delete can hard-delete only where no soft delete exists.
+    if org_can_destroy
+      it 'can destroy? (no soft delete exists for this type)' do
+        expect(policy.destroy?).to be true
+      end
+    else
+      it 'cannot destroy? (hard delete stays superuser/legacy-owner only)' do
+        expect(policy.destroy?).to be false
+      end
     end
   end
 
@@ -225,8 +233,18 @@ RSpec.shared_examples 'organization authorization matrix' do |factory_name, poli
       expect(policy.restore?).to be true
     end
 
-    it 'cannot destroy? (no hard-delete hook for org_admin yet)' do
-      expect(policy.destroy?).to be false
+    # Hard delete has no organization capability of its own: it is superuser-only
+    # by decision, because the types that need a reversible removal have soft
+    # delete. Specimens are the exception -- they have no soft delete at all, so
+    # SpecimenPolicy maps destroy? onto :soft_delete (see SpecimenPolicy).
+    if org_can_destroy
+      it 'can destroy? (no soft delete exists for this type)' do
+        expect(policy.destroy?).to be true
+      end
+    else
+      it 'cannot destroy? (hard delete is superuser-only for this type)' do
+        expect(policy.destroy?).to be false
+      end
     end
   end
 
@@ -457,7 +475,8 @@ RSpec.describe VarietyPolicy, type: :policy do
 end
 
 RSpec.describe SpecimenPolicy, type: :policy do
-  include_examples 'organization authorization matrix', :specimen, SpecimenPolicy
+  # org_can_destroy: a specimen has no soft delete, so removing one *is* destroy?.
+  include_examples 'organization authorization matrix', :specimen, SpecimenPolicy, org_can_destroy: true
 end
 
 RSpec.describe LocationPolicy, type: :policy do
