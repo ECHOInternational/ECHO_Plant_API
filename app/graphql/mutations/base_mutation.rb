@@ -15,19 +15,44 @@ module Mutations
 
     # Server-assigned ownership/provenance fields for newly created
     # independently-owned records (design.md sections 1 and 4). Never
-    # client-suppliable. Empty when the request has no resolved principal
-    # (schema-level specs, pre-rollout tokens), leaving legacy behavior
-    # untouched. A native record's source organization equals its owner.
+    # client-suppliable. A native record's source organization equals its owner.
+    #
+    # Returns [stamp, error] like acting_organization_stamp, and FAILS CLOSED
+    # when the request has no resolved principal:
+    #
+    #   stamp, err = ownership_stamp
+    #   return { resource: nil, errors: [err] } if err
+    #
+    # It used to return {} in that case, which inserted a row with NULL
+    # ownership columns. resolve_actor deliberately degrades to legacy authz on
+    # a database error rather than 500ing, so a transient blip during a create
+    # produced an unattributable record that nothing would ever repair -- and
+    # S7 puts NOT NULL on exactly those three columns, which would turn the
+    # same request into a raw insert failure. Refusing the write with a
+    # retryable payload error is better than either.
+    def unattributable_error
+      {
+        # MutationError.field is non-null, and this error belongs to no input
+        # field -- the request itself could not be attributed. 'base' is the
+        # Rails convention for a record-level rather than attribute-level error.
+        field: 'base',
+        message: 'Could not resolve the acting identity for this request. Please retry.',
+        code: 503
+      }
+    end
+
     def ownership_stamp
       user = context[:current_user]
-      return {} unless user&.principal
+      return [nil, unattributable_error] unless user&.principal
 
       org_id = user.personal_organization&.id
-      {
+      return [nil, unattributable_error] if org_id.nil?
+
+      [{
         created_by_principal_id: user.principal.id,
         owner_organization_id: org_id,
         source_organization_id: org_id
-      }
+      }, nil]
     end
 
     # Acting-organization stamp: like ownership_stamp but uses the specified
@@ -40,13 +65,9 @@ module Mutations
     #   return { resource: nil, errors: [err] } if err
     def acting_organization_stamp(organization_id)
       user = context[:current_user]
-      unless user&.principal
-        return [{
-          created_by_principal_id: nil,
-          owner_organization_id: nil,
-          source_organization_id: nil
-        }, nil]
-      end
+      # Same reasoning as ownership_stamp: an unattributable create is refused
+      # rather than written with NULL ownership.
+      return [nil, unattributable_error] unless user&.principal
 
       begin
         _type_name, raw_id = GraphQL::Schema::UniqueWithinType.decode(organization_id)
