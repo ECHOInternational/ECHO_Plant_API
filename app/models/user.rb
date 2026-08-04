@@ -98,11 +98,14 @@ class User
   end
 
   # Non-public read test for a single loaded record, mirroring the
-  # authenticated branch of OwnedResourcePolicy::Scope (legacy email ownership
-  # union organization membership). Used by loaded-association filters.
+  # authenticated branch of OwnedResourcePolicy::Scope. Used by loaded-
+  # association filters.
+  #
+  # Organization membership only: the email comparison this used to start with
+  # was the legacy grant S7 removed. owned_by is still written and returned for
+  # the mobile contract, but it confers nothing.
   def reads_owned_record?(record)
-    record.owned_by == email ||
-      readable_organization_ids.include?(record.owner_organization_id)
+    readable_organization_ids.include?(record.owner_organization_id)
   end
 
   # Stable-creator check backing the contributor "update records they

@@ -31,12 +31,6 @@ module Mutations
     end
 
     def resolve(plant:, **attributes) # rubocop:disable Metrics/AbcSize
-      if attributes.key?(:visibility)
-        Rails.logger.info(
-          "legacy_contract.visibility_arg mutation=UpdatePlant plant_id=#{plant.id}"
-        )
-      end
-
       range_errors = validate_range_literals(attributes)
       return { plant: plant, errors: range_errors } if range_errors.any?
 

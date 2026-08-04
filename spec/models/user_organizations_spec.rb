@@ -229,10 +229,14 @@ RSpec.describe User, type: :model do
   describe '#reads_owned_record?' do
     let(:principal) { create(:principal) }
 
-    it "returns true when the record is owned by the user's email (legacy)" do
+    # S7 removed the email grant. owned_by is still written and returned for
+    # the mobile contract, but on its own it confers no read at all -- what
+    # makes the owner's own records readable is the personal organization the
+    # backfill placed them in, covered by the organization case below.
+    it "returns false for a record carrying only the user's email" do
       user   = build_user_with_claims(trust_level: 2, principal: principal)
-      record = build(:plant, :private, owned_by: user.email)
-      expect(user.reads_owned_record?(record)).to be true
+      record = build(:plant, :private, :unowned, owned_by: user.email)
+      expect(user.reads_owned_record?(record)).to be false
     end
 
     it "returns true when the record's owner_organization_id is in readable_organization_ids" do

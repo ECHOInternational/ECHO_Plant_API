@@ -58,12 +58,6 @@ module Mutations
     end
 
     def resolve(location:, **attributes)
-      if attributes.key?(:visibility)
-        Rails.logger.info(
-          "legacy_contract.visibility_arg mutation=UpdateLocation location_id=#{location.id}"
-        )
-      end
-
       # When transitioning to deleted, stamp deleted_by_principal_id.
       vis = attributes[:visibility]
       if vis && vis.to_s.casecmp('deleted').zero? && location.visibility.to_s != 'deleted'

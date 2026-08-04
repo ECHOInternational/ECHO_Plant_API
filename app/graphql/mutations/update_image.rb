@@ -33,12 +33,6 @@ module Mutations
     end
 
     def resolve(image:, **attributes)
-      if attributes.key?(:visibility)
-        Rails.logger.info(
-          "legacy_contract.visibility_arg mutation=UpdateImage image_id=#{image.id}"
-        )
-      end
-
       language = attributes[:language] || I18n.locale
 
       Mobility.with_locale(language) do

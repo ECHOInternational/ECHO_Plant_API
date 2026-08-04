@@ -9,7 +9,7 @@
 # transition window.
 class ImagePolicy < OwnedResourcePolicy
   def show?
-    return true if user && imageable_manageable?
+    return true if user && imageable_readable?
 
     super
   end
@@ -44,22 +44,19 @@ class ImagePolicy < OwnedResourcePolicy
     }.freeze
 
     def resolve
-      if user&.admin?
-        scope.all
-      elsif user
-        org_ids = user.readable_organization_ids
-        return legacy_scope if org_ids.empty?
+      return public_scope unless user
+      return scope.all if user.super_admin?
 
-        legacy_scope.or(scope.where(org_imageable_condition, org_ids: org_ids))
-      else
-        scope.where(visibility: :public)
-      end
+      org_ids = user.readable_organization_ids
+      return public_scope if org_ids.empty?
+
+      public_scope.or(scope.where(org_imageable_condition, org_ids: org_ids))
     end
 
     private
 
-    def legacy_scope
-      scope.where(visibility: :public).or(scope.where(owned_by: user.email))
+    def public_scope
+      scope.where(visibility: :public)
     end
 
     def org_imageable_condition
@@ -85,12 +82,23 @@ class ImagePolicy < OwnedResourcePolicy
   private
 
   # True when the actor may manage (update) the record this image hangs off,
-  # per that record's own policy. Covers the legacy imageable-owner email path
-  # and the new organization capabilities in one place.
+  # per that record's own policy -- the organization capabilities, in one place.
   def imageable_manageable?
     imageable = record.imageable
     return false if imageable.nil?
 
     Pundit.policy(user, imageable).update?
+  end
+
+  # Reading an image is gated on reading its parent, not on managing it.
+  # show? used to accept the manage test because the legacy uploader-email rule
+  # covered the read case separately; with that rule gone, a read-tier member of
+  # the owning organization would have been unable to see a private image on a
+  # record they can plainly read.
+  def imageable_readable?
+    imageable = record.imageable
+    return false if imageable.nil?
+
+    Pundit.policy(user, imageable).show?
   end
 end

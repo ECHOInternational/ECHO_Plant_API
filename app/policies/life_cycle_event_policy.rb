@@ -16,23 +16,19 @@ class LifeCycleEventPolicy < ApplicationPolicy
     end
 
     def resolve
-      if user&.admin?
-        scope.all
-      elsif user
-        org_ids = user.readable_organization_ids
-        return legacy_scope if org_ids.empty?
+      return public_scope unless user
+      return scope.all if user.super_admin?
 
-        legacy_scope.or(scope.where(specimens: { owner_organization_id: org_ids }))
-      else
-        scope.where(specimens: { visibility: :public })
-      end
+      org_ids = user.readable_organization_ids
+      return public_scope if org_ids.empty?
+
+      public_scope.or(scope.where(specimens: { owner_organization_id: org_ids }))
     end
 
     private
 
-    def legacy_scope
+    def public_scope
       scope.where(specimens: { visibility: :public })
-           .or(scope.where(specimens: { owned_by: user.email }))
     end
   end
 end

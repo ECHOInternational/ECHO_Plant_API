@@ -103,7 +103,7 @@ RSpec.describe 'Remove Image Attributes From Image Mutation', type: :graphql_mut
       end
     end
     context 'when user owns the record' do
-      let(:image) { create(:image, owned_by: current_user.email, created_by: current_user.email, image_attributes: [image_attribute_a, image_attribute_b]) }
+      let(:image) { create(:image, imageable: create(:plant, owned_by: current_user.email), owned_by: current_user.email, created_by: current_user.email, image_attributes: [image_attribute_a, image_attribute_b]) }
       before :each do
         @image_id = PlantApiSchema.id_from_object(image, Image, {})
         @image_attribute_a_id = PlantApiSchema.id_from_object(image_attribute_a, ImageAttribute, {})

@@ -126,8 +126,9 @@ RSpec.describe 'syncConflicts query', type: :graphql_query do
   # ---------------------------------------------------------------------------
   # Admin: sees all conflicts
   # ---------------------------------------------------------------------------
-  context 'when user is admin (trust 9)' do
-    let(:user) { build(:user, :admin) }
+  context 'when user is a super admin (trust 10)' do
+    # S7: trust 9 no longer sees across organizations.
+    let(:user) { build(:user, :superadmin) }
 
     it 'returns all conflicts across orgs' do
       result = execute(user)

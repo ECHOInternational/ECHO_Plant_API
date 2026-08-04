@@ -2,6 +2,25 @@
 
 FactoryBot.define do
   factory :plant do
+    # Ownership as the S3 backfill left it in production; see
+    # spec/support/factory_ownership.rb. Pass owner_organization_id explicitly
+    # to override, or the :unowned trait to model a pre-backfill row.
+    transient do
+      unowned { false }
+    end
+
+    after(:build) do |record, evaluator|
+      FactoryOwnership.stamp!(record) unless evaluator.unowned
+    end
+
+    # The pre-backfill state: ownership columns NULL and no principal or
+    # personal organization brought into existence as a side effect. Real for
+    # exactly one audience -- OwnershipBackfill's own specs, which must start
+    # from the world the backfill was written to repair.
+    trait :unowned do
+      unowned { true }
+    end
+
     scientific_name { Faker::Creature::Animal.name }
     family_names { Faker::Creature::Animal.name }
     has_edible_green_leaves { false }
@@ -11,6 +30,7 @@ FactoryBot.define do
     description { '<h1>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</h1><p>Velit, libero nulla! Magni amet, reiciendis iste. Placeat eligendi magni recusandae aspernatur suscipit, rem maxime impedit velit, nam, consequuntur commodi! Hic, repellendus.</p>' }
     created_by { Faker::Internet.email }
     owned_by { Faker::Internet.email }
+
     trait :public do
       visibility { :public }
     end

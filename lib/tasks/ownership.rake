@@ -3,12 +3,40 @@
 # Ownership backfill, verify, and report rake tasks for the Phase B
 # ownership-redesign rollout (Stage S3).
 #
+# MAPPING env var accepts either a local filesystem path OR an s3:// URI.
+# When an s3:// URI is supplied the object is downloaded to a Tempfile before
+# being passed to OwnershipBackfill. The ECS task role needs s3:GetObject on
+# that URI (see .github/workflows/ops-ownership-backfill.yml prerequisites).
+#
 # Usage:
-#   rake ownership:backfill MAPPING=<path> ECHO_ORG_ID=<uuid>
+#   rake ownership:backfill MAPPING=<path-or-s3-uri> ECHO_ORG_ID=<uuid>
 #   rake ownership:backfill MAPPING=<path> ECHO_ORG_ID=<uuid> DRY_RUN=0
 #   rake ownership:backfill MAPPING=<path> ECHO_ORG_ID=<uuid> DRY_RUN=0 BATCH_SIZE=200
 #   rake ownership:verify
 #   rake ownership:report
+
+# Downloads a mapping JSON from S3 and yields the local tempfile path.
+# Used by ownership:backfill when MAPPING is an s3:// URI.
+# The tempfile is deleted after the block returns.
+def with_mapping_path(mapping_env)
+  if mapping_env.start_with?('s3://')
+    uri_path = mapping_env.sub(%r{\As3://}, '')
+    bucket, *key_parts = uri_path.split('/')
+    key = key_parts.join('/')
+    puts "  Downloading mapping from s3://#{bucket}/#{key} ..."
+    s3 = Aws::S3::Client.new
+    tmp = Tempfile.new(['ownership_mapping', '.json'])
+    begin
+      s3.get_object(bucket: bucket, key: key, response_target: tmp.path)
+      yield tmp.path
+    ensure
+      tmp.close
+      tmp.unlink
+    end
+  else
+    yield mapping_env
+  end
+end
 
 namespace :ownership do
   # ---------------------------------------------------------------------------
@@ -20,8 +48,8 @@ namespace :ownership do
     and defaults to DRY_RUN=1 -- no writes unless DRY_RUN=0.
 
     Required env vars:
-      MAPPING      Path to IdP export JSON { users:[{uid,email,name}...],
-                   organizations:[{id,name,slug}...] }
+      MAPPING      Local path OR s3:// URI to IdP export JSON
+                   { users:[{uid,email,name}...], organizations:[{id,name,slug}...] }
       ECHO_ORG_ID  IdP UUID of the ECHO organization (must be in mapping)
 
     Optional env vars:
@@ -29,30 +57,32 @@ namespace :ownership do
       BATCH_SIZE   Records per transaction batch (default 500)
   DESC
   task backfill: :environment do
-    mapping_path = ENV.fetch('MAPPING', nil)
+    mapping_env  = ENV.fetch('MAPPING', nil)
     echo_org_id  = ENV.fetch('ECHO_ORG_ID', nil)
     dry_run      = ENV.fetch('DRY_RUN', '1') != '0'
     batch_size   = ENV.fetch('BATCH_SIZE', '500').to_i
 
-    abort 'ERROR: MAPPING env var is required' if mapping_path.blank?
+    abort 'ERROR: MAPPING env var is required' if mapping_env.blank?
     abort 'ERROR: ECHO_ORG_ID env var is required' if echo_org_id.blank?
 
     puts 'ownership:backfill starting'
     puts "  DRY_RUN=#{dry_run ? '1 (no writes)' : '0 (WRITING)'}"
-    puts "  MAPPING=#{mapping_path}"
+    puts "  MAPPING=#{mapping_env}"
     puts "  ECHO_ORG_ID=#{echo_org_id}"
     puts "  BATCH_SIZE=#{batch_size}"
     puts
 
-    backfill = OwnershipBackfill.new(
-      mapping_path: mapping_path,
-      echo_org_id: echo_org_id,
-      dry_run: dry_run,
-      batch_size: batch_size
-    )
+    with_mapping_path(mapping_env) do |mapping_path|
+      backfill = OwnershipBackfill.new(
+        mapping_path: mapping_path,
+        echo_org_id: echo_org_id,
+        dry_run: dry_run,
+        batch_size: batch_size
+      )
 
-    report = backfill.run
-    puts report
+      report = backfill.run
+      puts report
+    end
   rescue ArgumentError => e
     abort "ERROR: #{e.message}"
   end
@@ -220,5 +250,82 @@ namespace :ownership do
     Organization.group(:kind).count.each { |k, c| puts "  #{k}: #{c}" }
 
     puts '=' * 60
+  end
+  # ---------------------------------------------------------------------------
+  # ownership:preflight
+  # ---------------------------------------------------------------------------
+  desc <<~DESC
+    S7 pre-flight: who would LOSE access when the legacy email rule is removed.
+    Read-only. Exits 1 if any record is unreachable by its owner post-S7.
+  DESC
+  task preflight: :environment do
+    puts 'ownership:preflight'
+    puts '=' * 60
+    puts <<~EXPLAIN
+
+      After S7, reading your own record requires its owner_organization_id to be
+      one your token can reach. Your personal organization is resolved from the
+      JWT by (identity_issuer, external_uid) -- NOT by email. So a record whose
+      owning personal organization belongs to a principal with a NULL
+      external_uid is unreachable by anyone: no token can ever resolve to that
+      principal. Those principals came from the backfill's legacy-email path,
+      for owners whose IdP uid was not in the mapping.
+
+      This is the gap ownership:verify does not cover (it checks for NULL
+      columns, not whether the non-NULL value is reachable), and that the S6
+      divergence soak could not cover either (it only observed users who
+      actually made requests during the window).
+
+    EXPLAIN
+
+    owned_models = [Plant, Variety, Specimen, Location, Category]
+    at_risk = Hash.new { |h, k| h[k] = Hash.new(0) }
+    totals = { real_org: 0, personal_reachable: 0, personal_unreachable: 0 }
+
+    owned_models.each do |model|
+      rows = model.connection.select_all(<<~SQL.squish)
+        SELECT o.kind AS org_kind,
+               p.external_uid IS NULL AS unreachable,
+               p.email AS principal_email,
+               COUNT(*) AS n
+        FROM #{model.table_name} r
+        JOIN organizations o ON o.id = r.owner_organization_id
+        LEFT JOIN principals p ON p.id = o.principal_id
+        GROUP BY o.kind, (p.external_uid IS NULL), p.email
+      SQL
+
+      rows.each do |row|
+        count = row['n'].to_i
+        if row['org_kind'] == 'real'
+          totals[:real_org] += count
+        elsif ActiveModel::Type::Boolean.new.cast(row['unreachable'])
+          totals[:personal_unreachable] += count
+          at_risk[row['principal_email']][model.table_name] += count
+        else
+          totals[:personal_reachable] += count
+        end
+      end
+    end
+
+    puts 'RECORDS BY OWNERSHIP REACHABILITY'
+    puts '  owned by a REAL organization (access via membership claims,'
+    puts "    not verifiable from here -- confirm the claims exist in the IdP): #{totals[:real_org]}"
+    puts "  owned by a personal org with a resolvable principal (healthy): #{totals[:personal_reachable]}"
+    puts "  owned by a personal org with NO external_uid (UNREACHABLE):     #{totals[:personal_unreachable]}"
+
+    if at_risk.empty?
+      puts "\nPASS: every personally-owned record is reachable by its owner after S7."
+      puts '=' * 60
+      next
+    end
+
+    puts "\nAT RISK -- these owners cannot reach these records once the legacy"
+    puts 'email rule is removed. Each needs its principal linked to an IdP uid,'
+    puts 'or its records repointed, BEFORE S7 ships:'
+    at_risk.sort_by { |_email, tables| -tables.values.sum }.each do |email, tables|
+      puts "  #{email || '(no email)'}: #{tables.values.sum} records #{tables.inspect}"
+    end
+    puts '=' * 60
+    abort "FAIL: #{totals[:personal_unreachable]} records across #{at_risk.size} owner(s) would become unreachable."
   end
 end

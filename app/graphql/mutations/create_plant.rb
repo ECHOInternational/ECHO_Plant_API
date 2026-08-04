@@ -43,14 +43,14 @@ module Mutations
       primary_common_name = attributes[:primary_common_name]
 
       org_id_arg = attributes.delete(:organization_id)
-      if org_id_arg
-        stamp, err = acting_organization_stamp(org_id_arg)
-        return { plant: nil, errors: [err] } if err
+      stamp, err = if org_id_arg
+                     acting_organization_stamp(org_id_arg)
+                   else
+                     ownership_stamp
+                   end
+      return { plant: nil, errors: [err] } if err
 
-        org_stamp = stamp
-      else
-        org_stamp = ownership_stamp
-      end
+      org_stamp = stamp
 
       attributes
         .except!(:language)

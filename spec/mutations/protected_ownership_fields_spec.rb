@@ -125,28 +125,29 @@ RSpec.describe 'Protected ownership fields', type: :graphql_mutation do
       expect(plant.owner_organization_id).to eq(write_user.personal_organization.id)
     end
 
-    it 'sets created_by_principal_id to nil when no principal is attached (schema-level call)' do
+    # Was: "sets created_by_principal_id to nil when no principal is attached".
+    # That documented the gap S7 could not ship over -- a create with no
+    # resolved identity wrote NULL into the three columns S7 makes NOT NULL.
+    # The write is now refused instead. See spec/mutations/unattributable_create_spec.rb.
+    it 'refuses the write when no principal is attached (schema-level call)' do
       no_principal_user = User.new(
         'uid' => nil,
         'email' => 'noprincipal@example.org',
         'trust_levels' => { 'plant' => 2 },
         'organizations' => []
       )
-      result = PlantApiSchema.execute(
-        query_string,
-        context: { current_user: no_principal_user },
-        variables: { input: { primaryCommonName: 'No Principal Plant', language: 'en' } }
-      )
-      # No principal: the mutation should still succeed with nil ownership fields
-      plant_id = result.dig('data', 'createPlant', 'plant', 'id')
-      if plant_id
-        plant = PlantApiSchema.object_from_id(plant_id, {})
-        expect(plant.created_by_principal_id).to be_nil
-        expect(plant.owner_organization_id).to be_nil
-      else
-        # If the auth check prevents it, just verify no 5xx
-        expect(result['errors']).to be_present
-      end
+      result = nil
+      expect do
+        result = PlantApiSchema.execute(
+          query_string,
+          context: { current_user: no_principal_user },
+          variables: { input: { primaryCommonName: 'No Principal Plant', language: 'en' } }
+        )
+      end.not_to change(Plant, :count)
+
+      payload = result.dig('data', 'createPlant')
+      expect(payload['plant']).to be_nil
+      expect(payload['errors'].map { |e| e['code'] }).to include(503)
     end
   end
 

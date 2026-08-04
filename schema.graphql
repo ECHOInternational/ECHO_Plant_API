@@ -6454,6 +6454,11 @@ type Query {
     ownedBy: String
 
     """
+    Returns only records owned by the specified organization (Relay global ID).
+    """
+    ownedByOrganizationId: ID
+
+    """
     Sorts by name either ascending or descending
     """
     sortDirection: SortDirection = ASC
@@ -6484,6 +6489,11 @@ type Query {
     """
     ids: [ID!]!
   ): [Node]!
+
+  """
+  Look up an organization by ID. Requires authentication.
+  """
+  organization(id: ID!): Organization
 
   """
   Find a plant by ID
@@ -6540,6 +6550,11 @@ type Query {
     Returns only records owned by the specified user
     """
     ownedBy: String
+
+    """
+    Returns only records owned by the specified organization (Relay global ID).
+    """
+    ownedByOrganizationId: ID
 
     """
     Performs a case-insensitive LIKE match on scientific names
@@ -6603,6 +6618,11 @@ type Query {
     Returns only records owned by the specified user
     """
     ownedBy: String
+
+    """
+    Returns only records owned by the specified organization (Relay global ID).
+    """
+    ownedByOrganizationId: ID
 
     """
     Sorts by created date either ascending or descending
@@ -6701,6 +6721,11 @@ type Query {
     Returns only records owned by the specified user
     """
     ownedBy: String
+
+    """
+    Returns only records owned by the specified organization (Relay global ID).
+    """
+    ownedByOrganizationId: ID
 
     """
     Sorts by name either ascending or descending

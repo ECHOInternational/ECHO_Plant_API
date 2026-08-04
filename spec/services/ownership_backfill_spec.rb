@@ -13,7 +13,7 @@ def build_mapping(users: [], organizations: [], echo_org_id: nil)
   }
 end
 
-RSpec.describe OwnershipBackfill, type: :service do
+RSpec.describe OwnershipBackfill, :pre_backfill, type: :service do
   # Shared factory helpers
   let(:echo_org_id) { SecureRandom.uuid }
   let(:mapping_path) { Rails.root.join('tmp', "test_mapping_#{SecureRandom.hex(4)}.json") }
@@ -149,10 +149,10 @@ RSpec.describe OwnershipBackfill, type: :service do
 
     before do
       # Create a plant owned by the mapped user
-      create(:plant, owned_by: user_email, created_by: user_email, visibility: :public)
+      create(:plant, :unowned, owned_by: user_email, created_by: user_email, visibility: :public)
       # And a category owned by the shared ECHO email
-      create(:category, owned_by: 'echo@echonet.org', created_by: 'echo@echonet.org',
-                        visibility: :public)
+      create(:category, :unowned, owned_by: 'echo@echonet.org', created_by: 'echo@echonet.org',
+                                  visibility: :public)
     end
 
     it 'writes nothing (all ownership columns remain nil)' do
@@ -191,6 +191,19 @@ RSpec.describe OwnershipBackfill, type: :service do
       svc.run
       expect(Principal.count).to eq initial_count
     end
+
+    it 'projects the personal-org count a real run would create (not 0)' do
+      # alice is a mapped human -> a real run creates 1 personal org for her.
+      # echo@echonet.org is a shared email -> service principal, no personal org.
+      # The dry-run must PROJECT this count so the review is trustworthy.
+      svc = run_backfill(
+        dry_run: true,
+        extra_users: [{ 'uid' => user_uid, 'email' => user_email, 'name' => 'Alice' }]
+      )
+      report = svc.run
+      expect(report.orgs_created_personal).to eq 1
+      expect(Organization.where(kind: 'personal').count).to eq 0 # still nothing written
+    end
   end
 
   # ---------------------------------------------------------------------------
@@ -200,7 +213,7 @@ RSpec.describe OwnershipBackfill, type: :service do
     let(:user_uid)   { SecureRandom.uuid }
     let(:user_email) { 'bob@example.com' }
     let!(:plant) do
-      create(:plant, owned_by: user_email, created_by: user_email, visibility: :public)
+      create(:plant, :unowned, owned_by: user_email, created_by: user_email, visibility: :public)
     end
 
     before do
@@ -256,7 +269,7 @@ RSpec.describe OwnershipBackfill, type: :service do
   describe 'unmapped email' do
     let(:unmapped_email) { 'mystery@example.com' }
     let!(:plant) do
-      create(:plant, owned_by: unmapped_email, created_by: unmapped_email, visibility: :draft)
+      create(:plant, :unowned, owned_by: unmapped_email, created_by: unmapped_email, visibility: :draft)
     end
 
     it 'creates a legacy principal (no uid)' do
@@ -286,8 +299,8 @@ RSpec.describe OwnershipBackfill, type: :service do
   # ---------------------------------------------------------------------------
   describe 'shared email (echo@echonet.org)' do
     let!(:category) do
-      create(:category, owned_by: 'echo@echonet.org', created_by: 'echo@echonet.org',
-                        visibility: :public)
+      create(:category, :unowned, owned_by: 'echo@echonet.org', created_by: 'echo@echonet.org',
+                                  visibility: :public)
     end
 
     before do
@@ -324,7 +337,7 @@ RSpec.describe OwnershipBackfill, type: :service do
 
     { private: %w[published organization], public: %w[published public], draft: %w[draft organization] }.each do |vis, (ps, al)|
       it "maps :#{vis} -> publication_state=#{ps}, access_level=#{al}" do
-        plant = create(:plant, owned_by: user_email, created_by: user_email, visibility: vis)
+        plant = create(:plant, :unowned, owned_by: user_email, created_by: user_email, visibility: vis)
         svc = run_backfill(
           dry_run: false,
           extra_users: [{ 'uid' => user_uid, 'email' => user_email, 'name' => 'Carol' }]
@@ -339,7 +352,7 @@ RSpec.describe OwnershipBackfill, type: :service do
 
     it 'maps :deleted -> deleted_at=updated_at, trio=published/organization' do
       # Create the plant and delete it via legacy visibility
-      plant = create(:plant, owned_by: user_email, created_by: user_email, visibility: :public)
+      plant = create(:plant, :unowned, owned_by: user_email, created_by: user_email, visibility: :public)
       # Simulate legacy deletion: update visibility directly to bypass callbacks
       plant.update_columns(visibility: 3, publication_state: nil, access_level: nil,
                            deleted_at: nil)
@@ -368,7 +381,7 @@ RSpec.describe OwnershipBackfill, type: :service do
     let(:user_email) { 'dave@example.com' }
 
     before do
-      create(:plant, owned_by: user_email, created_by: user_email, visibility: :public)
+      create(:plant, :unowned, owned_by: user_email, created_by: user_email, visibility: :public)
     end
 
     def run_once
@@ -410,8 +423,8 @@ RSpec.describe OwnershipBackfill, type: :service do
   describe 'resumability' do
     let(:user_uid)   { SecureRandom.uuid }
     let(:user_email) { 'eve@example.com' }
-    let!(:plant1) { create(:plant, owned_by: user_email, created_by: user_email, visibility: :public) }
-    let!(:plant2) { create(:plant, owned_by: user_email, created_by: user_email, visibility: :private) }
+    let!(:plant1) { create(:plant, :unowned, owned_by: user_email, created_by: user_email, visibility: :public) }
+    let!(:plant2) { create(:plant, :unowned, owned_by: user_email, created_by: user_email, visibility: :private) }
 
     it 'completes partially-filled records and does not touch already-filled rows' do
       # Do a real run for plant1 only (simulate partial fill)
@@ -501,8 +514,8 @@ RSpec.describe OwnershipBackfill, type: :service do
     it 'counts refused rows in the report' do
       # Create a plant with a visibility that we will make unresolvable by
       # setting an unexpected combination via update_columns
-      create(:plant, owned_by: 'echo@echonet.org', created_by: 'echo@echonet.org',
-                     visibility: :public)
+      create(:plant, :unowned, owned_by: 'echo@echonet.org', created_by: 'echo@echonet.org',
+                               visibility: :public)
 
       # Stub VisibilityBridge to return a mismatch for this specific plant
       allow(VisibilityBridge).to receive(:visibility_for).and_call_original
@@ -525,7 +538,7 @@ RSpec.describe OwnershipBackfill, type: :service do
     let(:user_uid)   { SecureRandom.uuid }
     let(:user_email) { 'frank@example.com' }
     let!(:plant) do
-      create(:plant, owned_by: user_email, created_by: user_email, visibility: :public)
+      create(:plant, :unowned, owned_by: user_email, created_by: user_email, visibility: :public)
     end
 
     it 'verify reports no violations after a complete backfill' do
@@ -600,7 +613,7 @@ RSpec.describe OwnershipBackfill, type: :service do
     let(:user_email) { 'grace@example.com' }
 
     before do
-      create(:plant, owned_by: user_email, created_by: user_email, visibility: :private)
+      create(:plant, :unowned, owned_by: user_email, created_by: user_email, visibility: :private)
     end
 
     it 'rake ownership:backfill DRY_RUN=1 produces a report without writing' do
@@ -643,8 +656,8 @@ RSpec.describe OwnershipBackfill, type: :service do
 
     before do
       # Two plants so the second batch can be made to fail
-      create(:plant, owned_by: user_email, created_by: user_email, visibility: :public)
-      create(:plant, owned_by: user_email, created_by: user_email, visibility: :private)
+      create(:plant, :unowned, owned_by: user_email, created_by: user_email, visibility: :public)
+      create(:plant, :unowned, owned_by: user_email, created_by: user_email, visibility: :private)
     end
 
     it 'does not count rows from a batch whose write_batch! raises' do
@@ -686,7 +699,7 @@ RSpec.describe OwnershipBackfill, type: :service do
     let(:user_email) { 'ivan@example.com' }
 
     it 'flags a deleted row whose deleted_at is NULL as a violation' do
-      plant = create(:plant, owned_by: user_email, created_by: user_email, visibility: :public)
+      plant = create(:plant, :unowned, owned_by: user_email, created_by: user_email, visibility: :public)
       # Simulate a corrupted/un-backfilled deleted row: visibility=3 but deleted_at nil
       plant.update_columns(visibility: 3, deleted_at: nil)
 
@@ -695,7 +708,7 @@ RSpec.describe OwnershipBackfill, type: :service do
     end
 
     it 'does not flag a deleted row that has deleted_at set' do
-      plant = create(:plant, owned_by: user_email, created_by: user_email, visibility: :public)
+      plant = create(:plant, :unowned, owned_by: user_email, created_by: user_email, visibility: :public)
       plant.update_columns(visibility: 3, deleted_at: Time.current)
 
       violations = collect_deleted_at_violations([Plant])
@@ -726,8 +739,8 @@ RSpec.describe OwnershipBackfill, type: :service do
     end
 
     it 'is used for service principal lookup/creation in backfill' do
-      create(:category, owned_by: 'echo@echonet.org', created_by: 'echo@echonet.org',
-                        visibility: :public)
+      create(:category, :unowned, owned_by: 'echo@echonet.org', created_by: 'echo@echonet.org',
+                                  visibility: :public)
       svc = run_backfill(dry_run: false)
       svc.run
 

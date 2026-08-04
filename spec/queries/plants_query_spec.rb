@@ -171,9 +171,10 @@ RSpec.describe 'Plants Query', type: :graphql_query do
           expect(plant_result[2]['scientificName']).to eq('Public Plant') | eq('Unowned Public Plant') | eq('Private Plant')
         end
       end
-      describe 'when user is an admin' do
+      describe 'when user is a super admin' do
         before :each do
-          @current_user = build(:user, :admin)
+          # S7: global reads are a superuser power now (design.md D3).
+          @current_user = build(:user, :superadmin)
 
           @query_string = <<-GRAPHQL
 						query($visibility: Visibility){
@@ -250,7 +251,7 @@ RSpec.describe 'Plants Query', type: :graphql_query do
 
   describe 'ownedBy filter' do
     before :each do
-      @current_user = build(:user, :admin)
+      @current_user = build(:user, :superadmin)
 
       @query_string = <<-GRAPHQL
 				query($ownedBy: String){
@@ -290,6 +291,49 @@ RSpec.describe 'Plants Query', type: :graphql_query do
 
       expect(plant_result.length).to eq 1
       expect(plant_result[0]['ownedBy']).to eq('not_me')
+    end
+  end
+
+  describe 'ownedByOrganizationId filter' do
+    before :each do
+      @current_user = build(:user, :superadmin)
+      @org = create(:organization, :real)
+      @other = create(:organization, :real)
+      @query_string = <<-GRAPHQL
+        query($orgId: ID){
+          plants(ownedByOrganizationId: $orgId, visibility: PRIVATE){
+            nodes{ id }
+            totalCount
+          }
+        }
+      GRAPHQL
+      create(:plant, :private, owner_organization_id: @org.id)
+      create(:plant, :private, owner_organization_id: @other.id)
+      create(:plant, :private)
+    end
+
+    it 'does not limit when nil' do
+      result = PlantApiSchema.execute(@query_string, context: { current_user: @current_user }, variables: { orgId: nil })
+      expect(result.dig('data', 'plants', 'nodes').length).to eq 3
+    end
+
+    it 'accepts a Relay global id and filters to that organization' do
+      global_id = GraphQL::Schema::UniqueWithinType.encode('Organization', @org.id)
+      result = PlantApiSchema.execute(@query_string, context: { current_user: @current_user }, variables: { orgId: global_id })
+      expect(result.dig('data', 'plants', 'totalCount')).to eq 1
+    end
+
+    it 'never widens visibility beyond the policy scope' do
+      anon = nil
+      global_id = GraphQL::Schema::UniqueWithinType.encode('Organization', @org.id)
+      result = PlantApiSchema.execute(@query_string, context: { current_user: anon }, variables: { orgId: global_id })
+      expect(result.dig('data', 'plants', 'totalCount')).to eq 0 # private records invisible to anonymous
+    end
+
+    it 'returns no records for a malformed global id rather than raising' do
+      result = PlantApiSchema.execute(@query_string, context: { current_user: @current_user }, variables: { orgId: 'not-a-valid-id' })
+      expect(result['errors']).to be_nil
+      expect(result.dig('data', 'plants', 'totalCount')).to eq 0
     end
   end
 

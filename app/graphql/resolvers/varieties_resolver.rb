@@ -31,11 +31,24 @@ module Resolvers
            type: String,
            with: :apply_owned_by_filter,
            description: 'Returns only records owned by the specified user'
+    option :owned_by_organization_id,
+           type: GraphQL::Types::ID,
+           with: :apply_owned_by_organization_id_filter,
+           description: 'Returns only records owned by the specified organization (Relay global ID).'
 
     def apply_owned_by_filter(scope, value)
       return scope if value.blank?
 
       scope.where(owned_by: value)
+    end
+
+    def apply_owned_by_organization_id_filter(scope, value)
+      return scope if value.blank?
+
+      uuid = decode_organization_id(value)
+      return scope.none if uuid.nil?
+
+      scope.where(owner_organization_id: uuid)
     end
 
     def apply_visibility_with_private(scope)
@@ -44,10 +57,13 @@ module Resolvers
       # user could see were only their own). The organization scope union would
       # otherwise inject org-owned private records here, which the frozen mobile
       # client treats as personal and would sync/edit. Preserve the historical
-      # contract: own-only for non-admins; admins keep the all-private view.
+      # contract: own-only for ordinary users; a system superuser keeps the
+      # all-private view. S7 removed the trust-9 tier, so this reads
+      # super_admin? now. The own-scoping itself is a mobile-contract control,
+      # not a legacy authorization grant, and stays.
       user = context[:current_user]
       scoped = scope.visibility_private
-      return scoped if user.nil? || user.admin?
+      return scoped if user.nil? || user.super_admin?
 
       scoped.where(owned_by: user.email)
     end
@@ -69,11 +85,25 @@ module Resolvers
     end
 
     def apply_sort_direction_with_asc(scope)
-      scope.order(name: :asc)
+      # The id tiebreaker is not cosmetic. The Relay connection paginates by
+      # OFFSET, so page 2 is a second query with OFFSET 25 rather than a
+      # continuation of the first. Postgres gives no stable order for rows that
+      # tie on the sort key, so without a deterministic final term two equal
+      # rows can swap between those queries and a record is skipped or repeated
+      # across a page boundary. Production has 13 duplicated scientific names.
+      # Chained rather than order(name:, id:): on a Mobility .i18n scope the
+      # translated key is rewritten into a jsonb expression and any other key
+      # in the same hash is silently dropped, so the tiebreaker never reached
+      # the SQL.
+      scope.order(name: :asc).order(id: :asc)
     end
 
     def apply_sort_direction_with_desc(scope)
-      scope.order(name: :desc)
+      # Chained rather than order(name:, id:): on a Mobility .i18n scope the
+      # translated key is rewritten into a jsonb expression and any other key
+      # in the same hash is silently dropped, so the tiebreaker never reached
+      # the SQL.
+      scope.order(name: :desc).order(id: :desc)
     end
 
     def apply_name_filter(scope, value)

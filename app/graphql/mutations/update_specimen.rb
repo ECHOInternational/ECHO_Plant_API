@@ -55,12 +55,6 @@ module Mutations
     end
 
     def resolve(specimen:, **attributes) # rubocop:disable all
-      if attributes.key?(:visibility)
-        Rails.logger.info(
-          "legacy_contract.visibility_arg mutation=UpdateSpecimen specimen_id=#{specimen.id}"
-        )
-      end
-
       errors = []
       if attributes[:plant_id]
         begin

@@ -232,10 +232,12 @@ class OwnershipBackfill
       cache[email] = principal
     end
 
-    # Create personal orgs for all HUMAN principals (not service)
+    # Create personal orgs for all HUMAN principals (not service). Dry-run
+    # stubs are NOT skipped here: create_personal_org_for! has a dry-run branch
+    # that counts (without writing) the personal orgs a real run would create,
+    # so the dry-run report projects the true count rather than 0.
     cache.each_value do |principal|
       next if principal.nil?
-      next if principal.respond_to?(:dry_run_stub?) && principal.dry_run_stub?
       next unless principal.kind == 'human'
 
       create_personal_org_for!(principal)

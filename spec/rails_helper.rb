@@ -10,6 +10,8 @@ abort('The Rails environment is running in production mode!') if Rails.env.produ
 require 'rspec/rails'
 require 'paper_trail/frameworks/rspec'
 require 'pundit/rspec'
+require 'support/factory_ownership'
+require 'support/pre_backfill'
 require 'support/shared_contexts/policy'
 require 'support/shared_examples/lookup_mutations'
 require 'support/shared_examples/relation_mutations'
