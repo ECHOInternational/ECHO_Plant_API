@@ -280,7 +280,16 @@ namespace :ownership do
 
     owned_models = [Plant, Variety, Specimen, Location, Category]
     at_risk = Hash.new { |h, k| h[k] = Hash.new(0) }
-    totals = { real_org: 0, personal_reachable: 0, personal_unreachable: 0 }
+    totals = { real_org: 0, personal_reachable: 0, personal_unreachable: 0, unbackfilled: 0 }
+
+    # Counted separately and FIRST, because the reachability query below joins
+    # on owner_organization_id and so cannot see these rows at all. Without
+    # this, a database that was never backfilled reports a serene PASS while
+    # being the single least ready state for S7 -- the NOT NULL migration
+    # cannot even apply. Ask how a check can lie before trusting it.
+    owned_models.each do |model|
+      totals[:unbackfilled] += model.where(owner_organization_id: nil).count
+    end
 
     owned_models.each do |model|
       rows = model.connection.select_all(<<~SQL.squish)
@@ -308,10 +317,21 @@ namespace :ownership do
     end
 
     puts 'RECORDS BY OWNERSHIP REACHABILITY'
+    puts "  NOT BACKFILLED (owner_organization_id IS NULL):                  #{totals[:unbackfilled]}"
     puts '  owned by a REAL organization (access via membership claims,'
     puts "    not verifiable from here -- confirm the claims exist in the IdP): #{totals[:real_org]}"
     puts "  owned by a personal org with a resolvable principal (healthy): #{totals[:personal_reachable]}"
     puts "  owned by a personal org with NO external_uid (UNREACHABLE):     #{totals[:personal_unreachable]}"
+
+    if totals[:unbackfilled].positive?
+      puts "\nNOT READY: #{totals[:unbackfilled]} records have no owner organization at all."
+      puts 'This database has not been through the S3 backfill. S7 cannot ship'
+      puts 'against it -- the NOT NULL migration would fail on these rows -- and'
+      puts 'the reachability audit above is meaningless, because it can only see'
+      puts 'records that HAVE an owner organization.'
+      puts '=' * 60
+      abort "FAIL: #{totals[:unbackfilled]} records not backfilled."
+    end
 
     if at_risk.empty?
       puts "\nPASS: every personally-owned record is reachable by its owner after S7."

@@ -5,7 +5,7 @@ require 'rake'
 
 # The S7 pre-flight audit is only worth running if it can actually fail, so
 # these specs build the unreachable case on purpose and assert it is caught.
-RSpec.describe 'ownership:preflight', type: :task do
+RSpec.describe 'ownership:preflight', :pre_backfill, type: :task do
   before(:all) do
     Rake::Task.clear
     Rails.application.load_tasks
@@ -23,6 +23,18 @@ RSpec.describe 'ownership:preflight', type: :task do
   def unreachable_owner
     principal = Principal.legacy_for_email('never-logged-in@example.com')
     Organization.personal_for!(principal)
+  end
+
+  # The case that actually happened: staging had 2,680 owned records and no
+  # organizations at all, and the first version of this audit reported PASS,
+  # because its join on owner_organization_id could not see a single one of
+  # them. A vacuous pass is worse than no check.
+  it 'fails loudly on a database that was never backfilled' do
+    create(:plant, :private, :unowned, owned_by: 'someone@example.com')
+
+    expect { run }
+      .to raise_error(SystemExit)
+      .and output(/NOT READY: 1 records have no owner organization at all/).to_stdout
   end
 
   it 'passes when every personally-owned record has a resolvable owner' do
