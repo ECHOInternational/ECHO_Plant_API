@@ -171,9 +171,10 @@ RSpec.describe 'Plants Query', type: :graphql_query do
           expect(plant_result[2]['scientificName']).to eq('Public Plant') | eq('Unowned Public Plant') | eq('Private Plant')
         end
       end
-      describe 'when user is an admin' do
+      describe 'when user is a super admin' do
         before :each do
-          @current_user = build(:user, :admin)
+          # S7: global reads are a superuser power now (design.md D3).
+          @current_user = build(:user, :superadmin)
 
           @query_string = <<-GRAPHQL
 						query($visibility: Visibility){
@@ -250,7 +251,7 @@ RSpec.describe 'Plants Query', type: :graphql_query do
 
   describe 'ownedBy filter' do
     before :each do
-      @current_user = build(:user, :admin)
+      @current_user = build(:user, :superadmin)
 
       @query_string = <<-GRAPHQL
 				query($ownedBy: String){
@@ -295,7 +296,7 @@ RSpec.describe 'Plants Query', type: :graphql_query do
 
   describe 'ownedByOrganizationId filter' do
     before :each do
-      @current_user = build(:user, :admin)
+      @current_user = build(:user, :superadmin)
       @org = create(:organization, :real)
       @other = create(:organization, :real)
       @query_string = <<-GRAPHQL

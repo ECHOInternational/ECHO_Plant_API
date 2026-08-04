@@ -72,7 +72,7 @@ RSpec.describe 'Update Image Mutation', type: :graphql_mutation do
 
   context 'when user is not an admin' do
     let(:current_user) { build(:user, :readwrite) }
-    let(:image) { create(:image, owned_by: current_user.email, created_by: current_user.email, name: 'a name', description: 'a description') }
+    let(:image) { create(:image, imageable: create(:plant, owned_by: current_user.email), owned_by: current_user.email, created_by: current_user.email, name: 'a name', description: 'a description') }
 
     context 'when the user does not own the record' do
       let(:image) { create(:image, owned_by: 'notme', created_by: 'notme', name: 'a name', description: 'a description') }

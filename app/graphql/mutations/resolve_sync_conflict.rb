@@ -23,7 +23,7 @@ module Mutations
       owner_org_id = record.owner_organization_id
       user         = context[:current_user]
 
-      can_resolve = user&.admin? ||
+      can_resolve = user&.super_admin? ||
                     user&.system_superuser? ||
                     user&.organization_capability?(owner_org_id, :resolve_conflicts)
 
@@ -36,7 +36,7 @@ module Mutations
       end
 
       if resolution.to_s == 'ACCEPT_INCOMING' && conflict.conflict_type == 'source_deletion'
-        can_delete = user&.admin? ||
+        can_delete = user&.super_admin? ||
                      user&.system_superuser? ||
                      user&.organization_capability?(owner_org_id, :accept_source_deletion)
 

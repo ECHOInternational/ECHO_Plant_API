@@ -23,9 +23,6 @@ class SpecimenPolicy < OwnedResourcePolicy
   def destroy?
     return false unless user&.can_write?
 
-    legacy = user.super_admin? || record.owned_by == user.email
-    org_granted = organization_capability?(:soft_delete)
-    log_legacy_divergence(:destroy, legacy, org_granted)
-    legacy || org_granted
+    user.super_admin? || organization_capability?(:soft_delete)
   end
 end

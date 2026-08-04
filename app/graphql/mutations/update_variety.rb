@@ -30,12 +30,6 @@ module Mutations
     end
 
     def resolve(variety:, **attributes)
-      if attributes.key?(:visibility)
-        Rails.logger.info(
-          "legacy_contract.visibility_arg mutation=UpdateVariety variety_id=#{variety.id}"
-        )
-      end
-
       range_errors = validate_range_literals(attributes)
       return { variety: variety, errors: range_errors } if range_errors.any?
 

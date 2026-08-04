@@ -178,7 +178,11 @@ RSpec.describe PlantPolicy, type: :policy do
         let(:target) { build(:plant, :draft, owned_by: user.email) }
         it { is_expected.to permit_action(:show) }
         it { is_expected.to permit_action(:update) }
-        it { is_expected.to permit_action(:destroy) }
+        # Hard delete is superuser-only in the target model: the capability
+        # matrix has no :destroy, and a plant's reversible removal is
+        # soft_delete, which the owner still has. No shipped client calls
+        # deletePlant (the frozen app uses softDeletePlant).
+        it { is_expected.to forbid_action(:destroy) }
       end
     end
     context 'for deleted records' do
@@ -192,7 +196,7 @@ RSpec.describe PlantPolicy, type: :policy do
         let(:target) { build(:plant, :deleted, owned_by: user.email) }
         it { is_expected.to permit_action(:show) }
         it { is_expected.to permit_action(:update) }
-        it { is_expected.to permit_action(:destroy) }
+        it { is_expected.to forbid_action(:destroy) }
       end
     end
     context 'for private records' do
@@ -206,12 +210,20 @@ RSpec.describe PlantPolicy, type: :policy do
         let(:target) { build(:plant, :private, owned_by: user.email) }
         it { is_expected.to permit_action(:show) }
         it { is_expected.to permit_action(:update) }
-        it { is_expected.to permit_action(:destroy) }
+        it { is_expected.to forbid_action(:destroy) }
       end
     end
   end
 
-  context 'when user is admin' do
+  # S7 (design.md D3): trust 9 was a global admin only for the rollout window,
+  # "removed in the cleanup phase once ECHO-org memberships cover staff". That
+  # prerequisite was verified against production before this change, so a trust
+  # 9 token now carries no global rights at all -- it is an ordinary writer that
+  # reaches other people's records through organization membership like anyone
+  # else. The global-override assertions that used to live here have not been
+  # weakened or deleted; they are the 'when user is super admin' context below,
+  # which is now the only path to them.
+  context 'when user is admin (trust 9, no org membership)' do
     let(:user) { build(:user, :admin) }
 
     let(:target) { Plant }
@@ -225,21 +237,21 @@ RSpec.describe PlantPolicy, type: :policy do
         @draft_plant_not_owned = create(:plant, :draft)
         @draft_plant_owned = create(:plant, :draft, owned_by: user.email)
         @deleted_plant_not_owned = create(:plant, :deleted)
-        @deleted_plant_owned = create(:plant, :draft, owned_by: user.email)
+        @deleted_plant_owned = create(:plant, :deleted, owned_by: user.email)
       end
 
       it 'allows access to public records' do
         expect(scope.to_a).to include(@public_plant)
       end
       context 'and the user does not own the record' do
-        it 'allows access to private records' do
-          expect(scope.to_a).to include(@private_plant_not_owned)
+        it 'does not allow access to private records' do
+          expect(scope.to_a).to_not include(@private_plant_not_owned)
         end
-        it 'allows access to draft records' do
-          expect(scope.to_a).to include(@draft_plant_not_owned)
+        it 'does not allow access to draft records' do
+          expect(scope.to_a).to_not include(@draft_plant_not_owned)
         end
-        it 'allows access to deleted records' do
-          expect(scope.to_a).to include(@deleted_plant_not_owned)
+        it 'does not allow access to deleted records' do
+          expect(scope.to_a).to_not include(@deleted_plant_not_owned)
         end
       end
       context 'and the user owns the record' do
@@ -258,49 +270,53 @@ RSpec.describe PlantPolicy, type: :policy do
     context 'for public records' do
       let(:target) { build(:plant, :public) }
       it { is_expected.to permit_action(:show) }
-      it { is_expected.to permit_action(:update) }
+      it { is_expected.to forbid_action(:update) }
       it { is_expected.to forbid_action(:destroy) }
     end
     context 'for draft records' do
       context 'when not owned by the user' do
         let(:target) { build(:plant, :draft, owned_by: 'no@no.com') }
-        it { is_expected.to permit_action(:show) }
-        it { is_expected.to permit_action(:update) }
+        it { is_expected.to forbid_action(:show) }
+        it { is_expected.to forbid_action(:update) }
         it { is_expected.to forbid_action(:destroy) }
       end
       context 'when owned by the user' do
         let(:target) { build(:plant, :draft, owned_by: user.email) }
         it { is_expected.to permit_action(:show) }
         it { is_expected.to permit_action(:update) }
-        it { is_expected.to permit_action(:destroy) }
+        # Hard delete is superuser-only in the target model: the capability
+        # matrix has no :destroy, and a plant's reversible removal is
+        # soft_delete, which the owner still has. No shipped client calls
+        # deletePlant (the frozen app uses softDeletePlant).
+        it { is_expected.to forbid_action(:destroy) }
       end
     end
     context 'for deleted records' do
       context 'when not owned by the user' do
         let(:target) { build(:plant, :deleted, owned_by: 'no@no.com') }
-        it { is_expected.to permit_action(:show) }
-        it { is_expected.to permit_action(:update) }
+        it { is_expected.to forbid_action(:show) }
+        it { is_expected.to forbid_action(:update) }
         it { is_expected.to forbid_action(:destroy) }
       end
       context 'when owned by the user' do
         let(:target) { build(:plant, :deleted, owned_by: user.email) }
         it { is_expected.to permit_action(:show) }
         it { is_expected.to permit_action(:update) }
-        it { is_expected.to permit_action(:destroy) }
+        it { is_expected.to forbid_action(:destroy) }
       end
     end
     context 'for private records' do
       context 'when not owned by the user' do
         let(:target) { build(:plant, :private, owned_by: 'no@no.com') }
-        it { is_expected.to permit_action(:show) }
-        it { is_expected.to permit_action(:update) }
+        it { is_expected.to forbid_action(:show) }
+        it { is_expected.to forbid_action(:update) }
         it { is_expected.to forbid_action(:destroy) }
       end
       context 'when owned by the user' do
         let(:target) { build(:plant, :private, owned_by: user.email) }
         it { is_expected.to permit_action(:show) }
         it { is_expected.to permit_action(:update) }
-        it { is_expected.to permit_action(:destroy) }
+        it { is_expected.to forbid_action(:destroy) }
       end
     end
   end

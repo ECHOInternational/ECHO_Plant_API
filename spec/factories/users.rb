@@ -19,7 +19,15 @@ FactoryBot.define do
     after(:build) do |user|
       next if user.instance_variable_get(:@skip_principal)
 
-      principal = Principal.resolve!(issuer: 'spec', external_uid: user.id, email: user.email)
+      # Reuse an existing principal for this email before minting one. A spec
+      # that creates the record first (`execute(plant, user)` evaluates its
+      # arguments left to right) has already resolved a principal for that
+      # address through FactoryOwnership; without this the person would end up
+      # with two identities and two personal organizations, and would not be
+      # able to read their own record. One human email, one principal --
+      # which is what production has.
+      principal = Principal.find_by(email: user.email) ||
+                  Principal.resolve!(issuer: 'spec', external_uid: user.id, email: user.email)
       user.principal = principal
       user.personal_organization = Organization.personal_for!(principal)
     end

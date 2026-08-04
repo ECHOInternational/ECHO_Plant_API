@@ -171,9 +171,10 @@ RSpec.describe 'Categories Query', type: :graphql_query do
           expect(category_result[2]['name']).to eq('Public Category') | eq('Unowned Public Category') | eq('Private Category')
         end
       end
-      describe 'when user is an admin' do
+      describe 'when user is a super admin' do
         before :each do
-          @current_user = build(:user, :admin)
+          # S7: global reads are a superuser power now (design.md D3).
+          @current_user = build(:user, :superadmin)
 
           @query_string = <<-GRAPHQL
 						query($visibility: Visibility){
@@ -250,7 +251,7 @@ RSpec.describe 'Categories Query', type: :graphql_query do
 
   describe 'ownedBy filter' do
     before :each do
-      @current_user = build(:user, :admin)
+      @current_user = build(:user, :superadmin)
 
       @query_string = <<-GRAPHQL
 				query($ownedBy: String){

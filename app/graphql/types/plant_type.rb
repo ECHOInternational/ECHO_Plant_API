@@ -244,9 +244,12 @@ module Types
     end
 
     # In-Ruby mirror of OwnedResourcePolicy::Scope#resolve for a loaded array.
+    # Must track that scope exactly: public, or readable through an
+    # organization. Email ownership stopped granting reads in S7, and trust 9
+    # stopped being a global override; trust >= 10 still sees everything.
     def policy_scope_loaded(user, records)
-      return records if user&.admin?
       return records.select(&:visibility_public?) unless user
+      return records if user.super_admin?
 
       records.select { |r| r.visibility_public? || user.reads_owned_record?(r) }
     end

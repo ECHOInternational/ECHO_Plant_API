@@ -79,9 +79,10 @@ RSpec.describe 'Variety Query', type: :graphql_query do
     end
   end
 
-  context 'when user is admin' do
+  context 'when user is a super admin' do
     it 'loads unowned records' do
-      current_user = build(:user, :admin)
+      # S7: reading another organization's private record is a superuser power.
+      current_user = build(:user, :superadmin)
 
       query_string = <<-GRAPHQL
 			query($id: ID!){

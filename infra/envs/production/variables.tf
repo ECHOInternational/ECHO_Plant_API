@@ -110,8 +110,3 @@ variable "route53_record_enabled" {
   default = false
 }
 
-variable "org_authz_cutover" {
-  description = "S6 divergence logging toggle for production (\"log_only\" to enable)."
-  type        = string
-  default     = ""
-}
