@@ -72,7 +72,23 @@ RSpec.describe 'Delete Plant Mutation', type: :graphql_mutation do
         expect(result['errors'][0]['extensions']['code']).to eq 403
       end
     end
+    # S7: hard delete is a superuser act. The capability matrix has no
+    # :destroy, and plant has a soft delete -- which its owner still has --
+    # so the owner's reversible removal path is softDeletePlant. No shipped
+    # client calls this mutation. The dependency-error coverage below is
+    # what matters most here, so it runs as the actor who can still get to it.
+    context 'when the owner is not a superuser' do
+      it 'refuses the hard delete' do
+        plant_id = PlantApiSchema.id_from_object(plant, Plant, {})
+        result = PlantApiSchema.execute(query_string, context: { current_user: current_user },
+                                                      variables: { input: { plantId: plant_id } })
+        expect(result['data']).to be_nil
+        expect(result['errors'][0]['extensions']['code']).to eq 403
+      end
+    end
+
     context 'when user owns the record' do
+      let(:current_user) { build(:user, :superadmin) }
       it 'deletes the record' do
         plant_id = PlantApiSchema.id_from_object(plant, Plant, {})
         record_id = plant.id

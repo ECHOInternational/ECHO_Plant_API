@@ -57,10 +57,13 @@ module Resolvers
       # user could see were only their own). The organization scope union would
       # otherwise inject org-owned private records here, which the frozen mobile
       # client treats as personal and would sync/edit. Preserve the historical
-      # contract: own-only for non-admins; admins keep the all-private view.
+      # contract: own-only for ordinary users; a system superuser keeps the
+      # all-private view. S7 removed the trust-9 tier, so this reads
+      # super_admin? now. The own-scoping itself is a mobile-contract control,
+      # not a legacy authorization grant, and stays.
       user = context[:current_user]
       scoped = scope.visibility_private
-      return scoped if user.nil? || user.admin?
+      return scoped if user.nil? || user.super_admin?
 
       scoped.where(owned_by: user.email)
     end

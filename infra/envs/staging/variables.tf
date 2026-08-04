@@ -130,8 +130,3 @@ variable "alb_zone_id" {
   default = ""
 }
 
-variable "org_authz_cutover" {
-  description = "S6 divergence logging toggle for staging (\"log_only\" to enable)."
-  type        = string
-  default     = ""
-}

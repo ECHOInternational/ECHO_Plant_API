@@ -41,13 +41,22 @@ Codegen against the deployed staging schema; capabilities replace `owns()`; org 
 
 Set `ORG_AUTHZ_CUTOVER=log_only` on the API. This does NOT change enforcement: the legacy email/trust-9 branches keep granting access exactly as before. What it adds is a structured `authz.legacy_divergence` log event (implemented in `OwnedResourcePolicy#log_legacy_divergence`) emitted whenever an access is granted **only** by a legacy branch and would be denied once legacy authorization is removed (fields: action, record type/id, principal id, owner org id — no PII). A soak window with **zero** such events is the evidence gate for S7. The enforcement flip (removing the legacy branches) is part of S7 cleanup, not this stage, because the mobile fleet keeps depending on legacy owner behavior until each user's records live in their personal org (which the backfill guarantees). In practice S6 is observation, not behavior change.
 
-## Stage S7 — Deferred cleanup (separate change, later)
+## Stage S7 — Cleanup (IMPLEMENTED 2026-08-04)
 
 Prerequisites, each with evidence:
-- Zero `authz.legacy_divergence` events over an agreed window.
-- Staff trust-9 accounts hold equivalent ECHO-org memberships (IdP admin export).
-- Mobile app release consuming capability fields shipped + adoption threshold agreed (or product accepts the legacy window indefinitely for mobile).
-Then: demote trust-9 global admin to ECHO-org roles, remove legacy email branches from policies, enforce NOT NULL on owner_organization_id/source_organization_id/created_by_principal_id, remove deprecated-field usage logging, update docs.
+- Zero `authz.legacy_divergence` events over an agreed window. **Met**: 173 events total, all inside one 30-second admin browse on 2026-07-15, attributed and accepted; silent since.
+- Staff trust-9 accounts hold equivalent ECHO-org memberships (IdP admin export). **Met**: the production trust audit (2026-08-03) found exactly one account at plant trust >= 9, already holding ECHO:org_admin, and zero accounts without a membership.
+- Mobile app release consuming capability fields shipped + adoption threshold agreed (or product accepts the legacy window indefinitely for mobile). **Taken as the second branch**: the app is frozen and only its external developer can release it, so the frozen documents under `spec/contracts/mobile_*` are the standing evidence instead. They pass unchanged in intent against the S7 policies.
+- `rake ownership:verify` against production immediately before the change: **PASS, all invariants satisfied.**
+
+What shipped: trust-9 global admin demoted (trust >= 10 remains the one global bypass); the legacy email branches removed from every policy; `NOT NULL` on `owner_organization_id`, `source_organization_id` and `created_by_principal_id`; the `legacy_contract.visibility_arg` logging removed from the six update mutations; the `ORG_AUTHZ_CUTOVER` flag and its Terraform variable removed along with the divergence logging it drove.
+
+Deliberate behaviour changes, beyond simply removing the legacy layer:
+- **Hard delete is superuser-only** wherever a soft delete exists (no `:destroy` capability was added — the reversible path is what an organization role gets). Two exceptions, each pinned by a spec: `Specimen`, which has no soft delete at all, maps `destroy?` onto `:soft_delete`; and `Location`, whose owner keeps hard delete because the frozen app calls `deleteLocation` during seed-trial sync — granted through the record's own personal organization only, so no real-organization role gains it.
+- **Plant and Variety owners lose hard delete** and keep soft delete. No shipped client calls those mutations.
+- **`ImagePolicy#show?` now delegates to the imageable's `show?`** rather than its `update?`. The old read path leaned on the image's own `owned_by`; without it a read-tier member of the owning organization could not see an image on a record they can plainly read.
+
+Test-suite consequence worth knowing: factories now stamp ownership the way the S3 backfill did (`spec/support/factory_ownership.rb`), because fixtures that set only `owned_by` modelled a pre-backfill database that no longer exists. The `:unowned` trait and the `:pre_backfill` tag (`spec/support/pre_backfill.rb`) exist for the specs that legitimately need the old shape — chiefly `OwnershipBackfill`'s own.
 
 ## Observability (added across S2–S4)
 

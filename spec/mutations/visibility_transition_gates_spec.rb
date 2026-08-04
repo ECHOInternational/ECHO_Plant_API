@@ -68,11 +68,17 @@ RSpec.describe 'Visibility transition gates on update mutations', type: :graphql
         end
       end
 
-      context 'when owner (readwrite, legacy_manage?)' do
+      # The owner's own record. It deliberately does NOT carry the unrelated
+      # real org this describe block uses elsewhere: a record owned by this
+      # email belongs to this person's personal organization, which is where
+      # the backfill put it and where org_admin gives them :soft_delete.
+      # Pinning it to an org they are not a member of modelled a record the
+      # backfill could not produce, and only passed via the legacy email rule.
+      context 'when owner (readwrite, org_admin of their personal org)' do
         let(:user) { build(:user, :readwrite) }
-        let(:plant) { create(:plant, :private, owned_by: user.email, owner_organization_id: org.id) }
+        let(:plant) { create(:plant, :private, owned_by: user.email) }
 
-        it 'allows owner to soft-delete via visibility DELETED (legacy contract)' do
+        it 'allows owner to soft-delete via visibility DELETED (mobile contract)' do
           plant_id = PlantApiSchema.id_from_object(plant, Plant, {})
           result = PlantApiSchema.execute(
             update_mutation,

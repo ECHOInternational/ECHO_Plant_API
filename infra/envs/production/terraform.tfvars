@@ -16,7 +16,6 @@ image = "382724554857.dkr.ecr.us-east-1.amazonaws.com/plant-api:e4997021317e"
 # Rollout stage S6 — divergence-logging toggle. "log_only" injects
 # ORG_AUTHZ_CUTOVER=log_only so OwnedResourcePolicy emits authz.legacy_divergence
 # events (observation only; enforcement is unchanged). Set back to "" for S7.
-org_authz_cutover = "log_only"
 
 # ECS sizing (production: 2 tasks minimum)
 cpu           = 1024

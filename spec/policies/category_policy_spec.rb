@@ -222,7 +222,9 @@ RSpec.describe CategoryPolicy, type: :policy do
 
   # Trust-9 admin keeps its broad READ scope, but category writes now require a
   # system superuser (trust >= 10), same as the other curated lookup tables.
-  context 'when user is admin' do
+  # S7 (design.md D3): trust 9 is no longer a global admin. The global-override
+  # assertions live on in the super admin context below.
+  context 'when user is admin (trust 9, no org membership)' do
     let(:user) { build(:user, :admin) }
 
     let(:target) { Category }
@@ -243,14 +245,14 @@ RSpec.describe CategoryPolicy, type: :policy do
         expect(scope.to_a).to include(@public_category)
       end
       context 'and the user does not own the record' do
-        it 'allows access to private records' do
-          expect(scope.to_a).to include(@private_category_not_owned)
+        it 'does not allow access to private records' do
+          expect(scope.to_a).to_not include(@private_category_not_owned)
         end
-        it 'allows access to draft records' do
-          expect(scope.to_a).to include(@draft_category_not_owned)
+        it 'does not allow access to draft records' do
+          expect(scope.to_a).to_not include(@draft_category_not_owned)
         end
-        it 'allows access to deleted records' do
-          expect(scope.to_a).to include(@deleted_category_not_owned)
+        it 'does not allow access to deleted records' do
+          expect(scope.to_a).to_not include(@deleted_category_not_owned)
         end
       end
       context 'and the user owns the record' do
@@ -275,7 +277,7 @@ RSpec.describe CategoryPolicy, type: :policy do
     context 'for draft records' do
       context 'when not owned by the user' do
         let(:target) { build(:category, :draft, owned_by: 'no@no.com') }
-        it { is_expected.to permit_action(:show) }
+        it { is_expected.to forbid_action(:show) }
         it { is_expected.to forbid_action(:update) }
         it { is_expected.to forbid_action(:destroy) }
       end
@@ -289,7 +291,7 @@ RSpec.describe CategoryPolicy, type: :policy do
     context 'for deleted records' do
       context 'when not owned by the user' do
         let(:target) { build(:category, :deleted, owned_by: 'no@no.com') }
-        it { is_expected.to permit_action(:show) }
+        it { is_expected.to forbid_action(:show) }
         it { is_expected.to forbid_action(:update) }
         it { is_expected.to forbid_action(:destroy) }
       end
@@ -303,7 +305,7 @@ RSpec.describe CategoryPolicy, type: :policy do
     context 'for private records' do
       context 'when not owned by the user' do
         let(:target) { build(:category, :private, owned_by: 'no@no.com') }
-        it { is_expected.to permit_action(:show) }
+        it { is_expected.to forbid_action(:show) }
         it { is_expected.to forbid_action(:update) }
         it { is_expected.to forbid_action(:destroy) }
       end

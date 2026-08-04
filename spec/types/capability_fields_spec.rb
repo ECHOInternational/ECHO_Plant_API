@@ -13,8 +13,10 @@ require 'rails_helper'
 #   :non_creator_contrib - contributor but did NOT create the record
 #   :editor          - org editor (update_any, no soft_delete)
 #   :steward         - org steward (soft_delete + restore)
-#   :owner           - legacy email owner (trust 2, owns by email)
-#   :admin           - trust 9 admin (legacy admin)
+#   :owner           - the record's own owner (trust 2, org_admin of their
+#                      personal organization, which is where the backfill put
+#                      the records they owned by email)
+#   :admin           - trust 9, which S7 demoted to an ordinary writer
 RSpec.describe 'CapabilityFields on PlantType', type: :graphql_query do
   let(:org) { create(:organization, :real) }
 
@@ -138,14 +140,18 @@ RSpec.describe 'CapabilityFields on PlantType', type: :graphql_query do
     end
   end
 
-  describe ':owner (legacy email-based ownership, trust 2)' do
+  describe ':owner (trust 2, org_admin of their own personal organization)' do
     let(:owner_email) { 'plant-owner@example.com' }
     let(:user) { build(:user, :readwrite, email: owner_email) }
+    # Deliberately not pinned to the unrelated real org this file uses
+    # elsewhere: a record owned by this email lives in this person's personal
+    # organization. Pinning it elsewhere modelled a row the backfill could not
+    # produce and only passed through the removed email rule.
     let(:plant) do
-      create(:plant, :private, owned_by: owner_email, owner_organization_id: org.id)
+      create(:plant, :private, owned_by: owner_email)
     end
 
-    it 'can edit (legacy_manage?), can delete (soft_delete? via legacy_manage?), can restore' do
+    it 'can edit, delete and restore its own record' do
       data = execute(plant, user).dig('data', 'plant')
       expect(data['canEdit']).to be true
       expect(data['canDelete']).to be true
@@ -153,15 +159,19 @@ RSpec.describe 'CapabilityFields on PlantType', type: :graphql_query do
     end
   end
 
-  describe ':admin (trust 9, legacy admin)' do
+  # S7 (design.md D3): trust 9 stopped being a global admin once ECHO-org
+  # memberships covered staff. With no membership in the owning organization it
+  # is an ordinary writer, and the capability fields the SPA renders its buttons
+  # from have to say so -- otherwise the UI offers actions the API will refuse.
+  describe ':admin (trust 9, no membership in the owning organization)' do
     let(:user) { build(:user, :admin) }
     let(:plant) { create(:plant, :public, owned_by: 'someone@example.com') }
 
-    it 'can edit (admin is legacy_manage? for trust>8), can delete (legacy_manage?), can restore' do
+    it 'cannot edit, delete or restore another organization\'s record' do
       data = execute(plant, user).dig('data', 'plant')
-      expect(data['canEdit']).to be true
-      expect(data['canDelete']).to be true
-      expect(data['canRestore']).to be true
+      expect(data['canEdit']).to be false
+      expect(data['canDelete']).to be false
+      expect(data['canRestore']).to be false
     end
   end
 
@@ -230,8 +240,11 @@ RSpec.describe 'CapabilityFields on PlantType', type: :graphql_query do
       expect(principal_node['email']).to eq principal_record.email
     end
 
-    it 'returns null ownerOrganization when not set' do
-      bare_plant = create(:plant, :public, owned_by: user.email)
+    it 'returns null ownerOrganization when not set', :pre_backfill do
+      # Needs the pre-backfill shape explicitly now that factories stamp
+      # ownership. Production has no such rows -- S7 puts NOT NULL on the
+      # column -- but the resolver's nil branch is still worth pinning.
+      bare_plant = create(:plant, :public, :unowned, owned_by: user.email)
       plant_id = PlantApiSchema.id_from_object(bare_plant, Plant, {})
       result = PlantApiSchema.execute(
         fields_query,

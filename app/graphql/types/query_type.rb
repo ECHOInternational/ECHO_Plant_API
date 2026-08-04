@@ -223,7 +223,7 @@ module Types
       base = SyncConflict.all
       base = base.where(status: status.downcase) if status
 
-      if user&.admin?
+      if user&.super_admin?
         base.includes(:data_source, :syncable)
       elsif user
         org_ids = user.readable_organization_ids

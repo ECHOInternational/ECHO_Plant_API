@@ -5,7 +5,7 @@ require 'rake'
 
 # The S7 pre-flight audit is only worth running if it can actually fail, so
 # these specs build the unreachable case on purpose and assert it is caught.
-RSpec.describe 'ownership:preflight', type: :task do
+RSpec.describe 'ownership:preflight', :pre_backfill, type: :task do
   before(:all) do
     Rake::Task.clear
     Rails.application.load_tasks
@@ -30,7 +30,7 @@ RSpec.describe 'ownership:preflight', type: :task do
   # because its join on owner_organization_id could not see a single one of
   # them. A vacuous pass is worse than no check.
   it 'fails loudly on a database that was never backfilled' do
-    create(:plant, :private, owned_by: 'someone@example.com')
+    create(:plant, :private, :unowned, owned_by: 'someone@example.com')
 
     expect { run }
       .to raise_error(SystemExit)
@@ -38,10 +38,8 @@ RSpec.describe 'ownership:preflight', type: :task do
   end
 
   it 'passes when every personally-owned record has a resolvable owner' do
-    principal = create(:principal) # a real IdP identity: external_uid present
-    org = Organization.personal_for!(principal)
-    create(:plant, :private, owned_by: principal.email,
-                             owner_organization_id: org.id, source_organization_id: org.id)
+    user = build(:user, :readwrite)
+    create(:plant, :private, owned_by: user.email)
 
     expect { run }.to output(/PASS: every personally-owned record is reachable/).to_stdout
   end
@@ -69,19 +67,9 @@ RSpec.describe 'ownership:preflight', type: :task do
       create(kind, owner_organization_id: org.id, source_organization_id: org.id,
                    owned_by: 'never-logged-in@example.com')
     end
-    # Factories build associated records (a specimen brings a plant and a
-    # variety) without ownership, and the un-backfilled check runs first and
-    # would abort before the per-model counting this example is about. Give
-    # those incidental rows the same owner so the subject under test is the
-    # counting, not the setup.
-    [Plant, Variety, Specimen, Location, Category].each do |model|
-      model.where(owner_organization_id: nil)
-           .update_all(owner_organization_id: org.id, source_organization_id: org.id)
-    end
 
     expect { run }
       .to raise_error(SystemExit)
-      .and output(/"plants" => \d+.*"varieties" => \d+.*"specimens" => \d+.*"locations" => \d+.*"categories" => \d+/m)
-      .to_stdout
+      .and output(/never-logged-in@example\.com: 5 records/).to_stdout
   end
 end
