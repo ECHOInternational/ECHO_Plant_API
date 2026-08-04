@@ -282,16 +282,15 @@ namespace :ownership do
     at_risk = Hash.new { |h, k| h[k] = Hash.new(0) }
     totals = { real_org: 0, personal_reachable: 0, personal_unreachable: 0, unbackfilled: 0 }
 
-    # Counted separately and FIRST, because the reachability query below joins
-    # on owner_organization_id and so cannot see these rows at all. Without
-    # this, a database that was never backfilled reports a serene PASS while
-    # being the single least ready state for S7 -- the NOT NULL migration
-    # cannot even apply. Ask how a check can lie before trusting it.
     owned_models.each do |model|
+      # Counted, and reported before anything else, because the reachability
+      # query below JOINs on owner_organization_id and so cannot see these rows
+      # at all. Without it a database that was never backfilled reports a
+      # serene PASS while being the single least ready state for S7 -- the NOT
+      # NULL migration cannot even apply. Ask how a check can lie before
+      # trusting what it tells you.
       totals[:unbackfilled] += model.where(owner_organization_id: nil).count
-    end
 
-    owned_models.each do |model|
       rows = model.connection.select_all(<<~SQL.squish)
         SELECT o.kind AS org_kind,
                p.external_uid IS NULL AS unreachable,
