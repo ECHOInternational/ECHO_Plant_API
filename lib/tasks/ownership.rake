@@ -251,4 +251,100 @@ namespace :ownership do
 
     puts '=' * 60
   end
+  # ---------------------------------------------------------------------------
+  # ownership:preflight
+  # ---------------------------------------------------------------------------
+  desc <<~DESC
+    S7 pre-flight: who would LOSE access when the legacy email rule is removed.
+    Read-only. Exits 1 if any record is unreachable by its owner post-S7.
+  DESC
+  task preflight: :environment do
+    puts 'ownership:preflight'
+    puts '=' * 60
+    puts <<~EXPLAIN
+
+      After S7, reading your own record requires its owner_organization_id to be
+      one your token can reach. Your personal organization is resolved from the
+      JWT by (identity_issuer, external_uid) -- NOT by email. So a record whose
+      owning personal organization belongs to a principal with a NULL
+      external_uid is unreachable by anyone: no token can ever resolve to that
+      principal. Those principals came from the backfill's legacy-email path,
+      for owners whose IdP uid was not in the mapping.
+
+      This is the gap ownership:verify does not cover (it checks for NULL
+      columns, not whether the non-NULL value is reachable), and that the S6
+      divergence soak could not cover either (it only observed users who
+      actually made requests during the window).
+
+    EXPLAIN
+
+    owned_models = [Plant, Variety, Specimen, Location, Category]
+    at_risk = Hash.new { |h, k| h[k] = Hash.new(0) }
+    totals = { real_org: 0, personal_reachable: 0, personal_unreachable: 0, unbackfilled: 0 }
+
+    owned_models.each do |model|
+      # Counted, and reported before anything else, because the reachability
+      # query below JOINs on owner_organization_id and so cannot see these rows
+      # at all. Without it a database that was never backfilled reports a
+      # serene PASS while being the single least ready state for S7 -- the NOT
+      # NULL migration cannot even apply. Ask how a check can lie before
+      # trusting what it tells you.
+      totals[:unbackfilled] += model.where(owner_organization_id: nil).count
+
+      rows = model.connection.select_all(<<~SQL.squish)
+        SELECT o.kind AS org_kind,
+               p.external_uid IS NULL AS unreachable,
+               p.email AS principal_email,
+               COUNT(*) AS n
+        FROM #{model.table_name} r
+        JOIN organizations o ON o.id = r.owner_organization_id
+        LEFT JOIN principals p ON p.id = o.principal_id
+        GROUP BY o.kind, (p.external_uid IS NULL), p.email
+      SQL
+
+      rows.each do |row|
+        count = row['n'].to_i
+        if row['org_kind'] == 'real'
+          totals[:real_org] += count
+        elsif ActiveModel::Type::Boolean.new.cast(row['unreachable'])
+          totals[:personal_unreachable] += count
+          at_risk[row['principal_email']][model.table_name] += count
+        else
+          totals[:personal_reachable] += count
+        end
+      end
+    end
+
+    puts 'RECORDS BY OWNERSHIP REACHABILITY'
+    puts "  NOT BACKFILLED (owner_organization_id IS NULL):                  #{totals[:unbackfilled]}"
+    puts '  owned by a REAL organization (access via membership claims,'
+    puts "    not verifiable from here -- confirm the claims exist in the IdP): #{totals[:real_org]}"
+    puts "  owned by a personal org with a resolvable principal (healthy): #{totals[:personal_reachable]}"
+    puts "  owned by a personal org with NO external_uid (UNREACHABLE):     #{totals[:personal_unreachable]}"
+
+    if totals[:unbackfilled].positive?
+      puts "\nNOT READY: #{totals[:unbackfilled]} records have no owner organization at all."
+      puts 'This database has not been through the S3 backfill. S7 cannot ship'
+      puts 'against it -- the NOT NULL migration would fail on these rows -- and'
+      puts 'the reachability audit above is meaningless, because it can only see'
+      puts 'records that HAVE an owner organization.'
+      puts '=' * 60
+      abort "FAIL: #{totals[:unbackfilled]} records not backfilled."
+    end
+
+    if at_risk.empty?
+      puts "\nPASS: every personally-owned record is reachable by its owner after S7."
+      puts '=' * 60
+      next
+    end
+
+    puts "\nAT RISK -- these owners cannot reach these records once the legacy"
+    puts 'email rule is removed. Each needs its principal linked to an IdP uid,'
+    puts 'or its records repointed, BEFORE S7 ships:'
+    at_risk.sort_by { |_email, tables| -tables.values.sum }.each do |email, tables|
+      puts "  #{email || '(no email)'}: #{tables.values.sum} records #{tables.inspect}"
+    end
+    puts '=' * 60
+    abort "FAIL: #{totals[:personal_unreachable]} records across #{at_risk.size} owner(s) would become unreachable."
+  end
 end

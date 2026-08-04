@@ -56,12 +56,14 @@ on:
           - staging
           - production
       action:
-        description: "Rake task to run (report=read-only stats, verify=invariant check, backfill=fill columns)"
+        description: "Task to run (report=read-only stats, verify=invariant check, preflight=S7 access-loss audit, backfill=fill columns)"
         required: true
         type: choice
         options:
           - report
           - verify
+          - preflight
+          - backfill_staging_rehearsal
           - backfill
       dry_run:
         description: "DRY_RUN=1 (default TRUE -- no DB writes). Set FALSE only with confirm_real_run."
@@ -103,11 +105,15 @@ jobs:
     name: Safety gate check
     runs-on: ubuntu-latest
     steps:
+      # Covers the staging rehearsal too: it writes principals, organizations
+      # and ownership columns just as the real backfill does, so it earns the
+      # same confirmation. The rehearsal being staging-only is a reason for
+      # fewer consequences, not for fewer gates.
       - name: Fail if real backfill requested without confirmation
-        if: inputs.action == 'backfill' && inputs.dry_run == false
+        if: (inputs.action == 'backfill' || inputs.action == 'backfill_staging_rehearsal') && inputs.dry_run == false
         run: |
           if [ "${{ inputs.confirm_real_run }}" != "RUN-REAL-BACKFILL" ]; then
-            echo "::error::SAFETY GATE: action=backfill with dry_run=FALSE requires"
+            echo "::error::SAFETY GATE: a writing backfill with dry_run=FALSE requires"
             echo "::error::  confirm_real_run to equal exactly 'RUN-REAL-BACKFILL'."
             echo "::error::  Got: '${{ inputs.confirm_real_run }}'"
             echo "::error::  Re-run the workflow and type RUN-REAL-BACKFILL in that field."
@@ -165,6 +171,40 @@ jobs:
               ;;
             verify)
               RAKE_CMD="bundle exec rake ownership:verify"
+              ;;
+            preflight)
+              # S7 pre-flight: which records become unreachable once the legacy
+              # email rule goes away. A personal organization whose principal has
+              # no external_uid can never be resolved from a JWT, so nobody can
+              # reach its records -- the gap ownership:verify does not cover.
+              #
+              # NOTE: a one-off task runs the image that is CURRENTLY DEPLOYED,
+              # so this action only works once the commit adding the task has
+              # been deployed to the target environment. That is deliberate:
+              # this tooling ships on its own, ahead of the S7 change it exists
+              # to gate, so the audit can answer for production BEFORE the risky
+              # change is anywhere near it.
+              RAKE_CMD="bundle exec rake ownership:preflight"
+              ;;
+            backfill_staging_rehearsal)
+              # Fills ownership on STAGING so S7 can be rehearsed against
+              # prod-sized data. Staging was never backfilled -- 2,680 records,
+              # zero organizations -- so the NOT NULL migration cannot apply
+              # there and nothing downstream of it can be tested.
+              #
+              # Synthesizes a mapping from staging's own data: fake uids, real
+              # shape. See lib/tasks/staging_rehearsal.rake for why that is
+              # sufficient for a rehearsal, and for the second guard. This one
+              # is the first: never anywhere but staging.
+              if [ "${{ inputs.environment }}" != "staging" ]; then
+                echo "::error::backfill_staging_rehearsal fabricates identities and is staging-only."
+                exit 1
+              fi
+              DR_FLAG="DRY_RUN=1"
+              if [ "$DRY_RUN" = "false" ]; then
+                DR_FLAG="DRY_RUN=0"
+              fi
+              RAKE_CMD="bundle exec rake ownership:staging_rehearsal ${DR_FLAG}"
               ;;
             backfill)
               DR_FLAG="DRY_RUN=1"
