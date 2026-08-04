@@ -56,12 +56,13 @@ on:
           - staging
           - production
       action:
-        description: "Rake task to run (report=read-only stats, verify=invariant check, backfill=fill columns)"
+        description: "Task to run (report=read-only stats, verify=invariant check, preflight=S7 access-loss audit, backfill=fill columns)"
         required: true
         type: choice
         options:
           - report
           - verify
+          - preflight
           - backfill
       dry_run:
         description: "DRY_RUN=1 (default TRUE -- no DB writes). Set FALSE only with confirm_real_run."
@@ -165,6 +166,23 @@ jobs:
               ;;
             verify)
               RAKE_CMD="bundle exec rake ownership:verify"
+              ;;
+            preflight)
+              # S7 pre-flight: which records become unreachable once the legacy
+              # email rule goes away. A personal organization whose principal has
+              # no external_uid can never be resolved from a JWT, so nobody can
+              # reach its records -- the gap ownership:verify does not cover.
+              #
+              # This is `rake ownership:preflight` (lib/tasks/ownership.rake)
+              # shipped inline as base64. The one-off task runs the image that is
+              # CURRENTLY DEPLOYED, so a rake task from an undeployed commit is
+              # simply not there -- the same trap that made the first trust audit
+              # fail. Inline, this answers the question against production BEFORE
+              # the change ships, which is the only time the answer is useful.
+              #
+              # base64 because the command string is split by `xargs` downstream,
+              # which would shred Ruby on its spaces and quotes. Keep it one line.
+              RAKE_CMD="sh -c 'echo IyBTNyBwcmUtZmxpZ2h0LCBpbmxpbmUgY29weSBvZiBgcmFrZSBvd25lcnNoaXA6cHJlZmxpZ2h0YC4KIyBSZWFkLW9ubHkuIFNlZSBsaWIvdGFza3Mvb3duZXJzaGlwLnJha2UgZm9yIHRoZSBtYWludGFpbmVkIHZlcnNpb24gYW5kIHRoZQojIHJlYXNvbmluZzsgdGhpcyBjb3B5IGV4aXN0cyBzbyB0aGUgYXVkaXQgY2FuIHJ1biBhZ2FpbnN0IGFuIGltYWdlIHRoYXQKIyBwcmVkYXRlcyB0aGUgdGFzay4KVEFCTEVTID0gJXdbcGxhbnRzIHZhcmlldGllcyBzcGVjaW1lbnMgbG9jYXRpb25zIGNhdGVnb3JpZXNdLmZyZWV6ZQoKYWdnID0gSGFzaC5uZXcoMCkKcmlzayA9IEhhc2gubmV3IHsgfGgsIGt8IGhba10gPSBIYXNoLm5ldygwKSB9CgpUQUJMRVMuZWFjaCBkbyB8dGFibGV8CiAgc3FsID0gPDx+U1FMCiAgICBTRUxFQ1Qgby5raW5kIEFTIG9yZ19raW5kLAogICAgICAgICAgIChwLmV4dGVybmFsX3VpZCBJUyBOVUxMKSBBUyB1bnJlYWNoYWJsZSwKICAgICAgICAgICBwLmVtYWlsIEFTIHByaW5jaXBhbF9lbWFpbCwKICAgICAgICAgICBDT1VOVCgqKSBBUyBuCiAgICBGUk9NICN7dGFibGV9IHIKICAgIEpPSU4gb3JnYW5pemF0aW9ucyBvIE9OIG8uaWQgPSByLm93bmVyX29yZ2FuaXphdGlvbl9pZAogICAgTEVGVCBKT0lOIHByaW5jaXBhbHMgcCBPTiBwLmlkID0gby5wcmluY2lwYWxfaWQKICAgIEdST1VQIEJZIDEsIDIsIDMKICBTUUwKCiAgQWN0aXZlUmVjb3JkOjpCYXNlLmNvbm5lY3Rpb24uc2VsZWN0X2FsbChzcWwpLmVhY2ggZG8gfHJvd3wKICAgIG4gPSByb3dbJ24nXS50b19pCiAgICBpZiByb3dbJ29yZ19raW5kJ10gPT0gJ3JlYWwnCiAgICAgIGFnZ1s6cmVhbF0gKz0gbgogICAgZWxzaWYgW3RydWUsICd0J10uaW5jbHVkZT8ocm93Wyd1bnJlYWNoYWJsZSddKQogICAgICBhZ2dbOnVucmVhY2hhYmxlXSArPSBuCiAgICAgIHJpc2tbcm93WydwcmluY2lwYWxfZW1haWwnXV1bdGFibGVdICs9IG4KICAgIGVsc2UKICAgICAgYWdnWzpyZWFjaGFibGVdICs9IG4KICAgIGVuZAogIGVuZAplbmQKCnB1dHMgIlBSRUZMSUdIVCByZWFsX29yZz0je2FnZ1s6cmVhbF19IHBlcnNvbmFsX3JlYWNoYWJsZT0je2FnZ1s6cmVhY2hhYmxlXX0gIiBcCiAgICAgInBlcnNvbmFsX1VOUkVBQ0hBQkxFPSN7YWdnWzp1bnJlYWNoYWJsZV19IgpyaXNrLnNvcnRfYnkgeyB8X2UsIHR8IC10LnZhbHVlcy5zdW0gfS5lYWNoIGRvIHxlbWFpbCwgdGFibGVzfAogIHB1dHMgIkFUX1JJU0sgI3tlbWFpbC5pbnNwZWN0fSAje3RhYmxlcy52YWx1ZXMuc3VtfSAje3RhYmxlcy5pbnNwZWN0fSIKZW5kCnB1dHMgIlBSRUZMSUdIVF9WRVJESUNUICN7cmlzay5lbXB0eT8gPyAnUEFTUycgOiAnRkFJTCd9Igo= | base64 -d | bundle exec rails runner -'"
               ;;
             backfill)
               DR_FLAG="DRY_RUN=1"
