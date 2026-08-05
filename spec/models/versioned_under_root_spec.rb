@@ -56,6 +56,21 @@ RSpec.describe VersionedUnderRoot, type: :model do
       expect(destroy_version.metadata['root_id']).to eq plant.id
     end
 
+    it 'records a stamped destroy version when a relation set replacement removes a link' do
+      plant = create(:plant)
+      category = create(:category)
+      link = CategoriesPlant.create!(plant: plant, category: category)
+
+      plant.categories = []
+
+      destroy_version = PaperTrail::Version
+                        .where(item_type: 'CategoriesPlant', item_id: link.id, event: 'destroy')
+                        .last
+      expect(destroy_version).not_to be_nil
+      expect(destroy_version.metadata['root_type']).to eq 'Plant'
+      expect(destroy_version.metadata['root_id']).to eq plant.id
+    end
+
     it 'records the variety root on a variety join row' do
       variety = create(:variety)
       tolerance = create(:tolerance)

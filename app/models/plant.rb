@@ -13,16 +13,16 @@ class Plant < ApplicationRecord # rubocop:disable Metrics/ClassLength
   has_many :images, as: :imageable, dependent: :destroy
 
   has_many :antinutrients_plants, dependent: :destroy
-  has_many :antinutrients, through: :antinutrients_plants
+  has_many :antinutrients, through: :antinutrients_plants, dependent: :destroy
 
   has_many :categories_plants, dependent: :destroy
-  has_many :categories, through: :categories_plants
+  has_many :categories, through: :categories_plants, dependent: :destroy
 
   has_many :growth_habits_plants, dependent: :destroy
-  has_many :growth_habits, through: :growth_habits_plants
+  has_many :growth_habits, through: :growth_habits_plants, dependent: :destroy
 
   has_many :tolerances_plants, dependent: :destroy
-  has_many :tolerances, through: :tolerances_plants
+  has_many :tolerances, through: :tolerances_plants, dependent: :destroy
 
   has_many :common_names, dependent: :destroy
 

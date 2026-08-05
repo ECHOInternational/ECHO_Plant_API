@@ -9,13 +9,13 @@ class Variety < ApplicationRecord
   has_many :images, as: :imageable, dependent: :destroy
 
   has_many :antinutrients_varieties, dependent: :destroy
-  has_many :antinutrients, through: :antinutrients_varieties
+  has_many :antinutrients, through: :antinutrients_varieties, dependent: :destroy
 
   has_many :growth_habits_varieties, dependent: :destroy
-  has_many :growth_habits, through: :growth_habits_varieties
+  has_many :growth_habits, through: :growth_habits_varieties, dependent: :destroy
 
   has_many :tolerances_varieties, dependent: :destroy
-  has_many :tolerances, through: :tolerances_varieties
+  has_many :tolerances, through: :tolerances_varieties, dependent: :destroy
 
   belongs_to :plant
 
