@@ -133,15 +133,34 @@ class FamilySeedBankingLoader
   # that already has notes from its OWN row in this same file. Overwriting
   # would silently discard whichever row is processed first, which is
   # exactly the editorial content the design document says must never be
-  # silently discarded. Appending instead keeps both; a family whose only
-  # note so far is its own must not gain a trailing ". " with nothing after
-  # it, and a family visited twice with byte-identical notes (not possible
-  # today, but not assumed away either) must not repeat itself.
+  # silently discarded. Appending instead keeps both.
+  #
+  # This must be idempotent, not just non-clobbering: the loader can be
+  # re-run against a database that already has last run's output on it (a
+  # partial-failure retry, a CSV correction, a staging rehearsal replayed
+  # against the same seed). Without a "would this already be there" check,
+  # every re-run appends both halves again --
+  # "Highly suitable. Merged family. Highly suitable. Merged family. ..." --
+  # onto a field that is publicly exposed as Family.seedBankingNotes.
+  # existing_notes.include?(new_notes) is the check: if this exact
+  # contribution is already present, do nothing, rather than tracking
+  # per-source state this loader has nowhere to persist.
+  #
+  # Deliberately appends even when existing_notes came from a curator's own
+  # updateFamily edit, not just a previous loader run: there is no column
+  # recording where seed_banking_notes came from, so an editor-vs-loader
+  # distinction is not available to check, and "discard whatever is already
+  # there" would resurrect the exact silent-clobber bug this method exists to
+  # avoid, just pointed at curator content instead of CSV content. The
+  # design document's rule -- no editorial content is silently discarded --
+  # is symmetric: it protects curator prose from this loader exactly as much
+  # as it protects one CSV row's notes from another's.
   def merged_notes(family, row)
     new_notes = notes_for(row).presence
     existing_notes = Mobility.with_locale(:en) { family.seed_banking_notes }.presence
     return existing_notes if new_notes.blank?
-    return new_notes if existing_notes.blank? || existing_notes == new_notes
+    return new_notes if existing_notes.blank?
+    return existing_notes if existing_notes.include?(new_notes)
 
     "#{existing_notes}. #{new_notes}"
   end

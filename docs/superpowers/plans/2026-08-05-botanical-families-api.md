@@ -2925,8 +2925,8 @@ COL matches plus 9 high-confidence GBIF spelling corrections); it never
 touches the 8 cases flagged for human review or the 22 with a blank source
 field. Those 8 are resolved by hand, per the specific decisions recorded in
 section 11 (e.g. the two `Leguminaceae` records and the one `Fabacaea` record
-onto Fabaceae), using `updateFamily`... no -- using `updatePlant(familyId:)`
-against each plant's Relay ID once a human has decided its family.
+onto Fabaceae), using `updatePlant(familyId:)` against each plant's Relay ID
+once a human has decided its family.
 
 `updatePlant(familyId:)` is safe to use for this today, even before the SPA
 ships a family picker: per section 10.2, setting `familyId` only writes the

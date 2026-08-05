@@ -133,6 +133,49 @@ RSpec.describe FamilySeedBankingLoader, type: :service do
       expect(Family.find_by(name: 'Amaranthaceae').seed_banking_notes).to eq('Highly suitable. Merged family')
     end
 
+    # The regression the fix wave introduced and then had to fix again: the
+    # original merge guarded only against byte-identical notes
+    # (existing_notes == new_notes), which never happens for a redirect onto
+    # a family with its own row -- the concatenated value never equals either
+    # half again. Every re-run (a partial-failure retry, a CSV correction, a
+    # staging rehearsal replayed against the same seed) appended both halves
+    # again, without bound, onto a field the GraphQL API exposes publicly.
+    # This is the test that should have existed from the start.
+    it 'is idempotent: running the loader twice does not duplicate the merged note' do
+      redirects = { 'Chenopodiaceae' => 'Amaranthaceae' }
+      described_class.new(rows: rows, redirects: redirects, dry_run: false).run
+      once = Family.find_by(name: 'Amaranthaceae').seed_banking_notes
+
+      described_class.new(rows: rows, redirects: redirects, dry_run: false).run
+      twice = Family.find_by(name: 'Amaranthaceae').seed_banking_notes
+
+      expect(twice).to eq(once)
+      expect(twice).to eq('Highly suitable. Merged family')
+    end
+
+    # Documents the chosen behaviour for the second half of the reviewer's
+    # question: appending is deliberate even onto a note a curator wrote by
+    # hand via updateFamily, not only onto the loader's own prior output.
+    # There is no column recording where seed_banking_notes came from, so
+    # there is no way to check "did the loader or a curator write this" --
+    # and discarding whatever is already there on the loader's say-so would
+    # reintroduce exactly the silent-clobber bug this class exists to avoid,
+    # just aimed at curator content instead of a second CSV row. The same
+    # idempotency guard applies here too: re-running after the note already
+    # contains the CSV text must not duplicate it.
+    it 'appends onto a curator-authored note rather than discarding it, and does not duplicate on a re-run' do
+      amaranthaceae = Family.find_by(name: 'Amaranthaceae')
+      Mobility.with_locale(:en) { amaranthaceae.seed_banking_notes = 'Curator note via updateFamily' }
+      amaranthaceae.save!
+
+      own_row = [rows.first]
+      described_class.new(rows: own_row, redirects: {}, dry_run: false).run
+      expect(amaranthaceae.reload.seed_banking_notes).to eq('Curator note via updateFamily. Highly suitable')
+
+      described_class.new(rows: own_row, redirects: {}, dry_run: false).run
+      expect(amaranthaceae.reload.seed_banking_notes).to eq('Curator note via updateFamily. Highly suitable')
+    end
+
     it 'reports the redirect that was applied' do
       report = described_class.new(rows: rows, redirects: { 'Chenopodiaceae' => 'Amaranthaceae' },
                                    dry_run: false).run
