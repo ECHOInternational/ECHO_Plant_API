@@ -77,6 +77,16 @@ class Family < ApplicationRecord
     end
   end
 
+  def translations_array
+    translations.map do |language, attributes|
+      {
+        locale: language,
+        description: attributes['description'],
+        seed_banking_notes: attributes['seed_banking_notes']
+      }
+    end
+  end
+
   private
 
   def assert_importing!

@@ -79,6 +79,21 @@ RSpec.describe Family, type: :model do
     end
   end
 
+  describe '#translations_array' do
+    it 'flattens the Mobility container into per-locale rows' do
+      family = described_class.importing { create(:family) }
+      Mobility.with_locale(:en) do
+        family.description = 'Pea family'
+        family.seed_banking_notes = 'Highly suitable'
+      end
+      family.save!
+
+      row = family.translations_array.find { |t| t[:locale] == 'en' }
+      expect(row[:description]).to eq('Pea family')
+      expect(row[:seed_banking_notes]).to eq('Highly suitable')
+    end
+  end
+
   describe 'the database trigger' do
     it 'refuses a raw INSERT that bypasses the model' do
       expect do
