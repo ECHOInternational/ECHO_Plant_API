@@ -288,6 +288,12 @@ module Types
     field :restore_variety,
           mutation: Mutations::RestoreVariety,
           description: 'Restores a soft-deleted variety'
+    field :restore_plant_version,
+          mutation: Mutations::RestorePlantVersion,
+          description: 'Restores a plant to the state it had immediately after a chosen record history entry'
+    field :restore_variety_version,
+          mutation: Mutations::RestoreVarietyVersion,
+          description: 'Restores a variety to the state it had immediately after a chosen record history entry'
     field :restore_location,
           mutation: Mutations::RestoreLocation,
           description: 'Restores a soft-deleted location'
