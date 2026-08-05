@@ -25,37 +25,6 @@ class FamilySeedBankingLoader
     'high' => 'high'
   }.freeze
 
-  Report = Struct.new(
-    :dry_run,
-    :total,
-    :updated,
-    :redirected,
-    :unmatched,
-    keyword_init: true
-  ) do
-    def to_s
-      (summary_lines + redirected_lines + unmatched_lines + closing_lines).join("\n")
-    end
-
-    private
-
-    def summary_lines
-      ["rows in file        : #{total}", "updated             : #{updated.size}"]
-    end
-
-    def redirected_lines
-      ['redirected to accepted family:'] + redirected.map { |from, to| "  #{from} -> #{to}" }
-    end
-
-    def unmatched_lines
-      ["NO TARGET, needs a decision (#{unmatched.size}):"] + unmatched.map { |name| "  #{name}" }
-    end
-
-    def closing_lines
-      ['', dry_run ? 'DRY RUN. Re-run with DRY_RUN=0 to write.' : 'Done.']
-    end
-  end
-
   class << self
     # The source splits one value across an en dash and an ASCII hyphen:
     # 86 rows say "Low-Medium" with U+2013 and 23 say it with '-'. Both must
@@ -71,28 +40,53 @@ class FamilySeedBankingLoader
     # 'intermediate', not the first category name it happens to contain, so
     # the table's ORDER carries meaning and is not just a lookup.
     STORAGE_RULES = [
-      [->(t) { t.include?('limited data') }, 'unknown'],
-      [->(t) { t.include?('intermediate') }, 'intermediate'],
-      [->(t) { t.start_with?('mixed') }, 'mixed'],
-      [->(t) { t.start_with?('variable') }, 'variable'],
-      [->(t) { t.include?('recalcitrant') }, 'recalcitrant'],
-      [->(t) { t.include?('orthodox') }, 'orthodox']
+      ['limited data', :include, 'unknown'],
+      ['intermediate', :include, 'intermediate'],
+      ['mixed', :start_with, 'mixed'],
+      ['variable', :start_with, 'variable'],
+      ['recalcitrant', :include, 'recalcitrant'],
+      ['orthodox', :include, 'orthodox']
     ].freeze
 
     def normalize_storage(value)
       return nil if value.blank?
 
       text = value.to_s.downcase
-      _matcher, category = STORAGE_RULES.find { |matcher, _category| matcher.call(text) }
+      _keyword, _mode, category = STORAGE_RULES.find { |keyword, mode, _category| storage_match?(text, keyword, mode) }
       category || 'unknown'
     end
 
     # "Mostly orthodox (onions, garlic, leeks)" carries editorial detail that
     # the enum cannot hold. Keep it in the notes rather than silently
-    # discarding it.
+    # discarding it. A row whose category keyword is negated (see
+    # +negated?+ below) falls through normalize_storage to 'unknown' with no
+    # parenthetical to fall back on; without this, the human meaning behind
+    # that fallback -- e.g. "Parasitic plants, no orthodox seeds" -- would be
+    # lost entirely rather than merely under-classified. "Limited data" is
+    # excluded since its own text already says exactly what the enum says.
     def qualifier_from(value)
       match = value.to_s.match(/\(([^)]+)\)/)
-      match && match[1]
+      return match[1] if match
+
+      raw = value.to_s.strip
+      return nil if raw.blank? || raw.downcase.include?('limited data')
+
+      raw if normalize_storage(value) == 'unknown'
+    end
+
+    private
+
+    # A category keyword's mere presence is not enough: "no orthodox seeds"
+    # must NOT match 'orthodox' just because the substring is there. Guards
+    # against "no <category>", "not <category>" and "non-<category>".
+    def storage_match?(text, keyword, mode)
+      return false if negated?(text, keyword)
+
+      mode == :start_with ? text.start_with?(keyword) : text.include?(keyword)
+    end
+
+    def negated?(text, keyword)
+      text.match?(/\b(?:no|not|non-)\s*#{Regexp.escape(keyword)}/)
     end
   end
 

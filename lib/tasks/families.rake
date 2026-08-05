@@ -60,9 +60,13 @@ namespace :families do
     path = ENV.fetch('FILE', 'db/seeds/family_seed_banking.csv')
     rows = CSV.read(path, headers: true).map(&:to_h)
 
-    # Six of the source families are synonyms in COL, so their guidance
-    # belongs on the accepted family. Pomaceae and Lycoperdiaceae have no COL
-    # target at all and are reported rather than guessed at.
+    # Six family names from issue #83's first spreadsheet are COL synonyms,
+    # so their guidance belongs on the accepted family. This map covers that
+    # broader COL-synonym reality, not just what this spreadsheet happens to
+    # exercise: only Chenopodiaceae also appears as a row in
+    # family_seed_banking.csv (the second spreadsheet) -- the other five, and
+    # Lycoperdiaceae (which has no COL target and is reported rather than
+    # guessed at, alongside Pomaceae), never occur as rows here at all.
     redirects = {
       'Chenopodiaceae' => 'Amaranthaceae',
       'Cystoseiraceae' => 'Sargassaceae',

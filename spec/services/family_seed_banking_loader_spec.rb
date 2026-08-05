@@ -48,6 +48,22 @@ RSpec.describe FamilySeedBankingLoader, type: :service do
     it 'returns nil for a blank' do
       expect(described_class.normalize_storage('')).to be_nil
     end
+
+    # The real Balanophoraceae row in db/seeds/family_seed_banking.csv. A bare
+    # `include?('orthodox')` check would classify this as 'orthodox' -- the
+    # exact opposite of what the text says -- because it never accounts for
+    # the "no" in front. Conservative wins: with no positively asserted
+    # category, this must fall to 'unknown', not to a guessed 'recalcitrant'.
+    it 'does not classify a negated category as that category, and falls back to unknown' do
+      value = 'Parasitic plants, no orthodox seeds'
+      expect(described_class.normalize_storage(value)).not_to eq('orthodox')
+      expect(described_class.normalize_storage(value)).to eq('unknown')
+    end
+
+    it 'also guards the "not <category>" and "non-<category>" phrasings' do
+      expect(described_class.normalize_storage('Not recalcitrant')).to eq('unknown')
+      expect(described_class.normalize_storage('Non-orthodox')).to eq('unknown')
+    end
   end
 
   describe '.qualifier_from' do
@@ -60,6 +76,18 @@ RSpec.describe FamilySeedBankingLoader, type: :service do
 
     it 'returns nil when there is none' do
       expect(described_class.qualifier_from('Orthodox')).to be_nil
+    end
+
+    it 'returns nil for the explicit limited data mapping, since its own text already says it' do
+      expect(described_class.qualifier_from('Limited data')).to be_nil
+    end
+
+    # The negation-guarded fallback has no parenthetical to fall back on, so
+    # without this the human meaning behind "no orthodox seeds" would be lost
+    # entirely, not merely under-classified.
+    it 'preserves the raw phrase when normalize_storage falls back to unknown' do
+      value = 'Parasitic plants, no orthodox seeds'
+      expect(described_class.qualifier_from(value)).to eq(value)
     end
   end
 
@@ -127,6 +155,23 @@ RSpec.describe FamilySeedBankingLoader, type: :service do
       family = Family.find_by(name: 'Amaranthaceae')
       expect(family.storage_physiology).to eq('orthodox')
       expect(family.seed_banking_notes).to eq('Editorial note. Storage detail: onions, garlic, leeks')
+    end
+
+    # The real Balanophoraceae row (db/seeds/family_seed_banking.csv line 35):
+    # `Balanophoraceae,"Parasitic plants, no orthodox seeds",,1,Unsuitable`.
+    # Proves the end-to-end pipeline, not just the normalizer in isolation --
+    # this is the row that would have silently written 'orthodox' before the
+    # negation guard.
+    it 'classifies the real negated row as unknown and keeps its wording in the notes' do
+      negated_rows = [{ 'family' => 'Amaranthaceae',
+                        'storage_physiology' => 'Parasitic plants, no orthodox seeds',
+                        'seed_longevity' => '', 'seed_banking_rank' => '1',
+                        'seed_banking_notes' => 'Unsuitable' }]
+      described_class.new(rows: negated_rows, redirects: {}, dry_run: false).run
+      family = Family.find_by(name: 'Amaranthaceae')
+      expect(family.storage_physiology).to eq('unknown')
+      expect(family.seed_longevity).to be_nil
+      expect(family.seed_banking_notes).to eq('Unsuitable. Storage detail: Parasitic plants, no orthodox seeds')
     end
   end
 end
