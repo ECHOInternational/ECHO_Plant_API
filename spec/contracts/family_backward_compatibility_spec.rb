@@ -4,16 +4,38 @@ require 'rails_helper'
 
 # The brief requires demonstrating, not asserting, that existing queries return
 # byte-identical results for every field other than the new ones.
-RSpec.describe 'families changes nothing that already worked', type: :request do
+RSpec.describe 'families changes nothing that already worked', type: :graphql_query do
   let(:family) { Family.importing { create(:family, name: 'Fabaceae') } }
 
-  # Exactly the field set the frozen mobile app requests in getPlantDetail.
+  # The exact getPlantDetail selection locked in
+  # spec/contracts/mobile_reads_contract_spec.rb:271-293, plus createdBy,
+  # createdAt, updatedAt and ownedBy for ownership/audit coverage. That
+  # superset is strictly stronger evidence than the frozen selection alone.
   let(:mobile_query) do
     <<~GQL
       query($id: ID!) {
         plant(id: $id) {
-          id primaryCommonName description scientificName familyNames
-          createdBy createdAt updatedAt ownedBy
+          id
+          primaryCommonName
+          description
+          scientificName
+          familyNames
+          images(first: 1) {
+            nodes {
+              baseUrl
+            }
+          }
+          cookingAndNutrition
+          cultivation
+          harvestingAndSeedProduction
+          origin
+          uses
+          pestsAndDiseases
+          attribution
+          createdBy
+          createdAt
+          updatedAt
+          ownedBy
         }
       }
     GQL
