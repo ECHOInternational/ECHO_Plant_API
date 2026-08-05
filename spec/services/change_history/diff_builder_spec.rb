@@ -56,6 +56,24 @@ RSpec.describe ChangeHistory::DiffBuilder, versioning: true do
     )
   end
 
+  it 'renders visibility from the raw integers PaperTrail stores when the item is gone' do
+    # PaperTrail's enum deserialization is skipped whenever `item` resolves to
+    # nil (see version_concern.rb: "unless item.nil?" guards the attribute
+    # serializer call, with the comment "item returns nil if event is
+    # destroy"). Destroy versions hit this path in production. We reproduce it
+    # here on an update version by deleting the row out from under it, which
+    # makes `item` nil the same way a destroy does.
+    plant = create(:plant, :private)
+    plant.update!(visibility: :public)
+    version = last_version(plant)
+
+    Plant.where(id: plant.id).delete_all
+    expect(version.changeset['visibility']).to eq [0, 1] # sanity: raw integers, not enum strings
+
+    change = described_class.new(version).call.find { |c| c[:field] == 'visibility' }
+    expect(change).to eq(field: 'visibility', locale: nil, before: 'PRIVATE', after: 'PUBLIC')
+  end
+
   it 'flattens translations into one entry per locale and attribute' do
     plant = create(:plant)
     Mobility.with_locale(:es) { plant.update!(uses: 'Usos nuevos') }

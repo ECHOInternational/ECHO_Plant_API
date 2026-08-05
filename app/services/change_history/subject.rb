@@ -37,13 +37,21 @@ module ChangeHistory
     def label
       case subject_type
       when RECORD then nil
-      when 'common_name' then changeset_value('name')
+      when 'common_name' then common_name_label
       when 'image' then Image.find_by(id: @version.item_id)&.name
       else join_label
       end
     end
 
     private
+
+    # Updates that touch some other attribute (e.g. location) don't carry a
+    # 'name' key in the changeset at all, so the row is still live and worth a
+    # lookup. Creates and destroys always carry 'name', and for destroys the
+    # row is gone, so the changeset stays authoritative there.
+    def common_name_label
+      changeset_value('name') || CommonName.find_by(id: @version.item_id)&.name
+    end
 
     def join_label
       config = JOIN_TYPES[@version.item_type]

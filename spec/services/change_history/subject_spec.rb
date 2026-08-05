@@ -33,6 +33,18 @@ RSpec.describe ChangeHistory::Subject, versioning: true do
     expect(subject.label).to eq 'Removed Name'
   end
 
+  it 'labels a common name update that only touches a non-name attribute' do
+    common_name = create(:common_name, name: 'Still Named', location: 'Old Field')
+    common_name.update!(location: 'New Field')
+    version = last_version(common_name)
+
+    expect(version.changeset).not_to have_key('name')
+
+    subject = described_class.new(version)
+    expect(subject.subject_type).to eq 'common_name'
+    expect(subject.label).to eq 'Still Named'
+  end
+
   it 'labels a join row with the linked lookup name' do
     category = create(:category, name: 'Legumes')
     link = CategoriesPlant.create!(plant: create(:plant), category: category)
