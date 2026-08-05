@@ -41,9 +41,41 @@ Codegen against the deployed staging schema; capabilities replace `owns()`; org 
 
 Set `ORG_AUTHZ_CUTOVER=log_only` on the API. This does NOT change enforcement: the legacy email/trust-9 branches keep granting access exactly as before. What it adds is a structured `authz.legacy_divergence` log event (implemented in `OwnedResourcePolicy#log_legacy_divergence`) emitted whenever an access is granted **only** by a legacy branch and would be denied once legacy authorization is removed (fields: action, record type/id, principal id, owner org id — no PII). A soak window with **zero** such events is the evidence gate for S7. The enforcement flip (removing the legacy branches) is part of S7 cleanup, not this stage, because the mobile fleet keeps depending on legacy owner behavior until each user's records live in their personal org (which the backfill guarantees). In practice S6 is observation, not behavior change.
 
-## Stage S7 — Cleanup (IMPLEMENTED 2026-08-04)
+## Stage S7 — Cleanup (LIVE IN PRODUCTION 2026-08-05)
 
-Prerequisites, each with evidence:
+**The ownership redesign is complete.** Production runs S7: authorization is organization membership alone, with trust >= 10 as the single global bypass. Post-deploy evidence: `ownership:verify` PASS, `ownership:preflight` PASS (0 unreachable), API serving, and all four frozen mobile documents still validating against the live schema.
+
+### The pre-flight, and why it exists
+
+S7 was blocked for a day by a problem no existing gate could see. `ownership:verify` checks the three ownership columns for NULLs; it does **not** check whether a non-NULL `owner_organization_id` is *reachable*. After S7 a personal organization is resolved from the JWT by `(identity_issuer, external_uid)` and never by email, so a record owned by a personal org whose principal has `external_uid IS NULL` is unreachable by everyone -- no token can resolve to it. The legacy email rule had been papering over this.
+
+`rake ownership:preflight` was written to answer exactly that, and against production it returned **FAIL: 336 records across 8 owners**. Those principals came from the backfill's legacy-email path, which handles owners missing from the identity export -- and the export selects `User.where.not(uid: nil)`. That is how they were missed. The S6 divergence soak could not have caught it either: it only observes users who make requests, and the affected users were precisely the ones not logging in.
+
+Note what the soak and `verify` both said before this: clean. Two green gates and a real problem behind them.
+
+### The repair
+
+`rake ownership:repair_unreachable` (config supplied at runtime via `REPAIR_MAPPING`; **never commit the addresses -- this repository is public**) resolved all 336:
+
+- **125 records, 4 owners**: their real IdP accounts existed under *different* email addresses. Linking ADOPTS the real uid onto the existing legacy principal, so the organization becomes reachable and no record is rewritten.
+- **211 records, 4 addresses**: confirmed disposable by the account holder and deleted.
+
+Then pre-flight returned PASS and S7 shipped.
+
+### Things that would each have silently broken this
+
+- **The frozen mobile app hard-deletes a location the user owns** during seed-trial sync (`echocommunity-app/app/store/SeedTrialReports/action.js:3736`). The legacy email rule authorized it; removing that rule collapsed `destroy?` to superuser-only and would have broken sync for every mobile user. `spec/contracts/mobile_writes_contract` caught it. `LocationPolicy#destroy?` now grants it via the record's own personal organization only.
+- **Superusers holding no org claims could not edit or restore anything.** Trust 10 had been reaching `update?`/`soft_delete?`/`restore?` *through* the trust-9 branch that S7 deletes. The bypass now lives in `OwnedResourcePolicy#organization_capability?`.
+- **`ImagePolicy#show?` tested the imageable's `update?`, not its `show?`** -- a read-tier org member could not see an image on a record they can plainly read.
+- **uid case is load-bearing.** IdP uids are mixed case; Postgres comparison is case-sensitive and `Principal.resolve!` matches `external_uid` exactly. A normalized uid resolves to nothing and recreates the bug.
+
+### Deliberate behaviour changes
+
+- Hard delete is superuser-only wherever a soft delete exists. **Plant and Variety owners lost hard delete** (they keep soft delete). No shipped client calls those mutations. Specimen and Location are the exceptions, each for a documented reason in its policy.
+- Trust 9 is an ordinary writer.
+
+### Original prerequisites, for the record
+
 - Zero `authz.legacy_divergence` events over an agreed window. **Met**: 173 events total, all inside one 30-second admin browse on 2026-07-15, attributed and accepted; silent since.
 - Staff trust-9 accounts hold equivalent ECHO-org memberships (IdP admin export). **Met**: the production trust audit (2026-08-03) found exactly one account at plant trust >= 9, already holding ECHO:org_admin, and zero accounts without a membership.
 - Mobile app release consuming capability fields shipped + adoption threshold agreed (or product accepts the legacy window indefinitely for mobile). **Taken as the second branch**: the app is frozen and only its external developer can release it, so the frozen documents under `spec/contracts/mobile_*` are the standing evidence instead. They pass unchanged in intent against the S7 policies.
