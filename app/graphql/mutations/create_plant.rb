@@ -15,10 +15,6 @@ module Mutations
     argument :family_names, String,
              required: false,
              description: 'The family names of the plant'
-    argument :family_id, GraphQL::Types::ID,
-             required: false,
-             loads: Types::FamilyType,
-             description: 'The botanical family this plant belongs to'
     argument :language, String,
              required: false,
              description: 'Language of the translatable fields supplied'
@@ -31,6 +27,7 @@ module Mutations
 
     include Mutations::Concerns::PlantEditableArguments
     include Mutations::Concerns::RangeLiteralValidation
+    include Mutations::Concerns::FamilyAssignment
 
     field :plant, Types::PlantType, null: true
     field :errors, [Types::MutationError], null: false
@@ -39,7 +36,7 @@ module Mutations
       authorize Plant, :create?
     end
 
-    def resolve(**attributes) # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+    def resolve(**attributes) # rubocop:disable Metrics/AbcSize
       range_errors = validate_range_literals(attributes)
       return { plant: nil, errors: range_errors } if range_errors.any?
 
@@ -65,14 +62,7 @@ module Mutations
 
       Mobility.with_locale(language) do
         plant = Plant.new(attributes.except(:family))
-        # The legacy free-text column stays authoritative for whatever a human
-        # typed. We only fill it in when it is empty, so a plant classified
-        # through the new relation still shows something useful in the clients
-        # that read family_names, without ever clobbering a person's own words.
-        if attributes.key?(:family)
-          plant.family = attributes[:family]
-          plant.family_names = attributes[:family]&.name if plant.family_names.blank?
-        end
+        apply_family(plant, attributes)
         plant.common_names.build(name: primary_common_name, language: language.upcase, primary: true)
         result = plant.save
         errors = errors_from_active_record plant.errors
