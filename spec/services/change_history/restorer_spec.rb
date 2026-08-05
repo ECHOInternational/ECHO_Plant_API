@@ -21,41 +21,29 @@ RSpec.describe ChangeHistory::Restorer, versioning: true do
       expect(plant.reload.scientific_name).to eq 'Original'
     end
 
-    it 'drops a blank (nil or {}) captured translations value instead of writing it' do
+    it 'skips a blank captured translations value instead of raising' do
       # Regression test for a 500 the history-drawer e2e spec hit end to end:
-      # `translations` is NOT NULL with a {} default. A record whose
-      # translations column has never been explicitly written (still exactly
-      # that default -- the common case for an edit that only touches
-      # structural/enum fields, e.g. CreatePlant with no translated argument)
-      # can have PaperTrail capture either a bare nil OR a "correct-looking"
-      # empty {} for that column in a version's snapshot (both observed
-      # against the real dev server) -- there is no real "before" content
-      # either way, because the attribute never entered ActiveRecord's
-      # dirty-tracking set for any save. Writing a literal nil back violates
-      # the NOT NULL constraint outright. Writing an explicit {} is not a safe
-      # fix either -- that still goes through Mobility's container-backend
-      # writer, which hits a documented cache/dirty-tracking defect (see
-      # config/application.rb's partial_inserts comment) that can *also*
-      # persist nil despite the assigned value. Only dropping the key entirely
-      # (so Rails' partial writes never touch the column at all) verified
-      # reliable. Stubbed at the `reified` seam (rather than trying to
-      # naturally reproduce a blank-translations snapshot end to end, which
-      # depends on those same Mobility/ActiveRecord internals) so this test
-      # reliably exercises exactly the guard clause the fix added.
-      create_version = versions_for(plant).first
-      restorer = described_class.new(record: plant, version_id: create_version.id)
+      # `translations` is `jsonb NOT NULL DEFAULT '{}'`. See the comment on
+      # ChangeHistory::Restorer#restorable_attributes for the verified
+      # mechanism -- in short, ActiveRecord::Type::Serialized#serialize
+      # returns nil (not a dumped `{}`) for any value equal to the column's
+      # blank default, so no assignable value can persist an empty jsonb back
+      # into this NOT NULL column. This reproduces the failure end to end,
+      # not stubbed: clear the plant's only translated field so its
+      # translations column genuinely collapses to `{}`, capture that as the
+      # restore target, then restore over a later edit. Pre-fix this raised
+      # ActiveRecord::NotNullViolation; post-fix it succeeds and -- per the
+      # documented silent-partial-restore semantic -- leaves the record's
+      # current (re-added) translated content alone rather than reverting it.
+      plant = create(:plant)
+      Mobility.with_locale(:en) { plant.update!(description: nil) }
+      target = PaperTrail::Version.where(item_type: 'Plant', item_id: plant.id).order(:id).last
+      Mobility.with_locale(:en) { plant.update!(description: 'Re-added') }
 
-      [nil, {}].each do |blank_value|
-        reified_double = instance_double(
-          Plant, attributes: { 'translations' => blank_value, 'scientific_name' => 'Reified' }
-        )
-        allow(restorer).to receive(:reified).and_return(reified_double)
+      result = described_class.new(record: plant, version_id: target.id).call
 
-        attrs = restorer.send(:restorable_attributes)
-
-        expect(attrs).not_to have_key('translations')
-        expect(attrs['scientific_name']).to eq 'Reified'
-      end
+      expect(result.errors).to be_empty
+      expect(Mobility.with_locale(:en) { plant.reload.description }).to eq 'Re-added'
     end
 
     it 'restores translated values' do

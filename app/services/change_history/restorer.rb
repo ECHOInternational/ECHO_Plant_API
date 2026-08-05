@@ -98,23 +98,36 @@ module ChangeHistory
     def restorable_attributes
       allowed = RESTORABLE_ATTRIBUTES.fetch(@item_type, [])
       attrs = reified.attributes.slice(*allowed)
-      # `translations` is NOT NULL with a `{}` default. When the live record's
-      # translations column has never been explicitly written (still exactly
-      # that schema default, so it never entered ActiveRecord's dirty-tracking
-      # set for any save), PaperTrail's captured snapshot carries either a bare
-      # nil OR a "correct-looking" empty {} for it (observed both, verified
-      # against the real dev server) -- there is no real "before" content
-      # either way. Writing a literal nil violates the NOT NULL constraint
-      # outright, and -- less obviously -- even writing an explicit {} through
-      # Mobility's container-backend writer hits a known cache/dirty-tracking
-      # defect (see config/application.rb's partial_inserts comment) that can
-      # *also* persist nil despite the assigned value. Dropping the key
-      # whenever the captured value is blank (nil or {}) sidesteps both: Rails'
-      # partial writes then simply never touch the column, leaving its current
-      # (already correct) value alone. A record that genuinely has translated
-      # content reifies a non-blank hash and is unaffected -- that write still
-      # goes through normally.
-      attrs.delete('translations') if attrs.key?('translations') && attrs['translations'].blank?
+      # `translations` is `jsonb NOT NULL DEFAULT '{}'`. Mobility's container
+      # backend declares it with `store :translations, coder:
+      # Mobility::Backends::ActiveRecord::Container::Coder` (plain
+      # ActiveRecord::Store); Store#store wraps that Coder in an
+      # ActiveRecord::Store::IndifferentCoder and declares the column via
+      # `serialize`, so the column's ActiveRecord type ends up
+      # ActiveRecord::Type::Serialized using that composite as `coder`.
+      # Type::Serialized#serialize special-cases any assigned value that
+      # equals `coder.load(nil)` -- which evaluates to a bare `{}`, since the
+      # inner Coder's own #dump strips every blank leaf down to nothing -- and
+      # returns nil for it instead of dumping it, so the write hits the column
+      # as SQL NULL and the NOT NULL constraint rejects it. Empirically
+      # verified against this schema: both `record.update!(translations: {})`
+      # and `record.update!(translations: nil)` raise
+      # ActiveRecord::NotNullViolation. A captured version whose translations
+      # were blank at that point in history reifies to exactly that bare `{}`,
+      # so there is no assignable value -- nil, {}, or anything else that
+      # honestly represents "empty" -- that can persist it back through a
+      # normal write. Dropping the key is the only fix at this layer: Rails'
+      # partial write then never touches the column, leaving the record's
+      # current value alone.
+      #
+      # That has a real semantic consequence, accepted here rather than fixed:
+      # if the *target* version's translations were genuinely empty, this
+      # restore keeps the record's CURRENT translated content in place instead
+      # of clearing it, and still reports success -- a silent partial restore
+      # for that one column. The correct fix lives at the type/coder layer
+      # (stop collapsing an explicit empty hash to the same sentinel as "no
+      # value") and is deliberately out of scope here.
+      attrs.delete('translations') if attrs['translations'].blank?
       attrs
     end
 
