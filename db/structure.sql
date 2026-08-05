@@ -1333,6 +1333,13 @@ CREATE INDEX index_versions_on_item_type_and_item_id ON public.versions USING bt
 
 
 --
+-- Name: index_versions_on_metadata_jsonb_path_ops; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_versions_on_metadata_jsonb_path_ops ON public.versions USING gin (metadata jsonb_path_ops);
+
+
+--
 -- Name: categories fk_categories_created_by_principal; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1747,6 +1754,7 @@ ALTER TABLE ONLY public.varieties
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260805000001'),
 ('20260804000001'),
 ('20260713000007'),
 ('20260713000006'),
