@@ -63,6 +63,7 @@ on:
           - report
           - verify
           - preflight
+          - repair_unreachable
           - backfill_staging_rehearsal
           - backfill
       dry_run:
@@ -110,7 +111,7 @@ jobs:
       # same confirmation. The rehearsal being staging-only is a reason for
       # fewer consequences, not for fewer gates.
       - name: Fail if real backfill requested without confirmation
-        if: (inputs.action == 'backfill' || inputs.action == 'backfill_staging_rehearsal') && inputs.dry_run == false
+        if: (inputs.action == 'backfill' || inputs.action == 'backfill_staging_rehearsal' || inputs.action == 'repair_unreachable') && inputs.dry_run == false
         run: |
           if [ "${{ inputs.confirm_real_run }}" != "RUN-REAL-BACKFILL" ]; then
             echo "::error::SAFETY GATE: a writing backfill with dry_run=FALSE requires"
@@ -185,6 +186,21 @@ jobs:
               # to gate, so the audit can answer for production BEFORE the risky
               # change is anywhere near it.
               RAKE_CMD="bundle exec rake ownership:preflight"
+              ;;
+            repair_unreachable)
+              # Repairs what preflight found. The affected addresses and uids
+              # are PERSONAL DATA and this repository is PUBLIC, so they are
+              # never in the code -- they come from a private mapping object at
+              # runtime, exactly as ownership:backfill takes its MAPPING.
+              if [ -z "${{ inputs.mapping_s3_uri }}" ]; then
+                echo "::error::action=repair_unreachable requires mapping_s3_uri (private s3:// object)."
+                exit 1
+              fi
+              DR_FLAG="DRY_RUN=1"
+              if [ "$DRY_RUN" = "false" ]; then
+                DR_FLAG="DRY_RUN=0"
+              fi
+              RAKE_CMD="bundle exec rake ownership:repair_unreachable REPAIR_MAPPING=${{ inputs.mapping_s3_uri }} ${DR_FLAG}"
               ;;
             backfill_staging_rehearsal)
               # Fills ownership on STAGING so S7 can be rehearsed against
