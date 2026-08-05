@@ -9,6 +9,10 @@ module Mutations
     argument :description, String, required: false
     argument :scientific_name, String, required: false
     argument :family_names, String, required: false
+    argument :family_id, GraphQL::Types::ID,
+             required: false,
+             loads: Types::FamilyType,
+             description: 'The botanical family this plant belongs to'
     argument :language, String, required: false
     argument :visibility, Types::VisibilityEnum, required: false
     argument :publication_state, Types::PublicationStateEnum,
@@ -50,8 +54,17 @@ module Mutations
         plant.common_names.build(name: primary_common_name, language: language.upcase, primary: true)
       end
 
+      # The legacy free-text column stays authoritative for whatever a human
+      # typed. We only fill it in when it is empty, so a plant classified
+      # through the new relation still shows something useful in the clients
+      # that read family_names, without ever clobbering a person's own words.
+      if attributes.key?(:family)
+        plant.family = attributes[:family]
+        plant.family_names = attributes[:family]&.name if plant.family_names.blank?
+      end
+
       Mobility.with_locale(language) do
-        plant.update(attributes.except(:language).except(:primary_common_name))
+        plant.update(attributes.except(:language).except(:primary_common_name).except(:family))
         {
           plant: plant,
           errors: errors_from_active_record(plant.errors)

@@ -1874,6 +1874,11 @@ input CreatePlantInput {
   edibleMatureFruitNote: String
 
   """
+  The botanical family this plant belongs to
+  """
+  familyId: ID
+
+  """
   The family names of the plant
   """
   familyNames: String
@@ -9134,6 +9139,11 @@ input UpdatePlantInput {
   The translatable edible mature fruit note of the plant
   """
   edibleMatureFruitNote: String
+
+  """
+  The botanical family this plant belongs to
+  """
+  familyId: ID
   familyNames: String
 
   """
