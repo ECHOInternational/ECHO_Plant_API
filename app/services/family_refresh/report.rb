@@ -7,13 +7,28 @@ class FamilyRefresh
   # the rake task thin and FamilyRefresh itself under Metrics/ClassLength.
   # Nothing here touches the database, it only formats a diff hash that was
   # already computed.
+  #
+  # The four bucket sections below (rename/merge/split/no-successor) are
+  # candidates from one automated name lookup per vanished name, not
+  # taxonomic facts -- see FamilyRefresh#classify_vanished. This is the
+  # output an operator actually reads before typing 'yes', so the legend
+  # saying so lives here, not only in a report file nobody opens at 2am.
   class Report
+    # [title, diff key, verb] for each vanished-family bucket, in the order
+    # they print. Kept as one table instead of four near-identical methods.
+    BUCKETS = [
+      ['RENAME CANDIDATES (same taxon, new label)', :renamed_candidates, 'apply_rename'],
+      ['MERGE CANDIDATES (now a synonym of a family we already hold)', :merge_candidates, 'apply_merge'],
+      ['SPLIT CANDIDATES (COL names no single successor)', :split_candidates, nil],
+      ['NO SUCCESSOR FOUND (gone upstream, nothing plausible)', :no_successor, nil]
+    ].freeze
+
     def initialize(diff)
       @diff = diff
     end
 
     def to_s
-      [header, counts, vanished_detail, col_id_conflict_detail, footer].compact.join("\n")
+      ([header, counts, legend] + bucket_sections + [col_id_conflict_detail, footer]).compact.join("\n")
     end
 
     private
@@ -29,7 +44,7 @@ class FamilyRefresh
       [
         count_line('unchanged', diff[:unchanged]),
         count_line('new upstream (would be added)', diff[:added].size),
-        count_line('gone upstream (needs a decision)', diff[:vanished].size)
+        count_line('gone upstream, total (see buckets below)', diff[:vanished].size)
       ].join("\n")
     end
 
@@ -37,16 +52,28 @@ class FamilyRefresh
       format('  %<label>-40s %<count>5d', label: label, count: count)
     end
 
-    def vanished_detail
-      return nil if diff[:vanished].empty?
+    def legend
+      "\nEach bucket below comes from one Catalogue of Life name lookup per vanished " \
+        'family. It is a candidate, not a fact: verify against COL directly before ' \
+        'running apply_rename or apply_merge. Nothing has been changed by this report.'
+    end
 
-      lines = ["\nFAMILIES NO LONGER ACCEPTED UPSTREAM",
-               'Each needs a human decision. Nothing is repointed automatically.']
-      diff[:vanished].each do |family|
-        count = diff[:affected_plant_counts][family.name]
-        lines << "  #{family.name} (#{count} plant(s) reference it)"
-      end
+    def bucket_sections
+      BUCKETS.map { |title, key, verb| bucket_detail(title, diff[key], verb) }
+    end
+
+    def bucket_detail(title, entries, verb)
+      return nil if entries.empty?
+
+      lines = ["\n#{title}"]
+      lines << "Human decision required. Confirmed by re-running with #{verb} on each." if verb
+      entries.each { |entry| lines << bucket_line(entry) }
       lines.join("\n")
+    end
+
+    def bucket_line(entry)
+      arrow = entry[:target_name] ? " -> #{entry[:target_name]}" : ''
+      "  #{entry[:family].name}#{arrow} (#{entry[:plant_count]} plant(s) reference it)"
     end
 
     def col_id_conflict_detail
@@ -59,8 +86,8 @@ class FamilyRefresh
     end
 
     def footer
-      "\nRun with APPLY=1 to add new families. Merges are applied individually, " \
-        'after review, via FamilyRefresh#apply_merge.'
+      "\nRun with APPLY=1 to add new families. Renames and merges are applied " \
+        'individually, after review, via FamilyRefresh#apply_rename / #apply_merge.'
     end
   end
 end

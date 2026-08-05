@@ -55,6 +55,29 @@ class CatalogueOfLife
     KINGDOMS.flat_map { |id, name| families(kingdom_id: id, kingdom_name: name) }
   end
 
+  # Looks up a single family-rank name in THIS release, to answer "is our
+  # name now a synonym, and if so of what". Used by FamilyRefresh only for
+  # names that vanished from the accepted set -- one request per vanished
+  # name, never per family, since COL's own monthly churn keeps that set in
+  # the single digits.
+  #
+  # Returns a status the caller can switch on rather than raising, because a
+  # refresh diff must never crash on one bad name: {status: :synonym,
+  # accepted_name:}, {status: :ambiguous_synonym} (COL's own status for a
+  # name with no single successor -- the closest available signal for a
+  # split, since neither this response nor our own schema carries a
+  # parent/order we could otherwise compare against), {status: :accepted}
+  # (the name is accepted after all; a name-matching inconsistency upstream
+  # of this call, not a taxonomic event), {status: :not_found}, or
+  # {status: :error} for anything unexpected -- network failure or a
+  # response shape this method does not recognize. FamilyRefresh treats
+  # every status except :synonym and :ambiguous_synonym as unclassified.
+  def synonym_lookup(name)
+    SynonymClassifier.call(name, get_name_search(name))
+  rescue StandardError
+    { status: :error }
+  end
+
   def families(kingdom_id:, kingdom_name:)
     rows = []
     offset = 0
@@ -93,6 +116,12 @@ class CatalogueOfLife
       rank: 'family', status: 'accepted', TAXON_ID: kingdom_id,
       limit: PAGE_SIZE, offset: offset
     )
+    JSON.parse(http_get(uri))
+  end
+
+  def get_name_search(name)
+    uri = URI("#{HOST}/dataset/#{dataset}/nameusage/search")
+    uri.query = URI.encode_www_form(q: name, rank: 'family')
     JSON.parse(http_get(uri))
   end
 

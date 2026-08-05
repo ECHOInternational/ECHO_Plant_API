@@ -50,4 +50,59 @@ RSpec.describe CatalogueOfLife do
                             kingdom: 'Plantae', plant_type: 'Angiosperms' }])
     end
   end
+
+  describe '#synonym_lookup' do
+    subject(:client) { described_class.new(dataset: '315834') }
+
+    def hit_for(name, status:, accepted_name: nil)
+      usage = { 'name' => { 'scientificName' => name }, 'status' => status }
+      usage['accepted'] = { 'name' => { 'scientificName' => accepted_name } } if accepted_name
+      { 'usage' => usage }
+    end
+
+    def stub_search(result)
+      allow(client).to receive(:get_name_search).with('Tiliaceae').and_return({ 'result' => result })
+    end
+
+    it 'reports a synonym and the accepted name it now points at' do
+      stub_search([hit_for('Tiliaceae', status: 'synonym', accepted_name: 'Malvaceae')])
+      expect(client.synonym_lookup('Tiliaceae')).to eq(status: :synonym, accepted_name: 'Malvaceae')
+    end
+
+    it 'reports an ambiguous synonym distinctly, with no single target' do
+      stub_search([hit_for('Tiliaceae', status: 'ambiguous synonym')])
+      expect(client.synonym_lookup('Tiliaceae')).to eq(status: :ambiguous_synonym)
+    end
+
+    it 'reports :accepted rather than guessing when the name turns out not to be gone at all' do
+      stub_search([hit_for('Tiliaceae', status: 'accepted')])
+      expect(client.synonym_lookup('Tiliaceae')).to eq(status: :accepted)
+    end
+
+    it 'reports :not_found when nothing matches the queried name' do
+      stub_search([hit_for('Somethingelseaceae', status: 'accepted')])
+      expect(client.synonym_lookup('Tiliaceae')).to eq(status: :not_found)
+    end
+
+    it 'reports :not_found for an empty result set' do
+      stub_search([])
+      expect(client.synonym_lookup('Tiliaceae')).to eq(status: :not_found)
+    end
+
+    it 'matches the queried name case-insensitively among several results' do
+      stub_search([hit_for('Somethingelseaceae', status: 'accepted'),
+                   hit_for('TILIACEAE', status: 'synonym', accepted_name: 'Malvaceae')])
+      expect(client.synonym_lookup('Tiliaceae')).to eq(status: :synonym, accepted_name: 'Malvaceae')
+    end
+
+    it 'falls back to :error rather than raising when the request itself fails' do
+      allow(client).to receive(:get_name_search).and_raise(StandardError, 'boom')
+      expect(client.synonym_lookup('Tiliaceae')).to eq(status: :error)
+    end
+
+    it 'falls back to :error rather than raising on an unexpected response shape' do
+      allow(client).to receive(:get_name_search).and_return('not' => 'the expected shape')
+      expect(client.synonym_lookup('Tiliaceae')).to eq(status: :not_found)
+    end
+  end
 end

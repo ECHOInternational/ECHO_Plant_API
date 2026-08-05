@@ -90,9 +90,10 @@ end
 namespace :families do
   desc <<~DESC
     Diff the family list against a Catalogue of Life release and report changes.
-    Applies nothing without APPLY=1 and an explicit confirmation. Merges are
-    never applied here: each one needs a human to confirm the target, via
-    FamilyRefresh#apply_merge.
+    Applies nothing without APPLY=1 and an explicit confirmation. Renames and
+    merges are never applied here: each needs a human to confirm the target,
+    via FamilyRefresh#apply_rename / #apply_merge, after checking the report's
+    rename/merge/split/no-successor buckets against COL directly.
     ENV:
       DATASET  ChecklistBank dataset key to compare against
       APPLY    '1' to apply additions after typing 'yes' to confirm
@@ -101,7 +102,10 @@ namespace :families do
     client = CatalogueOfLife.new(dataset: ENV.fetch('DATASET', CatalogueOfLife::DEFAULT_DATASET))
     puts "Fetching #{client.dataset}..."
 
-    refresh = FamilyRefresh.new(client.all_families)
+    # Same client for both: the per-name synonym lookups #diff makes for
+    # each vanished name must query this exact release, not a fresh default
+    # one, or a rename/merge target would be checked against the wrong data.
+    refresh = FamilyRefresh.new(client.all_families, client: client)
     diff = refresh.diff
     puts FamilyRefresh::Report.new(diff)
 
@@ -112,6 +116,6 @@ namespace :families do
     next puts('Aborted.') unless $stdin.gets.to_s.strip == 'yes'
 
     added = refresh.apply_additions!(diff[:added], version: ENV.fetch('VERSION', CatalogueOfLife::DEFAULT_VERSION))
-    puts "Added #{added}. Merges must be applied individually after review."
+    puts "Added #{added}. Renames and merges must be applied individually after review."
   end
 end
