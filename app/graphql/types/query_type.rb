@@ -42,6 +42,7 @@ module Types
     field :varieties, resolver: Resolvers::VarietiesResolver, connection: true
     field :specimens, resolver: Resolvers::SpecimensResolver, connection: true
     field :locations, resolver: Resolvers::LocationsResolver, connection: true
+    field :families, resolver: Resolvers::FamiliesResolver, connection: true
 
     # Object Queries
     field :life_cycle_event, Types::LifeCycleEventType, null: true do
@@ -195,6 +196,22 @@ module Types
       item_id = decode_global_id(id)
       Mobility.locale = language || I18n.locale
       GrowthHabit.find(item_id)
+    end
+
+    field :family, Types::FamilyType, null: true do
+      description 'Find a family by ID'
+      argument :id,
+               type: ID,
+               required: true
+      argument :language,
+               type: String,
+               required: false,
+               description: 'Request returned fields in a specific language. Overrides ACCEPT-LANGUAGE header.'
+    end
+    def family(id:, language: nil)
+      item_id = decode_global_id(id)
+      Mobility.locale = language || I18n.locale
+      Family.find(item_id)
     end
 
     field :organization, Types::OrganizationType, null: true do
