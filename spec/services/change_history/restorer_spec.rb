@@ -57,18 +57,65 @@ RSpec.describe ChangeHistory::Restorer, versioning: true do
     end
 
     it 'never touches ownership, visibility or sync columns' do
+      other_org = create(:organization, :real)
+      other_creator = create(:principal)
+      other_owned_by = Faker::Internet.email
       create_version = versions_for(plant).first
-      plant.update!(scientific_name: 'Second', visibility: :public)
+      original_owned_by = plant.owned_by
+
+      # Genuinely diverge the live row from the snapshot the restore will
+      # reify: if any of these columns were in the write whitelist, the
+      # restore would revert them to their create-time values below, and
+      # these assertions would catch it. Before this, only `visibility`
+      # differed between snapshot and live row, so the ownership/sync
+      # assertions passed whether or not the code wrote them.
+      plant.update!(
+        scientific_name: 'Second',
+        visibility: :public,
+        owner_organization_id: other_org.id,
+        created_by_principal_id: other_creator.id,
+        owned_by: other_owned_by
+      )
       owner = plant.owner_organization_id
       creator = plant.created_by_principal_id
+      owned_by = plant.owned_by
+      publication_state = plant.publication_state
+      access_level = plant.access_level
+      deleted_at = plant.deleted_at
+
+      expect(owner).to eq other_org.id
+      expect(creator).to eq other_creator.id
+      expect(owned_by).not_to eq original_owned_by
 
       described_class.new(record: plant, version_id: create_version.id).call
       plant.reload
 
+      expect(plant.scientific_name).to eq 'Original'
       expect(plant.visibility).to eq 'public'
       expect(plant.owner_organization_id).to eq owner
       expect(plant.created_by_principal_id).to eq creator
-      expect(plant.owned_by).to be_present
+      expect(plant.owned_by).to eq owned_by
+      expect(plant.publication_state).to eq publication_state
+      expect(plant.access_level).to eq access_level
+      expect(plant.deleted_at).to eq deleted_at
+    end
+
+    it 'discards unsaved changes on the caller instance before restoring' do
+      create_version = versions_for(plant).first
+      plant.update!(scientific_name: 'Second')
+
+      # Simulate a caller handing over an instance with a pending, unsaved
+      # mutation to a disallowed column. @record.update(attributes) would
+      # persist this alongside the whitelisted attributes if the service
+      # did not reload first.
+      plant.visibility = :public
+
+      result = described_class.new(record: plant, version_id: create_version.id).call
+
+      expect(result.errors).to be_empty
+      plant.reload
+      expect(plant.visibility).to eq 'private'
+      expect(plant.scientific_name).to eq 'Original'
     end
 
     it 'refuses the newest entry' do

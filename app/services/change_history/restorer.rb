@@ -41,6 +41,13 @@ module ChangeHistory
     end
 
     def call
+      # Reload before anything reads or writes @record: a caller may hand us
+      # an instance with unsaved changes (e.g. from a prior form build), and
+      # both the trash guard below and Record#update must see -- and only
+      # ever persist -- the actual database state, never attributes the
+      # caller happened to have pending.
+      @record.reload
+
       guard = guard_error
       return Result.new(record: @record, errors: [guard]) if guard
 
