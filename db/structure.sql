@@ -89,6 +89,26 @@ CREATE TYPE public.unit AS ENUM (
 );
 
 
+--
+-- Name: families_reject_list_change(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.families_reject_list_change() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  IF current_setting('families.import_mode', true) IS DISTINCT FROM 'on' THEN
+    RAISE EXCEPTION
+      'families is a locked reference list; % is only permitted during an import',
+      TG_OP;
+  END IF;
+  -- Permitted writes must proceed: returning NULL from a BEFORE row
+  -- trigger would silently skip the row instead.
+  RETURN COALESCE(NEW, OLD);
+END;
+$$;
+
+
 SET default_tablespace = '';
 
 --
@@ -209,6 +229,30 @@ CREATE TABLE public.data_sources (
     organization_id uuid NOT NULL,
     source_system_key character varying NOT NULL,
     notes text,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: families; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.families (
+    id uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    name character varying NOT NULL,
+    col_id character varying,
+    kingdom character varying NOT NULL,
+    plant_type character varying,
+    status character varying DEFAULT 'accepted'::character varying NOT NULL,
+    superseded_by_id uuid,
+    classification_source character varying NOT NULL,
+    classification_version character varying NOT NULL,
+    snapshot_date date NOT NULL,
+    storage_physiology character varying,
+    seed_longevity character varying,
+    seed_banking_rank integer,
+    translations jsonb DEFAULT '{}'::jsonb NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL
 );
@@ -698,6 +742,14 @@ ALTER TABLE ONLY public.data_sources
 
 
 --
+-- Name: families families_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.families
+    ADD CONSTRAINT families_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: growth_habits growth_habits_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -966,6 +1018,41 @@ CREATE INDEX index_data_sources_on_organization_id ON public.data_sources USING 
 --
 
 CREATE UNIQUE INDEX index_data_sources_on_source_system_key ON public.data_sources USING btree (source_system_key);
+
+
+--
+-- Name: index_families_on_col_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_families_on_col_id ON public.families USING btree (col_id) WHERE (col_id IS NOT NULL);
+
+
+--
+-- Name: index_families_on_lower_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_families_on_lower_name ON public.families USING btree (lower((name)::text));
+
+
+--
+-- Name: index_families_on_plant_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_families_on_plant_type ON public.families USING btree (plant_type);
+
+
+--
+-- Name: index_families_on_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_families_on_status ON public.families USING btree (status);
+
+
+--
+-- Name: index_families_on_superseded_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_families_on_superseded_by_id ON public.families USING btree (superseded_by_id);
 
 
 --
@@ -1333,6 +1420,13 @@ CREATE INDEX index_versions_on_item_type_and_item_id ON public.versions USING bt
 
 
 --
+-- Name: families families_locked_list; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER families_locked_list BEFORE INSERT OR DELETE ON public.families FOR EACH ROW EXECUTE PROCEDURE public.families_reject_list_change();
+
+
+--
 -- Name: categories fk_categories_created_by_principal; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1621,6 +1715,14 @@ ALTER TABLE ONLY public.categories_plants
 
 
 --
+-- Name: families fk_rails_e0748360be; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.families
+    ADD CONSTRAINT fk_rails_e0748360be FOREIGN KEY (superseded_by_id) REFERENCES public.families(id);
+
+
+--
 -- Name: common_names fk_rails_e1c5a1a6cd; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1747,6 +1849,7 @@ ALTER TABLE ONLY public.varieties
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260805000001'),
 ('20260804000001'),
 ('20260713000007'),
 ('20260713000006'),
