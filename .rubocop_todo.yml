@@ -179,6 +179,7 @@ Naming/MethodParameterName:
 Naming/PredicateMethod:
   Exclude:
     - 'app/controllers/application_controller.rb'
+    - 'app/graphql/types/change_entry_type.rb'
     - 'app/graphql/types/concerns/capability_fields.rb'
     - 'app/graphql/types/life_cycle_event_type.rb'
 

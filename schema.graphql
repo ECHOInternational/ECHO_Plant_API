@@ -1347,6 +1347,143 @@ type CategoryTranslation {
 }
 
 """
+One recorded change to a record or one of its child rows.
+"""
+type ChangeEntry {
+  """
+  The identity behind the change, when it can be resolved.
+  """
+  actor: Principal
+
+  """
+  Always-present display label for the actor.
+  """
+  actorLabel: String!
+  changes: [FieldChange!]!
+
+  """
+  When the change was recorded.
+  """
+  createdAt: ISO8601DateTime!
+  event: ChangeEvent!
+
+  """
+  Opaque id for this entry. Pass it to restorePlantVersion or restoreVarietyVersion.
+  """
+  id: ID!
+  origin: ChangeOrigin!
+
+  """
+  True when this entry can be restored with a restore-version mutation.
+  """
+  restorable: Boolean!
+
+  """
+  Name of the child row this entry is about, when it can be resolved.
+  """
+  subjectLabel: String
+  subjectType: ChangeSubject!
+}
+
+"""
+The connection type for ChangeEntry.
+"""
+type ChangeEntryConnectionWithTotalCount {
+  """
+  A list of edges.
+  """
+  edges: [ChangeEntryEdge]
+
+  """
+  A list of nodes.
+  """
+  nodes: [ChangeEntry]
+
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+"""
+An edge in a connection.
+"""
+type ChangeEntryEdge {
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+
+  """
+  The item at the end of the edge.
+  """
+  node: ChangeEntry
+}
+
+"""
+The kind of change a record history entry represents.
+"""
+enum ChangeEvent {
+  """
+  The row was created.
+  """
+  CREATED
+
+  """
+  The row was deleted.
+  """
+  DELETED
+
+  """
+  The record was restored to an earlier state.
+  """
+  RESTORED
+
+  """
+  The row was updated.
+  """
+  UPDATED
+}
+
+"""
+Where a recorded change came from. Entries written before provenance metadata existed report API.
+"""
+enum ChangeOrigin {
+  """
+  A request through the GraphQL API.
+  """
+  API
+
+  """
+  A maintenance backfill.
+  """
+  BACKFILL
+
+  """
+  An external data source synchronization run.
+  """
+  SYNC
+}
+
+"""
+Which part of the record a history entry is about.
+"""
+enum ChangeSubject {
+  ANTINUTRIENT
+  CATEGORY
+  COMMON_NAME
+  GROWTH_HABIT
+  IMAGE
+
+  """
+  The plant or variety itself.
+  """
+  RECORD
+  TOLERANCE
+}
+
+"""
 A language-specific name for a plant which can also reference a location where that name is common.
 """
 type CommonName implements Node {
@@ -3047,6 +3184,24 @@ type FertilizingEvent implements LifeCycleEvent & Node {
   The internal database ID for all life cycle events
   """
   uuid: ID!
+}
+
+"""
+A single field level change, with server-rendered values.
+"""
+type FieldChange {
+  after: String
+  before: String
+
+  """
+  The camelCase graphql name of the changed field.
+  """
+  field: String!
+
+  """
+  The locale of a translated field, or null for untranslated fields.
+  """
+  locale: String
 }
 
 """
@@ -5705,6 +5860,32 @@ type Plant implements Node {
   Whether this plant is a draft or published.
   """
   publicationState: PublicationStateEnum
+
+  """
+  Audit timeline for this plant and its common names, relation links and images,
+  newest first. Visible only to users who may edit the plant.
+  """
+  recordHistory(
+    """
+    Returns the elements in the list that come after the specified cursor.
+    """
+    after: String
+
+    """
+    Returns the elements in the list that come before the specified cursor.
+    """
+    before: String
+
+    """
+    Returns the first _n_ elements from the list.
+    """
+    first: Int
+
+    """
+    Returns the last _n_ elements from the list.
+    """
+    last: Int
+  ): ChangeEntryConnectionWithTotalCount
 
   """
   The scientific name for a plant (always render italicized)
@@ -10132,6 +10313,32 @@ type Variety implements Node {
   Whether this variety is a draft or published.
   """
   publicationState: PublicationStateEnum
+
+  """
+  Audit timeline for this variety and its common names, relation links and
+  images, newest first. Visible only to users who may edit the variety.
+  """
+  recordHistory(
+    """
+    Returns the elements in the list that come after the specified cursor.
+    """
+    after: String
+
+    """
+    Returns the elements in the list that come before the specified cursor.
+    """
+    before: String
+
+    """
+    Returns the first _n_ elements from the list.
+    """
+    first: Int
+
+    """
+    Returns the last _n_ elements from the list.
+    """
+    last: Int
+  ): ChangeEntryConnectionWithTotalCount
 
   """
   Describes a range of the number of days to maturity or havest
