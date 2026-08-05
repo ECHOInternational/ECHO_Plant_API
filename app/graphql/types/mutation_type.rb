@@ -297,5 +297,8 @@ module Types
     field :resolve_sync_conflict,
           mutation: Mutations::ResolveSyncConflict,
           description: 'Resolves a sync conflict by keeping local or accepting incoming values'
+    field :update_family,
+          mutation: Mutations::UpdateFamily,
+          description: 'Updates the editable metadata on a family'
   end
 end
