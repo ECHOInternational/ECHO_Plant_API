@@ -11,13 +11,12 @@ require Rails.root.join('lib/ownership_repair')
 # The config carries personal data and is supplied at runtime from a private
 # source; it is deliberately not in this repository, which is public. Same
 # treatment as ownership:backfill's MAPPING (rollout.md).
-def print_repair_report(report, dry_run)
-  puts "\nLINK -- give these records an owner who can actually sign in"
-  report[:link].each { |line| puts "  #{line}" }
+def print_repair_section(title, lines)
+  puts "\n#{title}"
+  lines.each { |line| puts "  #{line}" }
+end
 
-  puts "\nPURGE -- confirmed disposable by the account holder"
-  report[:purge].each { |line| puts "  #{line}" }
-
+def print_repair_outcome(report, dry_run)
   puts "\n#{'=' * 60}"
   if dry_run
     puts 'DRY RUN complete. Nothing was written. Re-run with DRY_RUN=0 to apply.'
@@ -25,10 +24,16 @@ def print_repair_report(report, dry_run)
     puts "Owners linked: #{report[:linked]}"
     puts "Records purged: #{report[:purged].inspect}"
   end
+end
+
+def print_repair_report(report, dry_run)
+  print_repair_section('LINK -- give these records an owner who can actually sign in', report[:link])
+  print_repair_section('PURGE -- confirmed disposable by the account holder', report[:purge])
+  print_repair_outcome(report, dry_run)
 
   if report[:refused].any?
-    puts "\nREFUSED (#{report[:refused].size}) -- left untouched on purpose, look at these:"
-    report[:refused].each { |line| puts "  #{line}" }
+    print_repair_section("REFUSED (#{report[:refused].size}) -- left untouched on purpose, look at these:",
+                         report[:refused])
   end
   puts 'Addresses are shown redacted; this log is public. Re-run ownership:preflight to confirm.'
 end
