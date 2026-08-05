@@ -82,3 +82,36 @@ namespace :families do
     puts report
   end
 end
+
+# A fourth `namespace :families do` block, same reason as the second and
+# third: keeps this task's body short enough to stay under
+# Metrics/BlockLength without an exclusion. The diff-vs-write split that
+# earns that room lives in FamilyRefresh and FamilyRefresh::Report, not here.
+namespace :families do
+  desc <<~DESC
+    Diff the family list against a Catalogue of Life release and report changes.
+    Applies nothing without APPLY=1 and an explicit confirmation. Merges are
+    never applied here: each one needs a human to confirm the target, via
+    FamilyRefresh#apply_merge.
+    ENV:
+      DATASET  ChecklistBank dataset key to compare against
+      APPLY    '1' to apply additions after typing 'yes' to confirm
+  DESC
+  task refresh: :environment do
+    client = CatalogueOfLife.new(dataset: ENV.fetch('DATASET', CatalogueOfLife::DEFAULT_DATASET))
+    puts "Fetching #{client.dataset}..."
+
+    refresh = FamilyRefresh.new(client.all_families)
+    diff = refresh.diff
+    puts FamilyRefresh::Report.new(diff)
+
+    next puts("\nREPORT ONLY. Nothing was written. Re-run with APPLY=1 to add new families.") \
+      unless ENV['APPLY'] == '1'
+
+    print "\nAdd #{diff[:added].size} new families? Type 'yes' to continue: "
+    next puts('Aborted.') unless $stdin.gets.to_s.strip == 'yes'
+
+    added = refresh.apply_additions!(diff[:added], version: ENV.fetch('VERSION', CatalogueOfLife::DEFAULT_VERSION))
+    puts "Added #{added}. Merges must be applied individually after review."
+  end
+end
