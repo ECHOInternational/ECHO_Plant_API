@@ -72,14 +72,27 @@ class FamilyResolver
     { spelling: alternative['family'], confidence: alternative['confidence'] }
   end
 
+  # A silent nil here used to be indistinguishable from "GBIF genuinely has no
+  # spelling suggestion". If GBIF egress is blocked (e.g. from the ECS task's
+  # subnet during the production reconciliation run), every request raises
+  # the same way and this method still returns nil for all of them -- the
+  # pipeline reports 22+9=31 blank/unresolved instead of 22 blank plus 9
+  # spelling-corrected, with nothing in the logs to explain the gap. Logging
+  # the failure is what makes that distinguishable from an honest miss.
+  # read_timeout matches CatalogueOfLife#http_get, which hits the same class
+  # of ChecklistBank/GBIF egress; a hung connection here must not hang the
+  # whole reconciliation task per plant.
   def gbif_match(name)
     uri = URI(GBIF_MATCH)
     uri.query = URI.encode_www_form(name: name, rank: 'FAMILY', verbose: 'true')
-    response = Net::HTTP.get_response(uri)
+    response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true, read_timeout: 90) do |http|
+      http.get(uri)
+    end
     return nil unless response.is_a?(Net::HTTPSuccess)
 
     JSON.parse(response.body)
-  rescue StandardError
+  rescue StandardError => e
+    Rails.logger.warn("FamilyResolver: GBIF lookup for #{name.inspect} failed: #{e.class} #{e.message}")
     nil
   end
 end

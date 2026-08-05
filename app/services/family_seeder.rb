@@ -106,11 +106,9 @@ class FamilySeeder
     # REFRESHABLE_ATTRIBUTES, not "everything" -- an existing row's curator
     # fields (and translations) must survive a re-seed untouched. Regression-
     # tested: see the "update half" example in spec/services/family_seeder_spec.rb.
-    Family.importing do
-      attributes.each_slice(500) do |slice|
-        Family.upsert_all(slice, unique_by: 'index_families_on_lower_name',
-                                 update_only: REFRESHABLE_ATTRIBUTES)
-      end
-    end
+    # Family.bulk_upsert is the one write path this shares with
+    # FamilyRefresh#apply_additions!; see its comment for why the two pass
+    # different update_only lists.
+    Family.bulk_upsert(attributes, update_only: REFRESHABLE_ATTRIBUTES)
   end
 end

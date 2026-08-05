@@ -2858,11 +2858,95 @@ git commit -m "test(families): demonstrate existing queries are byte-identical"
 1. Merge to `master`. CI runs rspec, RuboCop and the schema-drift gate.
 2. Staging deploys automatically; the migration runs there first.
 3. Approve the production deploy at the reviewer gate.
+
+   **Post-migration check (between steps 3 and 4):** confirm the trigger
+   actually arrived before running anything that writes to `families` --
+   `SELECT tgenabled FROM pg_trigger WHERE tgname = 'families_locked_list';`
+   should return one row. Do not proceed to step 4 on a bare "migrations
+   ran" assumption; a trigger that silently failed to attach would let
+   `families:seed` succeed while leaving the list unlocked outside the
+   importer.
+
 4. On production, in order: `families:seed` dry run, then `DRY_RUN=0`.
 5. `families:load_seed_banking` dry run, then `DRY_RUN=0`.
 6. `families:reconcile` dry run. **Share the report and get sign-off on the 8
    review cases before applying.** Then `DRY_RUN=0`.
 7. Verify: `families` has 4,596 rows; 292 plants have a `family_id`; anonymous
-   `plants` still returns 322 with `familyNames` unchanged.
+   `plants` still returns 322 with `familyNames` unchanged. Also:
+   `Family.where(col_id: nil).count == 0` (every seeded row got a COL id --
+   a non-zero count means the enumeration recipe silently skipped rows) and
+   `Plant.where.not(family_id: nil).count == 292` (exactly the auto-resolved
+   count from section 11, no more and no less).
 
 Only then start the SPA plan, which needs the deployed schema for codegen.
+
+### Open operational question: how does a rake task actually run in production?
+
+Steps 4-6 above have no documented execution mechanism. ECS exec is disabled
+and production RDS is not reachable from outside the VPC (see
+`aws-access-and-observability` notes), so there is currently no verified way
+to get a shell that can run `rails families:seed` against the production
+database. The likely route is a one-off `aws ecs run-task` invocation using
+the same task definition as the running service but with a command override
+(`bundle exec rails families:seed DRY_RUN=0`) instead of the server start
+command, so it runs inside the same VPC/subnet/security-group configuration
+without opening a persistent shell. **This is not yet verified against the
+real task definition and must be pinned down, and rehearsed on staging,
+before the production run** -- do not treat the above as a working procedure.
+
+### Egress prerequisite
+
+`families:seed` (and `families:refresh`) call `api.checklistbank.org`.
+`families:reconcile` additionally calls `api.gbif.org` for the spelling-
+correction step. Both must be reachable from whatever subnet the one-off
+task above runs in; the production service's existing egress rules were
+never written with either host in mind, since neither existed as a
+dependency before this branch.
+
+The two hosts fail differently if blocked, which matters for how a stuck run
+gets diagnosed:
+
+- A blocked `api.checklistbank.org` fails **loudly**: `CatalogueOfLife#http_get`
+  raises after three retries with backoff, and `families:seed` /
+  `families:reconcile` cannot proceed at all without it.
+- A blocked `api.gbif.org` used to fail **silently**: `FamilyResolver#gbif_match`
+  swallowed every error to `nil`, so a blocked host looked identical to "GBIF
+  had no suggestion" and the reconciliation would report 283 auto-resolved /
+  17 requiring review / 22 blank instead of the expected 292 / 8 / 22, with
+  nothing in the output explaining the 9-plant gap. This is now mitigated (not
+  eliminated) by a `Rails.logger.warn` on every GBIF failure -- check the
+  ECS task logs for `FamilyResolver: GBIF lookup` warnings if the 292/8/22
+  split does not match on the production run.
+
+### Applying the 8 human-decision reconciliation cases
+
+Step 6's `DRY_RUN=0` applies only the 292 auto-resolved plants (283 direct
+COL matches plus 9 high-confidence GBIF spelling corrections); it never
+touches the 8 cases flagged for human review or the 22 with a blank source
+field. Those 8 are resolved by hand, per the specific decisions recorded in
+section 11 (e.g. the two `Leguminaceae` records and the one `Fabacaea` record
+onto Fabaceae), using `updateFamily`... no -- using `updatePlant(familyId:)`
+against each plant's Relay ID once a human has decided its family.
+
+`updatePlant(familyId:)` is safe to use for this today, even before the SPA
+ships a family picker: per section 10.2, setting `familyId` only writes the
+canonical family name into `familyNames` when `familyNames` is **blank**.
+All 8 review-case plants have a non-blank `familyNames` (that free text is
+exactly what put them in the review bucket in the first place), so the
+blank-only mirror will not overwrite the human-typed value. The SPA shipping
+a picker later changes nothing about the safety of doing this now via a raw
+mutation.
+
+### Rollback note
+
+The schema change is purely additive: `families` is a new table and
+`plants.family_id` is a nullable foreign key with no `NOT NULL` and no
+backfill requirement for existing rows that never get one. A code rollback
+(reverting the API deploy to the pre-families image) is safe to do with the
+migrations left in place -- older code simply never reads or writes
+`family_id` or the `families` table, and nothing about the existing
+`familyNames` column or any other plant field changes shape. Rolling back
+the migrations themselves is a separate, unrelated decision (see migration
+3's `down`, which restores migration 1's original trigger function body
+rather than raising `IrreversibleMigration`) and is not required for a code
+rollback to be safe.

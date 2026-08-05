@@ -121,10 +121,29 @@ RSpec.describe FamilySeedBankingLoader, type: :service do
       expect(Family.find_by(name: 'Amaranthaceae').seed_banking_rank).to eq(4)
     end
 
+    # A redirect must never silently discard the editorial content of the
+    # row it lands on. Amaranthaceae's OWN row is processed first (rank 5,
+    # note "Highly suitable"); Chenopodiaceae's redirected row lands on top
+    # of it (rank 4, note "Merged family"). The scalar rank is a plain
+    # last-write-wins overwrite (there is no sensible way to merge a rank),
+    # but the note is editorial content and must be kept, not replaced.
+    it 'merges the redirected note onto the target family rather than overwriting its own note' do
+      described_class.new(rows: rows, redirects: { 'Chenopodiaceae' => 'Amaranthaceae' },
+                          dry_run: false).run
+      expect(Family.find_by(name: 'Amaranthaceae').seed_banking_notes).to eq('Highly suitable. Merged family')
+    end
+
     it 'reports the redirect that was applied' do
       report = described_class.new(rows: rows, redirects: { 'Chenopodiaceae' => 'Amaranthaceae' },
                                    dry_run: false).run
       expect(report.redirected).to eq([%w[Chenopodiaceae Amaranthaceae]])
+    end
+
+    it 'reports distinct families updated, not rows, since a redirect makes one family appear twice' do
+      report = described_class.new(rows: rows, redirects: { 'Chenopodiaceae' => 'Amaranthaceae' },
+                                   dry_run: false).run
+      expect(report.updated.size).to eq(2) # Amaranthaceae's own row, then Chenopodiaceae's redirected row
+      expect(report.to_s).to include('families updated    : 1')
     end
 
     it 'reports rather than guesses when there is no target' do

@@ -3,6 +3,10 @@
 namespace :families do
   desc <<~DESC
     Seed the locked family list from the Catalogue of Life.
+    This is for the initial, pinned COL26.7 XR snapshot ONLY. It has no
+    col_id collision defence, so a later release must go through
+    families:refresh instead, which detects renames/merges/resurrections
+    and reports col_id conflicts rather than crashing on them.
     ENV:
       DRY_RUN  '1' (default) reports without writing, '0' writes
       DATASET  ChecklistBank dataset key (default 315834, COL26.7 XR)
@@ -90,10 +94,11 @@ end
 namespace :families do
   desc <<~DESC
     Diff the family list against a Catalogue of Life release and report changes.
-    Applies nothing without APPLY=1 and an explicit confirmation. Renames and
-    merges are never applied here: each needs a human to confirm the target,
-    via FamilyRefresh#apply_rename / #apply_merge, after checking the report's
-    rename/merge/split/no-successor buckets against COL directly.
+    Applies nothing without APPLY=1 and an explicit confirmation. Renames,
+    merges and resurrections are never applied here: each needs a human to
+    confirm the target, via FamilyRefresh#apply_rename / #apply_merge /
+    #apply_resurrection!, after checking the report's rename/merge/split/
+    no-successor/resurrected buckets against COL directly.
     ENV:
       DATASET  ChecklistBank dataset key to compare against
       APPLY    '1' to apply additions after typing 'yes' to confirm
@@ -116,6 +121,6 @@ namespace :families do
     next puts('Aborted.') unless $stdin.gets.to_s.strip == 'yes'
 
     added = refresh.apply_additions!(diff[:added], version: ENV.fetch('VERSION', CatalogueOfLife::DEFAULT_VERSION))
-    puts "Added #{added}. Renames and merges must be applied individually after review."
+    puts "Added #{added}. Renames, merges and resurrections must be applied individually after review."
   end
 end

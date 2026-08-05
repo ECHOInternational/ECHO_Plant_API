@@ -507,6 +507,37 @@ Admin interface scope: browse families, view their plants, edit metadata and
 translations. **No affordance to add, delete or rename.** The picker needs a
 typeahead, not a plain select, at 4,596 rows.
 
+### 14.1 Production execution gaps (found in final review)
+
+The numbered deployment sequence with the actual rake-task steps lives in
+`docs/superpowers/plans/2026-08-05-botanical-families-api.md` ("Deployment
+sequence"), not here; this subsection records the gaps the final
+whole-branch review found in it, so they are not re-discovered from scratch:
+
+- **No documented mechanism for running a rake task against production.**
+  ECS exec is disabled and production RDS is unreachable from outside the
+  VPC, so "on production, run `families:seed`" has no verified procedure
+  behind it yet. A one-off `ecs run-task` with a command override on the
+  existing task definition is the likely route, but it is unverified and
+  must be pinned down (and rehearsed on staging) before the real run --
+  flagged as an open operational question, not solved here.
+- **Egress**: `families:seed`/`families:refresh` need `api.checklistbank.org`;
+  `families:reconcile` additionally needs `api.gbif.org`, both from the ECS
+  task's subnet. A blocked COL host fails loudly (retries then raises); a
+  blocked GBIF host used to degrade silently to "no suggestion", masked by
+  `FamilyResolver#gbif_match` swallowing every error to `nil` -- now logged
+  via `Rails.logger.warn`, which is a mitigation, not a fix for the egress
+  rule itself.
+- **The 8 human-decision reconciliation cases** are never applied by
+  `DRY_RUN=0`; they are resolved by hand via `updatePlant(familyId:)` per
+  plant, which is safe today (before the SPA ships a picker) because all 8
+  have a non-blank `familyNames`, so section 10's blank-only mirror will
+  never overwrite it.
+- **Rollback**: the schema change is purely additive and `family_id` is
+  nullable, so a code rollback with the migrations left in place is safe.
+- A post-migration check that the `families_locked_list` trigger actually
+  attached belongs between the migration step and the first write.
+
 ## 15. Out of scope
 
 Our own synonym table. The Food Plants International import. Any change to how

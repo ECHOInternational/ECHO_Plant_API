@@ -79,8 +79,14 @@ module Types
       # scientific_name is a plain column here (not translated), and id
       # breaks ties so the offset-paginated connection cannot skip or repeat
       # a row between pages, matching PlantsResolver's own sort contract.
+      #
+      # includes(:common_names): primary_common_name resolves over this
+      # association, and without it a families(first: N) { plants { ... } }
+      # request issues one common_names query per plant on top of the one
+      # plants query per family, matching PlantsResolver's own includes.
       Pundit.policy_scope(context[:current_user], object.plants)
             .i18n
+            .includes(:common_names)
             .order(scientific_name: :asc)
             .order(id: :asc)
     end

@@ -124,8 +124,26 @@ class FamilySeedBankingLoader
       seed_longevity: self.class.normalize_longevity(row['seed_longevity']),
       seed_banking_rank: row['seed_banking_rank'].presence&.to_i
     )
-    Mobility.with_locale(:en) { family.seed_banking_notes = notes_for(row).presence }
+    Mobility.with_locale(:en) { family.seed_banking_notes = merged_notes(family, row) }
     family.save!
+  end
+
+  # A redirect (a COL-synonym family's guidance landing on its accepted
+  # family, e.g. Chenopodiaceae onto Amaranthaceae) can arrive at a family
+  # that already has notes from its OWN row in this same file. Overwriting
+  # would silently discard whichever row is processed first, which is
+  # exactly the editorial content the design document says must never be
+  # silently discarded. Appending instead keeps both; a family whose only
+  # note so far is its own must not gain a trailing ". " with nothing after
+  # it, and a family visited twice with byte-identical notes (not possible
+  # today, but not assumed away either) must not repeat itself.
+  def merged_notes(family, row)
+    new_notes = notes_for(row).presence
+    existing_notes = Mobility.with_locale(:en) { family.seed_banking_notes }.presence
+    return existing_notes if new_notes.blank?
+    return new_notes if existing_notes.blank? || existing_notes == new_notes
+
+    "#{existing_notes}. #{new_notes}"
   end
 
   def notes_for(row)

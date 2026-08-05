@@ -13,10 +13,25 @@
 # Extracted into app/services, mirroring FamilySeeder, FamilyReconciler and
 # FamilySeedBankingLoader: the rake task stays a thin CLI wrapper and the
 # part that actually touches the database gets an automated regression test.
+# #diff itself is delegated to FamilyRefresh::DiffBuilder (own file, mirroring
+# FamilyRefresh::Report) so this class stays under Metrics/ClassLength.
 class FamilyRefresh
   # Raised by #apply_additions! instead of letting a raw uniqueness
   # violation escape. See ColIdCollisionError below for why this exists.
   class ColIdCollisionError < StandardError; end
+
+  # Columns #apply_additions! is allowed to touch when an "added" row's
+  # upsert lands on an existing row rather than inserting a fresh one. This
+  # differs from FamilySeeder::REFRESHABLE_ATTRIBUTES by including status and
+  # superseded_by_id: a resurrection (see DiffBuilder#split_resurrected) must
+  # flip status back to accepted and clear a now-dangling superseded_by_id,
+  # which a plain re-seed must never do. In the ordinary case -- a genuinely
+  # new name -- the row has no existing match at all, so this list never
+  # comes into play; it exists as the second line of defense the class
+  # comment on DiffBuilder#col_id_available? already establishes the pattern
+  # for.
+  ADDITION_UPDATE_ONLY = %i[col_id kingdom plant_type status superseded_by_id
+                            classification_version snapshot_date].freeze
 
   # client defaults to a real CatalogueOfLife so the rake task does not have
   # to thread one through; specs always inject a stub/double here so the
@@ -28,12 +43,7 @@ class FamilyRefresh
   end
 
   def diff
-    local = Family.accepted.to_a
-    local_names = local.to_set { |f| f.name.downcase }
-    added, col_id_conflicts, added_names = partition_upstream(local_names)
-    vanished = local.reject { |f| @upstream_by_name.key?(f.name.downcase) }
-
-    build_diff(local, added, col_id_conflicts, vanished, classify_vanished(vanished, added_names, local_names))
+    DiffBuilder.new(@upstream, @upstream_by_name, @client).call
   end
 
   # A merge is applied only after a human has confirmed it. Plants move to
@@ -53,30 +63,51 @@ class FamilyRefresh
   # taxon, new label. The family keeps its own UUID, so every plant that
   # already referenced it keeps referencing this exact row -- no
   # repointing, no superseding, no PaperTrail noise beyond the name change
-  # itself. Deliberately just this one assignment; see the class comment on
-  # #diff for why renamed_candidates must never be auto-applied as a merge.
+  # itself. Deliberately just this one assignment; see
+  # DiffBuilder#exclude_rename_targets for why renamed_candidates must never
+  # be auto-applied as a merge, nor auto-inserted as an addition.
   def apply_rename(family, new_name)
     family.update!(name: new_name)
   end
 
+  # Re-accepts a family Catalogue of Life resurrected after we had already
+  # merged it away (see DiffBuilder#split_resurrected). Undoes exactly the
+  # two fields #apply_merge set -- status and superseded_by -- refreshes the
+  # taxonomic facts sourced from COL, and deliberately touches nothing else:
+  # the plants that were repointed onto the absorbing family during the
+  # merge stay there. COL re-accepting a name is not evidence about which
+  # specific plants belong under it, so this never repoints anything,
+  # matching the "never silently repoint a plant" rule the whole class is
+  # built around.
+  def apply_resurrection!(candidate, version: CatalogueOfLife::DEFAULT_VERSION,
+                          snapshot_date: CatalogueOfLife::DEFAULT_SNAPSHOT)
+    row = candidate[:row]
+    candidate[:family].update!(
+      status: 'accepted',
+      superseded_by_id: nil,
+      col_id: row[:col_id],
+      kingdom: row[:kingdom],
+      plant_type: row[:plant_type],
+      classification_version: version,
+      snapshot_date: snapshot_date
+    )
+  end
+
   # Writes only the rows #diff already classified as :added -- names with no
-  # local match and a col_id that collides with nothing else in the batch or
-  # the table. That filtering is what makes this safe to run inside the one
-  # transaction Family.importing opens; the rescue below is a second line of
-  # defense for a caller that skips #diff and hands this a conflicting row
-  # directly (see the col_id collision hazard in the class comment above).
+  # local match at all (not a rename target, not a resurrected name) and a
+  # col_id that collides with nothing else in the batch or the table. That
+  # filtering is what makes this safe to run inside the one transaction
+  # Family.importing opens. update_only: ADDITION_UPDATE_ONLY and the rescue
+  # below are both second lines of defense for a caller that skips #diff and
+  # hands this a conflicting row directly (see the col_id collision hazard
+  # on DiffBuilder#col_id_available?, and ADDITION_UPDATE_ONLY's own comment).
   def apply_additions!(added, version: CatalogueOfLife::DEFAULT_VERSION,
                        snapshot_date: CatalogueOfLife::DEFAULT_SNAPSHOT)
     return 0 if added.empty?
 
     now = Time.current
-    Family.importing do
-      added.each_slice(500) do |slice|
-        Family.upsert_all(slice.map { |row| addition_attributes(row, version, snapshot_date, now) },
-                          unique_by: 'index_families_on_lower_name')
-      end
-    end
-    added.size
+    attributes = added.map { |row| addition_attributes(row, version, snapshot_date, now) }
+    Family.bulk_upsert(attributes, update_only: ADDITION_UPDATE_ONLY)
   rescue ActiveRecord::RecordNotUnique => e
     raise ColIdCollisionError,
           "a col_id collided with an existing family row (#{e.message}); " \
@@ -85,112 +116,21 @@ class FamilyRefresh
 
   private
 
-  def build_diff(local, added, col_id_conflicts, vanished, classification)
-    {
-      added: added,
-      col_id_conflicts: col_id_conflicts,
-      vanished: vanished,
-      affected_plant_counts: vanished.to_h { |f| [f.name, f.plants.count] },
-      unchanged: local.size - vanished.size
-    }.merge(classification)
-  end
-
-  def partition_upstream(local_names)
-    added, col_id_conflicts = added_candidates(local_names).partition { |row| col_id_available?(row) }
-    [added, col_id_conflicts, added.to_set { |r| r[:name].downcase }]
-  end
-
-  def added_candidates(local_names)
-    @upstream.reject { |r| local_names.include?(r[:name].downcase) }
-  end
-
-  # Splits the single "gone" bucket into the four cases the design doc
-  # distinguishes (docs/superpowers/specs/2026-08-05-botanical-families-design.md
-  # section 9), using one CatalogueOfLife#synonym_lookup request per vanished
-  # name -- never per family, since a real COL monthly release moves the
-  # family count by single digits. Detection only: nothing here writes
-  # anything. A human reads the report and chooses #apply_rename or
-  # #apply_merge; #diff never picks for them.
-  #
-  # Real split detection (design doc: "new accepted families appeared under
-  # the SAME PARENT") would need each vanished name's higher classification
-  # (its order) compared against every added row's, which neither our
-  # schema nor CatalogueOfLife#all_families carries, and fetching it per
-  # added row would violate the one-request-per-VANISHED-name budget this
-  # method is built to respect. Absent that, a COL "ambiguous synonym" --
-  # COL's own status for a name with no single successor -- is used as the
-  # best available proxy for a split; see the class comment above
-  # +classify_family+ and the fix report for the full reasoning.
-  def classify_vanished(vanished, added_names, local_names)
-    buckets = { renamed_candidates: [], merge_candidates: [], split_candidates: [], no_successor: [] }
-    vanished.each do |family|
-      key, entry = classify_family(family, added_names, local_names)
-      buckets[key] << entry
-    end
-    buckets
-  end
-
-  # Never raises: a lookup failure or a status this method does not
-  # recognize both fall through to :no_successor, reported and unapplied,
-  # exactly like a genuine disappearance -- never guessed at, never
-  # silently dropped.
-  def classify_family(family, added_names, local_names)
-    result = @client.synonym_lookup(family.name)
-    case result[:status]
-    when :synonym then classify_synonym(family, result[:accepted_name], added_names, local_names)
-    when :ambiguous_synonym then [:split_candidates, candidate(family)]
-    else [:no_successor, candidate(family)]
-    end
-  rescue StandardError
-    [:no_successor, candidate(family)]
-  end
-
-  def classify_synonym(family, target_name, added_names, local_names)
-    return [:no_successor, candidate(family)] if target_name.blank?
-    return [:renamed_candidates, candidate(family, target_name)] if added_names.include?(target_name.downcase)
-    return [:merge_candidates, candidate(family, target_name)] if local_names.include?(target_name.downcase)
-
-    # The target is neither newly added nor already held under that exact
-    # name -- most likely an authorship/formatting difference in the name
-    # string COL returned. Report it, do not guess which bucket it belongs
-    # in.
-    [:no_successor, candidate(family, target_name)]
-  end
-
-  def candidate(family, target_name = nil)
-    { family: family, plant_count: family.plants.count, target_name: target_name }
-  end
-
-  # Guards the col_id hazard carried over from the seeder: col_id has its
-  # own unique partial index (index_families_on_col_id), separate from the
-  # lower(name) index this diff matches on. A COL release can recycle an id
-  # onto a different family than the one that held it locally, or two new
-  # rows in the same release can arrive sharing one id; either would abort
-  # the whole Family.importing transaction with a hard uniqueness violation
-  # mid-batch. Filtering here, before any write is attempted, turns that
-  # crash into a reviewable list (diff[:col_id_conflicts]) instead. Mutates
-  # the memoized set so a duplicate col_id among the added rows themselves
-  # is caught too, not just a collision with an existing row.
-  def col_id_available?(row)
-    return true if row[:col_id].blank?
-    return false if seen_col_ids.include?(row[:col_id])
-
-    seen_col_ids << row[:col_id]
-    true
-  end
-
-  def seen_col_ids
-    @seen_col_ids ||= Family.where.not(col_id: nil).pluck(:col_id).to_set
-  end
-
   # translations is deliberately omitted here, not set to {}: see
   # FamilySeeder#write! for the regression this avoids. An explicit
   # translations: {} collapses to a literal SQL NULL under upsert_all
   # because it equals the Mobility container coder's own "empty" value, and
   # families.translations is NOT NULL. Omitting the key lets the INSERT fall
   # through to the column's own DEFAULT '{}' instead.
+  #
+  # superseded_by_id: nil is explicit, matching ADDITION_UPDATE_ONLY, even
+  # though DiffBuilder#split_resurrected already keeps a resurrected name
+  # (the one case where an existing row could have a non-nil
+  # superseded_by_id) out of +added+ entirely. Belt-and-suspenders: if that
+  # filtering is ever bypassed, this is what stops the dangling pointer
+  # rather than merely narrowing it.
   def addition_attributes(row, version, snapshot_date, now)
-    row.merge(status: 'accepted', classification_source: 'catalogue-of-life',
+    row.merge(status: 'accepted', superseded_by_id: nil, classification_source: 'catalogue-of-life',
               classification_version: version, snapshot_date: snapshot_date,
               created_at: now, updated_at: now)
   end

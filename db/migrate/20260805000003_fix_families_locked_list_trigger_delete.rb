@@ -32,8 +32,29 @@ class FixFamiliesLockedListTriggerDelete < ActiveRecord::Migration[8.1]
     SQL
   end
 
+  # Restores migration 1's original function body via CREATE OR REPLACE,
+  # rather than raising IrreversibleMigration. The dev database already holds
+  # 4,596 real seeded rows, so `rails db:rollback` must not be a dead end for
+  # this migration or for any other migration after it in the same run.
+  # Restoring the broken COALESCE(NEW, OLD) body on rollback is deliberate: a
+  # rollback must reproduce the state migration 1 alone would have left, not
+  # invent a third function body that migration 1's own spec never ran
+  # against. The trigger itself is untouched -- only its function body
+  # changes -- so no DROP TRIGGER / CREATE TRIGGER round trip is needed here.
   def down
-    raise ActiveRecord::IrreversibleMigration,
-          'not reverting to the broken DELETE-branch function'
+    execute <<~SQL
+      CREATE OR REPLACE FUNCTION families_reject_list_change() RETURNS trigger AS $$
+      BEGIN
+        IF current_setting('families.import_mode', true) IS DISTINCT FROM 'on' THEN
+          RAISE EXCEPTION
+            'families is a locked reference list; % is only permitted during an import',
+            TG_OP;
+        END IF;
+        -- Permitted writes must proceed: returning NULL from a BEFORE row
+        -- trigger would silently skip the row instead.
+        RETURN COALESCE(NEW, OLD);
+      END;
+      $$ LANGUAGE plpgsql;
+    SQL
   end
 end

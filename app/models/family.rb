@@ -75,6 +75,33 @@ class Family < ApplicationRecord
     def importing?
       Thread.current[:family_importing] == true
     end
+
+    # Bulk-upserts +rows+ (each already a full attributes Hash, one entry per
+    # family) keyed on the case-insensitively-unique name, inside
+    # Family.importing since this is the only path through which new names
+    # enter the locked list.
+    #
+    # +update_only+ is the one axis FamilySeeder and FamilyRefresh#apply_additions!
+    # differ on, and expressing it as a parameter here is what stops the two
+    # from drifting into contradictory upsert_all calls the way they once did.
+    # FamilySeeder::REFRESHABLE_ATTRIBUTES never includes status or
+    # superseded_by_id, so a curator's own edits and a family's merge state
+    # both survive an ordinary re-seed of the whole table untouched.
+    # FamilyRefresh::ADDITION_UPDATE_ONLY does include those two, because an
+    # "added" row can land on an existing row (a Catalogue of Life release
+    # resurrecting a name it once retired) and that conflict must flip status
+    # back to accepted and clear the now-dangling superseded_by_id rather than
+    # leave both stale.
+    def bulk_upsert(rows, update_only:)
+      return 0 if rows.empty?
+
+      importing do
+        rows.each_slice(500) do |slice|
+          upsert_all(slice, unique_by: 'index_families_on_lower_name', update_only: update_only)
+        end
+      end
+      rows.size
+    end
   end
 
   def translations_array

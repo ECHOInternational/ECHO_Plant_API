@@ -29,6 +29,13 @@ class CreateFamilies < ActiveRecord::Migration[8.1]
     # which sets families.import_mode for the duration of its transaction.
     # A model callback alone is not enough: insert_all, delete_all and a console
     # session all bypass it.
+    #
+    # SUPERSEDED: this function body is broken (it references NEW during a
+    # DELETE and OLD during an INSERT, both unassigned on the side that
+    # doesn't apply) and is replaced by
+    # 20260805000003_fix_families_locked_list_trigger_delete.rb. Do not read
+    # this migration alone and believe it describes the function currently
+    # installed; read migration 3 too.
     reversible do |dir|
       dir.up do
         execute <<~SQL

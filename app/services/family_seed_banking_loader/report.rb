@@ -20,7 +20,11 @@ class FamilySeedBankingLoader
     private
 
     def summary_lines
-      ["rows in file        : #{total}", "updated             : #{updated.size}"]
+      # DISTINCT families, not rows: a redirect (e.g. Chenopodiaceae onto
+      # Amaranthaceae) makes one family appear twice in +updated+ -- once for
+      # its own row, once for the row redirected onto it -- and counting rows
+      # would overstate how many families actually changed.
+      ["rows in file        : #{total}", "families updated    : #{updated.uniq.size}"]
     end
 
     def redirected_lines

@@ -252,6 +252,103 @@ RSpec.describe FamilyRefresh, type: :service do
     end
   end
 
+  # The reviewer's IMPORTANT-1 finding: a rename target is ALWAYS present in
+  # #diff's upstream batch with no local match (that is exactly why
+  # classify_synonym calls it a rename in the first place), so leaving it in
+  # +added+ meant apply_additions! always inserted it as a fresh, plant-less
+  # row before the rename ran, and the rename then collided with that row on
+  # index_families_on_lower_name. This spec drives the whole sequence a real
+  # operator would: read the diff, apply additions, then apply the rename.
+  describe 'the full rename-then-additions sequence' do
+    it 'keeps a rename appliable after additions for the same release have already been applied' do
+      tiliaceae = Family.find_by(name: 'Tiliaceae')
+      plant = create(:plant, family: tiliaceae)
+      client = stub_client('Tiliaceae' => { status: :synonym, accepted_name: 'Neoteliaceae' })
+      rows = upstream('Malvaceae', 'Neoteliaceae', 'Brassicaceae')
+
+      refresh = described_class.new(rows, client: client)
+      diff = refresh.diff
+
+      # The rename target must never be in the added set: it belongs to
+      # apply_rename, not apply_additions!.
+      expect(diff[:added].map { |r| r[:name] }).to eq(['Brassicaceae'])
+      expect(diff[:renamed_candidates].first[:target_name]).to eq('Neoteliaceae')
+
+      added = refresh.apply_additions!(diff[:added], version: 'COL26.7 XR', snapshot_date: Date.new(2026, 7, 17))
+      expect(added).to eq(1)
+      expect(Family.find_by(name: 'Neoteliaceae')).to be_nil
+
+      expect { refresh.apply_rename(tiliaceae, 'Neoteliaceae') }.not_to raise_error
+      expect(tiliaceae.reload.name).to eq('Neoteliaceae')
+      expect(plant.reload.family).to eq(tiliaceae)
+    end
+  end
+
+  # The reviewer's IMPORTANT-2 finding: apply_additions! upserted with no
+  # update_only at all, so a name COL resurrects after we already merged it
+  # away landed in +added+ (Family.accepted does not include a superseded
+  # row) and the upsert flipped status back to accepted while leaving
+  # superseded_by_id pointing at the family that absorbed it. Splitting a
+  # resurrection into its own bucket is meant to make that impossible: added
+  # additions never touch an existing row's status at all.
+  describe 'a Catalogue of Life resurrection' do
+    it 'never treats a re-accepted, previously superseded family as a plain addition' do
+      tiliaceae = Family.find_by(name: 'Tiliaceae')
+      malvaceae = Family.find_by(name: 'Malvaceae')
+      plant = create(:plant, family: tiliaceae)
+      described_class.new([]).apply_merge(tiliaceae, malvaceae)
+
+      refresh = described_class.new(upstream('Malvaceae', 'Tiliaceae'))
+      diff = refresh.diff
+
+      expect(diff[:added]).to be_empty
+      expect(diff[:resurrected].map { |c| c[:family] }).to eq([tiliaceae])
+
+      refresh.apply_additions!(diff[:added])
+
+      tiliaceae.reload
+      expect(tiliaceae.status).to eq('superseded')
+      expect(tiliaceae.superseded_by).to eq(malvaceae)
+      expect(plant.reload.family).to eq(malvaceae)
+    end
+
+    describe '#apply_resurrection!' do
+      it 're-accepts the family and clears the dangling superseded_by_id without repointing plants back' do
+        tiliaceae = Family.find_by(name: 'Tiliaceae')
+        malvaceae = Family.find_by(name: 'Malvaceae')
+        plant = create(:plant, family: tiliaceae)
+        described_class.new([]).apply_merge(tiliaceae, malvaceae)
+
+        refresh = described_class.new(upstream('Malvaceae', 'Tiliaceae'))
+        candidate = refresh.diff[:resurrected].first
+
+        refresh.apply_resurrection!(candidate, version: 'COL26.8 XR', snapshot_date: Date.new(2026, 8, 17))
+
+        tiliaceae.reload
+        expect(tiliaceae.status).to eq('accepted')
+        expect(tiliaceae.superseded_by_id).to be_nil
+        expect(tiliaceae.classification_version).to eq('COL26.8 XR')
+        # The merge already decided these plants belong under malvaceae; a
+        # resurrection is not evidence about any individual plant, so it must
+        # not repoint them back.
+        expect(plant.reload.family).to eq(malvaceae)
+      end
+
+      it 'preserves curator-authored metadata, since apply_additions! never touches this row at all' do
+        tiliaceae = Family.find_by(name: 'Tiliaceae')
+        Mobility.with_locale(:en) { tiliaceae.description = 'Curator note' }
+        tiliaceae.save!
+        described_class.new([]).apply_merge(tiliaceae, Family.find_by(name: 'Malvaceae'))
+
+        refresh = described_class.new(upstream('Malvaceae', 'Tiliaceae'))
+        candidate = refresh.diff[:resurrected].first
+        refresh.apply_resurrection!(candidate)
+
+        expect(tiliaceae.reload.description).to eq('Curator note')
+      end
+    end
+  end
+
   describe FamilyRefresh::Report do
     it 'renders the vanished families and any col_id conflicts for a human to review' do
       rows = upstream('Malvaceae') + [
@@ -288,6 +385,18 @@ RSpec.describe FamilyRefresh, type: :service do
       expect(text).not_to include('MERGE CANDIDATES')
       expect(text).not_to include('SPLIT CANDIDATES')
       expect(text).not_to include('NO SUCCESSOR')
+    end
+
+    it 'reports a resurrection distinctly, pointing at apply_resurrection! rather than APPLY=1' do
+      tiliaceae = Family.find_by(name: 'Tiliaceae')
+      FamilyRefresh.new([]).apply_merge(tiliaceae, Family.find_by(name: 'Malvaceae'))
+
+      diff = FamilyRefresh.new(upstream('Malvaceae', 'Tiliaceae')).diff
+      text = described_class.new(diff).to_s
+
+      expect(text).to include('RESURRECTED')
+      expect(text).to include('Tiliaceae (was superseded by Malvaceae)')
+      expect(text).to include('apply_resurrection!')
     end
   end
 end

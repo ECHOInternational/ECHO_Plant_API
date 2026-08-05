@@ -28,7 +28,8 @@ class FamilyRefresh
     end
 
     def to_s
-      ([header, counts, legend] + bucket_sections + [col_id_conflict_detail, footer]).compact.join("\n")
+      ([header, counts, legend] + bucket_sections + [resurrected_detail, col_id_conflict_detail, footer])
+        .compact.join("\n")
     end
 
     private
@@ -44,6 +45,7 @@ class FamilyRefresh
       [
         count_line('unchanged', diff[:unchanged]),
         count_line('new upstream (would be added)', diff[:added].size),
+        count_line('resurrected (superseded, now accepted again)', diff[:resurrected].size),
         count_line('gone upstream, total (see buckets below)', diff[:vanished].size)
       ].join("\n")
     end
@@ -76,6 +78,17 @@ class FamilyRefresh
       "  #{entry[:family].name}#{arrow} (#{entry[:plant_count]} plant(s) reference it)"
     end
 
+    def resurrected_detail
+      return nil if diff[:resurrected].empty?
+
+      lines = ["\nRESURRECTED (previously superseded, Catalogue of Life accepts it again)",
+               'Not inserted as a new row and not applied by APPLY=1: confirm individually via ' \
+               'FamilyRefresh#apply_resurrection!. Plants moved during the original merge stay ' \
+               'where they are; this only undoes the status/superseded_by flip.']
+      diff[:resurrected].each { |c| lines << "  #{c[:family].name} (was superseded by #{c[:family].superseded_by&.name})" }
+      lines.join("\n")
+    end
+
     def col_id_conflict_detail
       return nil if diff[:col_id_conflicts].empty?
 
@@ -86,8 +99,8 @@ class FamilyRefresh
     end
 
     def footer
-      "\nRun with APPLY=1 to add new families. Renames and merges are applied " \
-        'individually, after review, via FamilyRefresh#apply_rename / #apply_merge.'
+      "\nRun with APPLY=1 to add new families. Renames, merges and resurrections are applied " \
+        'individually, after review, via FamilyRefresh#apply_rename / #apply_merge / #apply_resurrection!.'
     end
   end
 end
