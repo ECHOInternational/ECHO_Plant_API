@@ -45,6 +45,9 @@ module Types
     field :family_names, String,
           description: 'The family names for a plant',
           null: true
+    field :family, Types::FamilyType,
+          description: 'The botanical family this plant belongs to',
+          null: true
     field :genus, String,
           description: 'The genus of a plant',
           null: true

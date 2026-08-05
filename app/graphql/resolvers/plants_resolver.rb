@@ -17,7 +17,7 @@ module Resolvers
     # one varieties query per plant (the classic N+1). Rails de-duplicates this
     # against the additional includes(:common_names) added by the name/any_name
     # filters, so those branches keep working.
-    scope { Pundit.policy_scope(context[:current_user], Plant).i18n.includes(:common_names, :varieties) }
+    scope { Pundit.policy_scope(context[:current_user], Plant).i18n.includes(:common_names, :varieties, :family) }
 
     option :language,
            type: String,

@@ -61,5 +61,20 @@ module Types
           description: 'Translations of translatable family fields',
           null: false,
           method: :translations_array
+
+    # Fabaceae alone will eventually hold roughly 2,200 plants once the Food
+    # Plants International import lands. A per-field cap is used rather than a
+    # schema-wide default_max_page_size, because the frozen mobile client calls
+    # plants() with no first: argument and a global cap would silently truncate
+    # its full sync.
+    field :plants, Types::PlantType::PlantConnectionWithTotalCountType,
+          description: 'The plants belonging to this family',
+          null: false,
+          connection: true,
+          max_page_size: 100
+
+    def plants
+      Pundit.policy_scope(context[:current_user], object.plants).i18n
+    end
   end
 end

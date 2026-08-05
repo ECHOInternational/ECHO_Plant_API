@@ -3015,6 +3015,31 @@ type Family implements Node {
   plantType: String
 
   """
+  The plants belonging to this family
+  """
+  plants(
+    """
+    Returns the elements in the list that come after the specified cursor.
+    """
+    after: String
+
+    """
+    Returns the elements in the list that come before the specified cursor.
+    """
+    before: String
+
+    """
+    Returns the first _n_ elements from the list.
+    """
+    first: Int
+
+    """
+    Returns the last _n_ elements from the list.
+    """
+    last: Int
+  ): PlantConnectionWithTotalCount!
+
+  """
   Translated notes on this family suitability for seed banking
   """
   seedBankingNotes: String
@@ -5667,6 +5692,11 @@ type Plant implements Node {
   Translated full text description of whether or not a plant has edible mature fruit
   """
   edibleMatureFruitNote: String
+
+  """
+  The botanical family this plant belongs to
+  """
+  family: Family
 
   """
   The family names for a plant
