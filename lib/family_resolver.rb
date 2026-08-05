@@ -42,11 +42,19 @@ class FamilyResolver
   end
 
   # Guard on kingdom and rank, not confidence. A threshold cannot separate the
-  # good from the bad here: the correct recovery of Curcurbitaceae comes back at
-  # confidence 5, while the garbage match for Fabacaea comes back at 0.
+  # good from the bad here: the correct recovery of Curcurbitaceae comes back
+  # at confidence 5, while the garbage match for Fabacaea comes back at 0.
+  #
+  # The rank check is not redundant with rank: 'FAMILY' on the request in
+  # gbif_match: a query for a non-family name (e.g. a genus like "Rosa") comes
+  # back with matchType NONE at the top level, which sends gbif_spelling into
+  # `alternatives`. Those alternatives are not filtered by the request's rank
+  # parameter at all, so a same-kingdom, high-confidence SPECIES hit would
+  # otherwise sail through a kingdom-only guard.
   def acceptable_gbif_match?(payload)
     return false if payload.nil?
     return false if payload['family'].blank?
+    return false unless payload['rank'] == 'FAMILY'
     return false unless IN_SCOPE_KINGDOMS.include?(payload['kingdom'])
 
     !['NONE', nil].include?(payload['matchType'])

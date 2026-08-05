@@ -39,10 +39,21 @@ RSpec.describe FamilyResolver do
   # a bivalve mollusc family, at confidence 0.
   it 'refuses an out-of-scope kingdom suggestion' do
     expect(resolver.send(:acceptable_gbif_match?,
-                         { 'family' => 'Hiatellidae', 'kingdom' => 'Animalia',
+                         { 'family' => 'Hiatellidae', 'kingdom' => 'Animalia', 'rank' => 'FAMILY',
                            'matchType' => 'FUZZY' })).to be false
     expect(resolver.send(:acceptable_gbif_match?,
-                         { 'family' => 'Rosaceae', 'kingdom' => 'Plantae',
+                         { 'family' => 'Rosaceae', 'kingdom' => 'Plantae', 'rank' => 'FAMILY',
                            'matchType' => 'FUZZY' })).to be true
+  end
+
+  # Querying a genus like "Rosa" with rank=FAMILY returns matchType NONE at
+  # the top level, which sends gbif_spelling into `alternatives`. Those are
+  # not filtered by the request's rank param, so a same-kingdom,
+  # high-confidence SPECIES hit ("Rosa spec Lej.", family Rosaceae, EXACT,
+  # confidence 70) would otherwise slip past a kingdom-only guard.
+  it 'refuses a same-kingdom, high-confidence match at the wrong rank' do
+    expect(resolver.send(:acceptable_gbif_match?,
+                         { 'family' => 'Rosaceae', 'kingdom' => 'Plantae', 'rank' => 'SPECIES',
+                           'matchType' => 'EXACT', 'confidence' => 70 })).to be false
   end
 end
