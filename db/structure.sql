@@ -103,8 +103,14 @@ BEGIN
       TG_OP;
   END IF;
   -- Permitted writes must proceed: returning NULL from a BEFORE row
-  -- trigger would silently skip the row instead.
-  RETURN COALESCE(NEW, OLD);
+  -- trigger would silently skip the row instead. NEW is unassigned on
+  -- DELETE and OLD is unassigned on INSERT, so branch on TG_OP rather
+  -- than referencing both sides via COALESCE.
+  IF TG_OP = 'DELETE' THEN
+    RETURN OLD;
+  ELSE
+    RETURN NEW;
+  END IF;
 END;
 $$;
 
@@ -462,7 +468,8 @@ CREATE TABLE public.plants (
     access_level character varying,
     deleted_at timestamp with time zone,
     deleted_by_principal_id uuid,
-    source_snapshot jsonb
+    source_snapshot jsonb,
+    family_id uuid
 );
 
 
@@ -1217,6 +1224,13 @@ CREATE INDEX index_plants_on_deleted_at_partial ON public.plants USING btree (de
 
 
 --
+-- Name: index_plants_on_family_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_plants_on_family_id ON public.plants USING btree (family_id);
+
+
+--
 -- Name: index_plants_on_owned_by; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1587,6 +1601,14 @@ ALTER TABLE ONLY public.life_cycle_events
 
 
 --
+-- Name: plants fk_rails_34cb82851b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plants
+    ADD CONSTRAINT fk_rails_34cb82851b FOREIGN KEY (family_id) REFERENCES public.families(id);
+
+
+--
 -- Name: sync_conflicts fk_rails_3521d38c41; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1849,6 +1871,8 @@ ALTER TABLE ONLY public.varieties
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260805000003'),
+('20260805000002'),
 ('20260805000001'),
 ('20260804000001'),
 ('20260713000007'),
