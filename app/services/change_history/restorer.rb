@@ -97,7 +97,25 @@ module ChangeHistory
 
     def restorable_attributes
       allowed = RESTORABLE_ATTRIBUTES.fetch(@item_type, [])
-      reified.attributes.slice(*allowed)
+      attrs = reified.attributes.slice(*allowed)
+      # `translations` is NOT NULL with a `{}` default. When the live record's
+      # translations column has never been explicitly written (still exactly
+      # that schema default, so it never entered ActiveRecord's dirty-tracking
+      # set for any save), PaperTrail's captured snapshot carries either a bare
+      # nil OR a "correct-looking" empty {} for it (observed both, verified
+      # against the real dev server) -- there is no real "before" content
+      # either way. Writing a literal nil violates the NOT NULL constraint
+      # outright, and -- less obviously -- even writing an explicit {} through
+      # Mobility's container-backend writer hits a known cache/dirty-tracking
+      # defect (see config/application.rb's partial_inserts comment) that can
+      # *also* persist nil despite the assigned value. Dropping the key
+      # whenever the captured value is blank (nil or {}) sidesteps both: Rails'
+      # partial writes then simply never touch the column, leaving its current
+      # (already correct) value alone. A record that genuinely has translated
+      # content reifies a non-blank hash and is unaffected -- that write still
+      # goes through normally.
+      attrs.delete('translations') if attrs.key?('translations') && attrs['translations'].blank?
+      attrs
     end
 
     # A normal validated save, so model validations and the sync machinery
