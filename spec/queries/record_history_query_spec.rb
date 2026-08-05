@@ -29,11 +29,31 @@ RSpec.describe 'recordHistory query', type: :graphql_query do
     GRAPHQL
   end
 
+  let(:variety_query_string) do
+    <<~GRAPHQL
+      query($id: ID!) {
+        variety(id: $id) {
+          recordHistory(first: 10) {
+            totalCount
+          }
+        }
+      }
+    GRAPHQL
+  end
+
   def execute(plant, user)
     PlantApiSchema.execute(
       query_string,
       context: { current_user: user },
       variables: { id: PlantApiSchema.id_from_object(plant, Plant, {}) }
+    )
+  end
+
+  def execute_variety(variety, user)
+    PlantApiSchema.execute(
+      variety_query_string,
+      context: { current_user: user },
+      variables: { id: PlantApiSchema.id_from_object(variety, Variety, {}) }
     )
   end
 
@@ -48,6 +68,23 @@ RSpec.describe 'recordHistory query', type: :graphql_query do
     it 'returns 403 for an authenticated user who cannot edit', versioning: true do
       plant = create(:plant, :public)
       result = execute(plant, build(:user, :readonly))
+
+      expect(result.dig('errors', 0, 'extensions', 'code')).to eq 403
+    end
+
+    # VarietyType#record_history is a separate resolver from PlantType's, gated
+    # the same way; cover the gate on both types rather than assuming the two
+    # implementations stay identical.
+    it 'returns 401 for anonymous callers on a variety', versioning: true do
+      variety = create(:variety, :public)
+      result = execute_variety(variety, nil)
+
+      expect(result.dig('errors', 0, 'extensions', 'code')).to eq 401
+    end
+
+    it 'returns 403 for an authenticated user who cannot edit a variety', versioning: true do
+      variety = create(:variety, :public)
+      result = execute_variety(variety, build(:user, :readonly))
 
       expect(result.dig('errors', 0, 'extensions', 'code')).to eq 403
     end
@@ -93,6 +130,54 @@ RSpec.describe 'recordHistory query', type: :graphql_query do
       expect(child['subjectLabel']).to eq 'Child Entry'
       expect(child['event']).to eq 'CREATED'
       expect(child['restorable']).to be false
+    end
+
+    it 'reports a DELETED event for a destroyed child row' do
+      common_name = create(:common_name, plant: plant, name: 'Doomed Name')
+      common_name.destroy!
+
+      nodes = execute(plant, user).dig('data', 'plant', 'recordHistory', 'edges').map { |e| e['node'] }
+      deleted = nodes.find { |node| node['subjectType'] == 'COMMON_NAME' && node['subjectLabel'] == 'Doomed Name' }
+
+      expect(deleted).not_to be_nil
+      expect(deleted['event']).to eq 'DELETED'
+    end
+
+    it 'reports a RESTORED event when a version carries restored_from_version_id metadata' do
+      plant.update!(scientific_name: 'After')
+      version = PaperTrail::Version.where(item_type: 'Plant', item_id: plant.id).order(:id).last
+      # Task 7's restore mutation is the real writer of this key and does not
+      # exist yet, so this stamps it directly onto the version row to pin
+      # ChangeEntryType's RESTORED branch ahead of that mutation landing.
+      version.update_columns(
+        metadata: (version.metadata || {}).merge('restored_from_version_id' => version.id)
+      )
+
+      nodes = execute(plant, user).dig('data', 'plant', 'recordHistory', 'edges').map { |e| e['node'] }
+      restored = nodes.find { |node| node['id'] == GraphQL::Schema::UniqueWithinType.encode('ChangeEntry', version.id) }
+
+      expect(restored['event']).to eq 'RESTORED'
+    end
+
+    it 'renders origin API for a version with no origin metadata' do
+      # The plant let! is created via a plain factory call outside any
+      # PaperTrail.request wrapping, so its CREATE version's metadata carries
+      # no origin key at all.
+      nodes = execute(plant, user).dig('data', 'plant', 'recordHistory', 'edges').map { |e| e['node'] }
+      created = nodes.find { |node| node['event'] == 'CREATED' }
+
+      expect(created['origin']).to eq 'API'
+    end
+
+    it 'renders origin API for a version with an unrecognized origin value' do
+      plant.update!(scientific_name: 'After')
+      version = PaperTrail::Version.where(item_type: 'Plant', item_id: plant.id).order(:id).last
+      version.update_columns(metadata: (version.metadata || {}).merge('origin' => 'unknown_source'))
+
+      nodes = execute(plant, user).dig('data', 'plant', 'recordHistory', 'edges').map { |e| e['node'] }
+      updated = nodes.find { |node| node['event'] == 'UPDATED' }
+
+      expect(updated['origin']).to eq 'API'
     end
 
     it 'gives every entry an opaque id that is not node addressable' do
