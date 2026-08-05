@@ -98,4 +98,59 @@ RSpec.describe ChangeHistory::DiffBuilder, versioning: true do
 
     expect(described_class.new(version).call).to eq []
   end
+
+  it 'resolves an ownership-transfer organization id to the organization name' do
+    plant = create(:plant)
+    original_owner_name = Organization.find(plant.owner_organization_id).name
+    new_org = create(:organization, :real)
+
+    plant.update!(owner_organization_id: new_org.id)
+
+    change = build(plant).find { |c| c[:field] == 'ownerOrganizationId' }
+    expect(change).to eq(
+      field: 'ownerOrganizationId', locale: nil, before: original_owner_name, after: new_org.name
+    )
+  end
+
+  it 'falls back to an unknown-organization label when the referenced organization row is gone' do
+    plant = create(:plant)
+    vanished_org = create(:organization, :real)
+    final_org = create(:organization, :real)
+
+    plant.update!(owner_organization_id: vanished_org.id)
+    plant.update!(owner_organization_id: final_org.id)
+    vanished_org.destroy!
+
+    change = build(plant).find { |c| c[:field] == 'ownerOrganizationId' }
+    expect(change).to eq(
+      field: 'ownerOrganizationId', locale: nil, before: 'Unknown organization', after: final_org.name
+    )
+  end
+
+  it 'resolves a created_by_principal_id change to the principal display name' do
+    original_creator = create(:principal)
+    plant = create(:plant, created_by_principal_id: original_creator.id)
+    new_creator = create(:principal)
+
+    plant.update!(created_by_principal_id: new_creator.id)
+
+    change = build(plant).find { |c| c[:field] == 'createdByPrincipalId' }
+    expect(change).to eq(
+      field: 'createdByPrincipalId', locale: nil, before: original_creator.display_name, after: new_creator.display_name
+    )
+  end
+
+  it 'falls back to an unknown-user label when the referenced principal row is gone' do
+    original_creator = create(:principal)
+    plant = create(:plant, created_by_principal_id: original_creator.id)
+    new_creator = create(:principal)
+
+    plant.update!(created_by_principal_id: new_creator.id)
+    original_creator.destroy!
+
+    change = build(plant).find { |c| c[:field] == 'createdByPrincipalId' }
+    expect(change).to eq(
+      field: 'createdByPrincipalId', locale: nil, before: 'Unknown user', after: new_creator.display_name
+    )
+  end
 end

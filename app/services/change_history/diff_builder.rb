@@ -28,6 +28,24 @@ module ChangeHistory
 
     ENUM_COLUMNS = %w[early_growth_phase life_cycle].freeze
 
+    # Ownership columns kept in diffs (see class comment) but stored as raw
+    # uuids: resolve them to a human label instead of leaking the id.
+    ORGANIZATION_COLUMNS = %w[owner_organization_id source_organization_id].freeze
+    PRINCIPAL_COLUMNS = %w[created_by_principal_id].freeze
+
+    # Consistent with ChangeHistory::ActorResolver::UNKNOWN_LABEL: a raw uuid
+    # is never an acceptable fallback for a person or an organization.
+    UNKNOWN_ORGANIZATION_LABEL = 'Unknown organization'
+    UNKNOWN_USER_LABEL = ActorResolver::UNKNOWN_LABEL
+
+    # Per-column formatters, dispatched by name so format_value stays a
+    # single lookup instead of a growing if/elsif chain.
+    COLUMN_FORMATTERS = { 'visibility' => :visibility_name }
+                        .merge(ENUM_COLUMNS.index_with { :enum_name })
+                        .merge(ORGANIZATION_COLUMNS.index_with { :organization_name })
+                        .merge(PRINCIPAL_COLUMNS.index_with { :principal_name })
+                        .freeze
+
     def initialize(version)
       @version = version
     end
@@ -89,14 +107,37 @@ module ChangeHistory
 
     def format_value(column, value)
       return nil if value.nil?
-      return visibility_name(value) if column == 'visibility'
-      return value.to_s.upcase if ENUM_COLUMNS.include?(column)
 
+      formatter = COLUMN_FORMATTERS[column]
+      return send(formatter, value) if formatter
+
+      generic_format(value)
+    end
+
+    def generic_format(value)
       case value
       when Range then range_literal(value)
       when Time, DateTime, Date then value.iso8601
       else value.to_s
       end
+    end
+
+    def enum_name(value)
+      value.to_s.upcase
+    end
+
+    # Ownership-transfer diffs must read as organization names, never raw
+    # uuids: a deleted/unmirrored org id still renders a label, just not one
+    # that leaks the id.
+    def organization_name(value)
+      Organization.find_by(id: value)&.name || UNKNOWN_ORGANIZATION_LABEL
+    end
+
+    def principal_name(value)
+      principal = Principal.find_by(id: value)
+      return UNKNOWN_USER_LABEL unless principal
+
+      principal.display_name.presence || principal.email.presence || UNKNOWN_USER_LABEL
     end
 
     # AR's enum dirty-tracking reports the mapped string ('private'), so most

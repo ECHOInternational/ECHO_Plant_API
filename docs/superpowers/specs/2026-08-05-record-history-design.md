@@ -81,6 +81,18 @@ New `features/history/` folder:
 - Ship API first (additive, invisible to existing clients), then the SPA. The GIN index migration deploys with the API release. No Terraform changes.
 - Mobile contract specs must remain untouched and green.
 
+### Deploy notes
+
+- The GIN index migration uses `algorithm: :concurrently` with `if_not_exists: true`. `if_not_exists` is a safety net for re-running migrations, but it can also mask an INVALID index left behind by a failed CONCURRENTLY build (Postgres does not roll back a failed concurrent index; it leaves an invalid one in place, and a later `if_not_exists: true` run will see the name exists and silently skip rebuilding it). After running migrations in production, verify the index is actually valid:
+
+  ```sql
+  SELECT indisvalid FROM pg_index JOIN pg_class ON indexrelid = pg_class.oid
+    WHERE relname = 'index_versions_on_metadata_jsonb_path_ops';
+  ```
+
+  If this returns `false`, `DROP INDEX CONCURRENTLY index_versions_on_metadata_jsonb_path_ops` and re-run the migration.
+- The GIN index adds a small write cost to every version insert app-wide, not just plant/variety history; keeping it `jsonb_path_ops` on the small `metadata` payload (rather than full `jsonb_ops` or indexing the whole `object_changes` column) keeps that cost cheap.
+
 ## Out of scope (recorded for later)
 
 - Per-field revert from the diff view.
