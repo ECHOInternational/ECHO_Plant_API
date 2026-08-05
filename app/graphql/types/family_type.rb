@@ -74,7 +74,15 @@ module Types
           max_page_size: 100
 
     def plants
-      Pundit.policy_scope(context[:current_user], object.plants).i18n
+      # Chained .order calls, not a single hash: .i18n rewrites a translated
+      # sort key and silently drops any other key that shares its order hash.
+      # scientific_name is a plain column here (not translated), and id
+      # breaks ties so the offset-paginated connection cannot skip or repeat
+      # a row between pages, matching PlantsResolver's own sort contract.
+      Pundit.policy_scope(context[:current_user], object.plants)
+            .i18n
+            .order(scientific_name: :asc)
+            .order(id: :asc)
     end
   end
 end
