@@ -42,6 +42,15 @@ module Types
     field :varieties, resolver: Resolvers::VarietiesResolver, connection: true
     field :specimens, resolver: Resolvers::SpecimensResolver, connection: true
     field :locations, resolver: Resolvers::LocationsResolver, connection: true
+    # max_page_size only, NOT a schema-wide default_max_page_size: the design
+    # doc rules that out because it would silently truncate the frozen mobile
+    # client's unpaginated plants() full sync. families needs its own cap
+    # regardless -- it is 4,596 rows, versus 19 for the largest other
+    # uncapped lookup connection (antinutrients), and every family row can
+    # itself carry a plants(first: 100) connection and a common_names query
+    # per plant, so an unbounded first: on this field alone is thousands of
+    # round trips in one anonymous, tokenless request.
+    field :families, resolver: Resolvers::FamiliesResolver, connection: true, max_page_size: 100
 
     # Object Queries
     field :life_cycle_event, Types::LifeCycleEventType, null: true do
@@ -195,6 +204,22 @@ module Types
       item_id = decode_global_id(id)
       Mobility.locale = language || I18n.locale
       GrowthHabit.find(item_id)
+    end
+
+    field :family, Types::FamilyType, null: true do
+      description 'Find a family by ID'
+      argument :id,
+               type: ID,
+               required: true
+      argument :language,
+               type: String,
+               required: false,
+               description: 'Request returned fields in a specific language. Overrides ACCEPT-LANGUAGE header.'
+    end
+    def family(id:, language: nil)
+      item_id = decode_global_id(id)
+      Mobility.locale = language || I18n.locale
+      Family.find(item_id)
     end
 
     field :organization, Types::OrganizationType, null: true do

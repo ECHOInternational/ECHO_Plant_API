@@ -27,6 +27,7 @@ module Mutations
 
     include Mutations::Concerns::PlantEditableArguments
     include Mutations::Concerns::RangeLiteralValidation
+    include Mutations::Concerns::FamilyAssignment
 
     field :plant, Types::PlantType, null: true
     field :errors, [Types::MutationError], null: false
@@ -60,7 +61,8 @@ module Mutations
         .merge!(org_stamp)
 
       Mobility.with_locale(language) do
-        plant = Plant.new(attributes)
+        plant = Plant.new(attributes.except(:family))
+        apply_family(plant, attributes)
         plant.common_names.build(name: primary_common_name, language: language.upcase, primary: true)
         result = plant.save
         errors = errors_from_active_record plant.errors

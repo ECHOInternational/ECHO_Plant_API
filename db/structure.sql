@@ -89,6 +89,32 @@ CREATE TYPE public.unit AS ENUM (
 );
 
 
+--
+-- Name: families_reject_list_change(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.families_reject_list_change() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  IF current_setting('families.import_mode', true) IS DISTINCT FROM 'on' THEN
+    RAISE EXCEPTION
+      'families is a locked reference list; % is only permitted during an import',
+      TG_OP;
+  END IF;
+  -- Permitted writes must proceed: returning NULL from a BEFORE row
+  -- trigger would silently skip the row instead. NEW is unassigned on
+  -- DELETE and OLD is unassigned on INSERT, so branch on TG_OP rather
+  -- than referencing both sides via COALESCE.
+  IF TG_OP = 'DELETE' THEN
+    RETURN OLD;
+  ELSE
+    RETURN NEW;
+  END IF;
+END;
+$$;
+
+
 SET default_tablespace = '';
 
 --
@@ -209,6 +235,30 @@ CREATE TABLE public.data_sources (
     organization_id uuid NOT NULL,
     source_system_key character varying NOT NULL,
     notes text,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: families; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.families (
+    id uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    name character varying NOT NULL,
+    col_id character varying,
+    kingdom character varying NOT NULL,
+    plant_type character varying,
+    status character varying DEFAULT 'accepted'::character varying NOT NULL,
+    superseded_by_id uuid,
+    classification_source character varying NOT NULL,
+    classification_version character varying NOT NULL,
+    snapshot_date date NOT NULL,
+    storage_physiology character varying,
+    seed_longevity character varying,
+    seed_banking_rank integer,
+    translations jsonb DEFAULT '{}'::jsonb NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL
 );
@@ -418,7 +468,8 @@ CREATE TABLE public.plants (
     access_level character varying,
     deleted_at timestamp with time zone,
     deleted_by_principal_id uuid,
-    source_snapshot jsonb
+    source_snapshot jsonb,
+    family_id uuid
 );
 
 
@@ -698,6 +749,14 @@ ALTER TABLE ONLY public.data_sources
 
 
 --
+-- Name: families families_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.families
+    ADD CONSTRAINT families_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: growth_habits growth_habits_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -969,6 +1028,41 @@ CREATE UNIQUE INDEX index_data_sources_on_source_system_key ON public.data_sourc
 
 
 --
+-- Name: index_families_on_col_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_families_on_col_id ON public.families USING btree (col_id) WHERE (col_id IS NOT NULL);
+
+
+--
+-- Name: index_families_on_lower_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_families_on_lower_name ON public.families USING btree (lower((name)::text));
+
+
+--
+-- Name: index_families_on_plant_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_families_on_plant_type ON public.families USING btree (plant_type);
+
+
+--
+-- Name: index_families_on_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_families_on_status ON public.families USING btree (status);
+
+
+--
+-- Name: index_families_on_superseded_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_families_on_superseded_by_id ON public.families USING btree (superseded_by_id);
+
+
+--
 -- Name: index_growth_habits_plants_on_growth_habit_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1127,6 +1221,13 @@ CREATE UNIQUE INDEX index_plants_on_data_source_and_source_record ON public.plan
 --
 
 CREATE INDEX index_plants_on_deleted_at_partial ON public.plants USING btree (deleted_at) WHERE (deleted_at IS NOT NULL);
+
+
+--
+-- Name: index_plants_on_family_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_plants_on_family_id ON public.plants USING btree (family_id);
 
 
 --
@@ -1340,6 +1441,13 @@ CREATE INDEX index_versions_on_metadata_jsonb_path_ops ON public.versions USING 
 
 
 --
+-- Name: families families_locked_list; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER families_locked_list BEFORE INSERT OR DELETE ON public.families FOR EACH ROW EXECUTE PROCEDURE public.families_reject_list_change();
+
+
+--
 -- Name: categories fk_categories_created_by_principal; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1500,6 +1608,14 @@ ALTER TABLE ONLY public.life_cycle_events
 
 
 --
+-- Name: plants fk_rails_34cb82851b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.plants
+    ADD CONSTRAINT fk_rails_34cb82851b FOREIGN KEY (family_id) REFERENCES public.families(id);
+
+
+--
 -- Name: sync_conflicts fk_rails_3521d38c41; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1625,6 +1741,14 @@ ALTER TABLE ONLY public.growth_habits_plants
 
 ALTER TABLE ONLY public.categories_plants
     ADD CONSTRAINT fk_rails_d29e534eae FOREIGN KEY (category_id) REFERENCES public.categories(id);
+
+
+--
+-- Name: families fk_rails_e0748360be; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.families
+    ADD CONSTRAINT fk_rails_e0748360be FOREIGN KEY (superseded_by_id) REFERENCES public.families(id);
 
 
 --
@@ -1754,6 +1878,9 @@ ALTER TABLE ONLY public.varieties
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260806000003'),
+('20260806000002'),
+('20260806000001'),
 ('20260805000001'),
 ('20260804000001'),
 ('20260713000007'),

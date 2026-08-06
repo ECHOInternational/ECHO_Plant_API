@@ -43,3 +43,15 @@ token is issued. Trust levels are per-domain (a user may be `general: 9` but
 > Do **not** lower the API thresholds to "fix" an under-provisioned account —
 > they are read identically by the API and SPA, and lowering `admin?` would
 > widen access for *every* level-8 user. Provision the account instead.
+
+### Exception: family metadata is editable at 9, not 10
+
+The other lookup tables (Tolerance, GrowthHabit, Antinutrient, ImageAttribute)
+require trust level 10 for every write, because their lists are editable and a
+lower bar would let anyone fork a shared vocabulary.
+
+The family list cannot be forked: it is locked at the model and in the database,
+and no create or delete mutation exists. Only the metadata layered on top is
+editable, so that is gated at level 9. Note also that no account currently holds
+plant trust 10, so gating family metadata there would make it uneditable by
+anyone.

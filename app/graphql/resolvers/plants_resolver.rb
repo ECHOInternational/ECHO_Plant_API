@@ -10,14 +10,15 @@ module Resolvers
     type Types::PlantType::PlantConnectionWithTotalCountType, null: false
     description 'Returns a list of Plants'
 
-    # Eager-load the two associations the list/detail responses read per plant
-    # (primary_common_name resolves over common_names; the nested varieties
-    # connection resolves through the varieties association). Without this the
+    # Eager-load the three associations the list/detail responses read per
+    # plant (primary_common_name resolves over common_names; the nested
+    # varieties connection resolves through the varieties association;
+    # family resolves the new Plant.family relation). Without this the
     # mobile cache-priming query issues one common_names query per plant plus
     # one varieties query per plant (the classic N+1). Rails de-duplicates this
     # against the additional includes(:common_names) added by the name/any_name
     # filters, so those branches keep working.
-    scope { Pundit.policy_scope(context[:current_user], Plant).i18n.includes(:common_names, :varieties) }
+    scope { Pundit.policy_scope(context[:current_user], Plant).i18n.includes(:common_names, :varieties, :family) }
 
     option :language,
            type: String,

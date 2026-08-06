@@ -2011,6 +2011,11 @@ input CreatePlantInput {
   edibleMatureFruitNote: String
 
   """
+  The botanical family this plant belongs to
+  """
+  familyId: ID
+
+  """
   The family names of the plant
   """
   familyNames: String
@@ -3116,6 +3121,169 @@ type EvaluateSpecimenPayload {
 }
 
 """
+A family is a rank of biological classification, sourced from the Catalogue of
+Life. The list is fixed; only its metadata is editable.
+"""
+type Family implements Node {
+  """
+  The source release this row was loaded from
+  """
+  classificationVersion: String!
+
+  """
+  Catalogue of Life identifier. Informational only: these are not stable across releases and nothing references them.
+  """
+  colId: String
+
+  """
+  The translated description of a family
+  """
+  description: String
+  id: ID!
+
+  """
+  Plantae, Fungi or Chromista
+  """
+  kingdom: String!
+
+  """
+  The scientific name of the family. Not translated.
+  """
+  name: String!
+
+  """
+  Broad grouping derived from the source classification, for example Angiosperms or Ferns & Fern Allies
+  """
+  plantType: String
+
+  """
+  The plants belonging to this family
+  """
+  plants(
+    """
+    Returns the elements in the list that come after the specified cursor.
+    """
+    after: String
+
+    """
+    Returns the elements in the list that come before the specified cursor.
+    """
+    before: String
+
+    """
+    Returns the first _n_ elements from the list.
+    """
+    first: Int
+
+    """
+    Returns the last _n_ elements from the list.
+    """
+    last: Int
+  ): PlantConnectionWithTotalCount!
+
+  """
+  Translated notes on this family suitability for seed banking
+  """
+  seedBankingNotes: String
+
+  """
+  Seed banking suitability from 1 (poor) to 5 (excellent)
+  """
+  seedBankingRank: Int
+
+  """
+  low, low_medium, medium, medium_high or high
+  """
+  seedLongevity: String
+
+  """
+  The date of the source release
+  """
+  snapshotDate: ISO8601Date!
+
+  """
+  accepted, or superseded when the source taxonomy has merged this family into another
+  """
+  status: String!
+
+  """
+  orthodox, recalcitrant, intermediate, variable, mixed or unknown
+  """
+  storagePhysiology: String
+
+  """
+  The family this one was merged into, when status is superseded
+  """
+  supersededBy: Family
+
+  """
+  Translations of translatable family fields
+  """
+  translations: [FamilyTranslation!]!
+
+  """
+  The internal database ID for a family
+  """
+  uuid: ID!
+}
+
+"""
+The connection type for Family.
+"""
+type FamilyConnectionWithTotalCount {
+  """
+  A list of edges.
+  """
+  edges: [FamilyEdge]
+
+  """
+  A list of nodes.
+  """
+  nodes: [Family]
+
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+"""
+An edge in a connection.
+"""
+type FamilyEdge {
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+
+  """
+  The item at the end of the edge.
+  """
+  node: Family
+}
+
+"""
+Translated fields for a family
+"""
+type FamilyTranslation {
+  """
+  The translated description of a family
+  """
+  description: String
+
+  """
+  The locale for this translation
+  """
+  locale: String!
+
+  """
+  The translated seed banking notes for a family
+  """
+  seedBankingNotes: String
+}
+
+"""
 Actions taken when applying fertilizer
 """
 type FertilizingEvent implements LifeCycleEvent & Node {
@@ -3505,6 +3673,11 @@ type HarvestEvent implements LifeCycleEvent & Node {
   """
   uuid: ID!
 }
+
+"""
+An ISO 8601-encoded date
+"""
+scalar ISO8601Date @specifiedBy(url: "https://tools.ietf.org/html/rfc3339")
 
 """
 An ISO 8601-encoded datetime
@@ -4894,6 +5067,16 @@ type Mutation {
   ): UpdateEndOfLifeLifeCycleEventPayload!
 
   """
+  Updates the editable metadata on a family
+  """
+  updateFamily(
+    """
+    Parameters for UpdateFamily
+    """
+    input: UpdateFamilyInput!
+  ): UpdateFamilyPayload!
+
+  """
   Updates a Fertilizing life cycle event
   """
   updateFertilizingEvent(
@@ -5701,6 +5884,11 @@ type Plant implements Node {
   edibleMatureFruitNote: String
 
   """
+  The botanical family this plant belongs to
+  """
+  family: Family
+
+  """
   The family names for a plant
   """
   familyNames: String
@@ -6503,6 +6691,63 @@ type Query {
     """
     language: String
   ): Category
+
+  """
+  Returns a list of Families
+  """
+  families(
+    """
+    Returns the elements in the list that come after the specified cursor.
+    """
+    after: String
+
+    """
+    Returns the elements in the list that come before the specified cursor.
+    """
+    before: String
+
+    """
+    Returns the first _n_ elements from the list.
+    """
+    first: Int
+
+    """
+    Restrict to one of Plantae, Fungi or Chromista
+    """
+    kingdom: String
+
+    """
+    Request returned fields in a specific language. Overrides ACCEPT-LANGUAGE header.
+    """
+    language: String
+
+    """
+    Returns the last _n_ elements from the list.
+    """
+    last: Int
+
+    """
+    Performs a case-insensitive LIKE match on the scientific name
+    """
+    name: String
+
+    """
+    Restrict to a broad grouping such as Angiosperms or Fungi
+    """
+    plantType: String
+  ): FamilyConnectionWithTotalCount!
+
+  """
+  Find a family by ID
+  """
+  family(
+    id: ID!
+
+    """
+    Request returned fields in a specific language. Overrides ACCEPT-LANGUAGE header.
+    """
+    language: String
+  ): Family
 
   """
   Find a growth habit by ID
@@ -8298,6 +8543,63 @@ type UpdateEndOfLifeLifeCycleEventPayload {
 }
 
 """
+Autogenerated input type of UpdateFamily
+"""
+input UpdateFamilyInput {
+  """
+  A unique identifier for the client performing the mutation.
+  """
+  clientMutationId: String
+
+  """
+  Translatable description of the family
+  """
+  description: String
+
+  """
+  The family whose metadata is being edited
+  """
+  familyId: ID!
+
+  """
+  Language of the translatable fields supplied
+  """
+  language: String
+
+  """
+  Translatable notes on seed banking suitability
+  """
+  seedBankingNotes: String
+
+  """
+  Seed banking suitability from 1 (poor) to 5 (excellent)
+  """
+  seedBankingRank: Int
+
+  """
+  low, low_medium, medium, medium_high or high
+  """
+  seedLongevity: String
+
+  """
+  orthodox, recalcitrant, intermediate, variable, mixed or unknown
+  """
+  storagePhysiology: String
+}
+
+"""
+Autogenerated return type of UpdateFamily.
+"""
+type UpdateFamilyPayload {
+  """
+  A unique identifier for the client performing the mutation.
+  """
+  clientMutationId: String
+  errors: [MutationError!]!
+  family: Family
+}
+
+"""
 Autogenerated input type of UpdateFertilizingLifeCycleEvent
 """
 input UpdateFertilizingLifeCycleEventInput {
@@ -9094,6 +9396,11 @@ input UpdatePlantInput {
   The translatable edible mature fruit note of the plant
   """
   edibleMatureFruitNote: String
+
+  """
+  The botanical family this plant belongs to
+  """
+  familyId: ID
   familyNames: String
 
   """

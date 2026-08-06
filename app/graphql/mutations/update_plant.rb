@@ -20,6 +20,7 @@ module Mutations
 
     include Mutations::Concerns::PlantEditableArguments
     include Mutations::Concerns::RangeLiteralValidation
+    include Mutations::Concerns::FamilyAssignment
 
     field :plant, Types::PlantType, null: true
     field :errors, [Types::MutationError], null: false
@@ -51,7 +52,14 @@ module Mutations
       end
 
       Mobility.with_locale(language) do
-        plant.update(attributes.except(:language).except(:primary_common_name))
+        # Assign every other attribute (including any client-supplied
+        # family_names) before applying the family mirror, so the mirror's
+        # blank check sees what the client just sent rather than the stale
+        # persisted value. This keeps the rule consistent with CreatePlant,
+        # where Plant.new already applies attributes before the mirror runs.
+        plant.assign_attributes(attributes.except(:language, :primary_common_name, :family))
+        apply_family(plant, attributes)
+        plant.save
         {
           plant: plant,
           errors: errors_from_active_record(plant.errors)

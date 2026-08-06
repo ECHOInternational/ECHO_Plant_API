@@ -296,4 +296,26 @@ RSpec.describe Plant, type: :model do
       expect(resolve_both_ways(plant, 'en')).to eq winner
     end
   end
+
+  describe 'family relation' do
+    let(:family) { Family.importing { create(:family, name: 'Fabaceae') } }
+
+    it 'is optional' do
+      plant = create(:plant, family: nil)
+      expect(plant).to be_valid
+      expect(plant.family).to be_nil
+    end
+
+    it 'links a plant to exactly one family' do
+      plant = create(:plant, family: family)
+      expect(plant.reload.family).to eq(family)
+      expect(family.plants).to include(plant)
+    end
+
+    it 'nullifies the plant link rather than blocking when a family is removed' do
+      plant = create(:plant, family: family)
+      Family.importing { family.destroy }
+      expect(plant.reload.family_id).to be_nil
+    end
+  end
 end

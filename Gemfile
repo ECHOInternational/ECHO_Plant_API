@@ -55,6 +55,11 @@ gem 'aws-sdk-s3', '~> 1'
 # Health Checks
 gem 'rails-healthcheck'
 
+# Ruby 3.4 demoted csv from a default gem to a bundled one; db/seeds.rb and
+# FamilySeedBankingLoader's rake task both `require 'csv'`, which raises
+# LoadError under `bundle exec` unless it is declared here.
+gem 'csv', '~> 3.3'
+
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug', platforms: %i[mri mingw x64_mingw]

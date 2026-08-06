@@ -112,6 +112,8 @@ class PlantApiSchema < GraphQL::Schema
       Types::SpecimenType
     when Location
       Types::LocationType
+    when Family
+      Types::FamilyType
     when LifeCycleEvent
       Types::LifeCycleEventType.resolve_type(obj, _ctx)
     else

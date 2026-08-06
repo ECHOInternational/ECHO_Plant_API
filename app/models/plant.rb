@@ -30,6 +30,10 @@ class Plant < ApplicationRecord # rubocop:disable Metrics/ClassLength
 
   has_many :specimens, dependent: :restrict_with_error
 
+  # One family per plant. The legacy free-text family_names column is left
+  # untouched and still writable; see the families design document.
+  belongs_to :family, optional: true
+
   # default_scope { includes(:common_names) }
 
   extend Mobility
