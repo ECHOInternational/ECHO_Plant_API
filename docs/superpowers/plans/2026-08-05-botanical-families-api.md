@@ -2880,28 +2880,47 @@ git commit -m "test(families): demonstrate existing queries are byte-identical"
 
 Only then start the SPA plan, which needs the deployed schema for codegen.
 
-### Open operational question: how does a rake task actually run in production?
+### How a rake task runs in production (verified 2026-08-06)
 
-Steps 4-6 above have no documented execution mechanism. ECS exec is disabled
-and production RDS is not reachable from outside the VPC (see
-`aws-access-and-observability` notes), so there is currently no verified way
-to get a shell that can run `rails families:seed` against the production
-database. The likely route is a one-off `aws ecs run-task` invocation using
-the same task definition as the running service but with a command override
-(`bundle exec rails families:seed DRY_RUN=0`) instead of the server start
-command, so it runs inside the same VPC/subnet/security-group configuration
-without opening a persistent shell. **This is not yet verified against the
-real task definition and must be pinned down, and rehearsed on staging,
-before the production run** -- do not treat the above as a working procedure.
+Steps 4-6 run as a one-off ECS task, the same way the ownership work did.
+`.github/workflows/ops-ownership-backfill.yml` is the working precedent: it
+calls `aws ecs run-task` against the production cluster with the service's own
+task definition, borrows the service's network configuration verbatim, passes a
+command override instead of the server start command, waits with
+`aws ecs wait tasks-stopped`, reads the container exit code, and pulls the
+output from CloudWatch. A families ops workflow is that shape with different
+rake commands.
 
-### Egress prerequisite
+**ECS exec is not needed and should not be enabled for this.** It is currently
+`false` on `plant-api-production-web`, but `run-task` does not use it.
+
+An earlier draft of this section claimed production RDS was unreachable. That
+was wrong -- it conflated "unreachable from the developer workstation" with
+"unreachable from the task." RDS security group `sg-007ae20731af7483c` allows
+5432 from the plant-api task security group `sg-0176f8975b00d0c2b`, which is
+how the API serves every request.
+
+### Egress prerequisite (verified 2026-08-06: satisfied)
 
 `families:seed` (and `families:refresh`) call `api.checklistbank.org`.
 `families:reconcile` additionally calls `api.gbif.org` for the spelling-
-correction step. Both must be reachable from whatever subnet the one-off
-task above runs in; the production service's existing egress rules were
-never written with either host in mind, since neither existed as a
-dependency before this branch.
+correction step. `families:load_seed_banking` needs no network at all -- it
+reads a committed CSV.
+
+The production subnet has internet egress. `subnet-7d57a227` is associated with
+route table `rtb-97d73eef`, whose `0.0.0.0/0` route points at `eni-f9102f21` on
+EC2 instance `i-03f65b4dc1516cef7` ("ECHOcommunity NAT and Bastion Server",
+`SourceDestCheck: false`), state active. The task security group allows all
+outbound. So a one-off task in that subnet reaches both hosts with no
+infrastructure change and without assigning a public IP.
+
+Two things worth knowing when diagnosing a stuck run. Egress depends on a
+single t2.nano NAT instance, so check that it is running before suspecting
+routing or DNS. And note that a NAT *instance* is invisible to
+`aws ec2 describe-nat-gateways` (which returns an empty list here) and its
+route populates `InstanceId`/`NetworkInterfaceId` rather than `NatGatewayId` --
+querying only the gateway fields makes a working NAT look absent, which is
+exactly the false conclusion that produced the earlier draft of this section.
 
 The two hosts fail differently if blocked, which matters for how a stuck run
 gets diagnosed:

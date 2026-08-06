@@ -514,20 +514,26 @@ The numbered deployment sequence with the actual rake-task steps lives in
 sequence"), not here; this subsection records the gaps the final
 whole-branch review found in it, so they are not re-discovered from scratch:
 
-- **No documented mechanism for running a rake task against production.**
-  ECS exec is disabled and production RDS is unreachable from outside the
-  VPC, so "on production, run `families:seed`" has no verified procedure
-  behind it yet. A one-off `ecs run-task` with a command override on the
-  existing task definition is the likely route, but it is unverified and
-  must be pinned down (and rehearsed on staging) before the real run --
-  flagged as an open operational question, not solved here.
-- **Egress**: `families:seed`/`families:refresh` need `api.checklistbank.org`;
-  `families:reconcile` additionally needs `api.gbif.org`, both from the ECS
-  task's subnet. A blocked COL host fails loudly (retries then raises); a
-  blocked GBIF host used to degrade silently to "no suggestion", masked by
-  `FamilyResolver#gbif_match` swallowing every error to `nil` -- now logged
-  via `Rails.logger.warn`, which is a mitigation, not a fix for the egress
-  rule itself.
+- **Running a rake task against production: SOLVED, and the earlier entry here
+  was wrong.** It runs as a one-off `aws ecs run-task` with a command override,
+  exactly as `.github/workflows/ops-ownership-backfill.yml` already does for the
+  ownership work. ECS exec is not needed. The earlier claim that production RDS
+  was unreachable conflated "unreachable from the developer workstation" with
+  "unreachable from the task"; RDS SG `sg-007ae20731af7483c` allows 5432 from
+  the task SG `sg-0176f8975b00d0c2b`, which is how the API serves every request.
+- **Egress: SATISFIED, and the earlier entry here was also wrong.**
+  `families:seed`/`families:refresh` need `api.checklistbank.org`;
+  `families:reconcile` additionally needs `api.gbif.org`;
+  `families:load_seed_banking` needs no network. The production subnet has
+  egress via a NAT **instance** (`i-03f65b4dc1516cef7`, the ECHOcommunity NAT
+  and Bastion Server), routed from `rtb-97d73eef`. The earlier "no egress"
+  conclusion came from querying a route's `GatewayId`/`NatGatewayId` -- a
+  NAT-instance route populates `InstanceId`/`NetworkInterfaceId` instead -- and
+  from `describe-nat-gateways` returning empty, which cannot see NAT instances.
+  Separately, `FamilyResolver#gbif_match` now logs via `Rails.logger.warn`
+  rather than swallowing failures silently, which remains worthwhile: it makes
+  a future egress or GBIF outage diagnosable instead of showing up only as an
+  unexplained shortfall in the reconciliation counts.
 - **The 8 human-decision reconciliation cases** are never applied by
   `DRY_RUN=0`; they are resolved by hand via `updatePlant(familyId:)` per
   plant, which is safe today (before the SPA ships a picker) because all 8
