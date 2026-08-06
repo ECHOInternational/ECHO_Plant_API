@@ -2,6 +2,8 @@
 
 # Images can be related to any 'imageable' object
 class Image < ApplicationRecord
+  include VersionedUnderRoot
+
   extend Mobility
   after_initialize :build_urls
   translates :name, :description
@@ -15,6 +17,13 @@ class Image < ApplicationRecord
   has_many :image_attributes, through: :image_attributes_image
   belongs_to :imageable, polymorphic: true, optional: false, touch: true
   enum :visibility, { private: 0, public: 1, draft: 2, deleted: 3 }, prefix: :visibility
+
+  # Images hang off many parents; only plant and variety images belong in a
+  # record history timeline. Read the columns rather than the association so
+  # this still works in after_destroy.
+  versioned_under_root do
+    %w[Plant Variety].include?(imageable_type) ? [imageable_type, imageable_id] : nil
+  end
 
   # Raise an error when trying to update readonly fields
   def s3_key=(val)

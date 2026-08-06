@@ -53,7 +53,7 @@ class PlantApiSchema < GraphQL::Schema
   # authorized parent (ownerOrganization, createdByPrincipal) or through their
   # own scoped query (syncConflicts). Enforced in QueryType's node/nodes
   # resolvers, which also apply Pundit show? to policy-governed records.
-  NODE_FORBIDDEN_TYPES = %w[Principal Organization DataSource SyncConflict].freeze
+  NODE_FORBIDDEN_TYPES = %w[Principal Organization DataSource SyncConflict ChangeEntry].freeze
 
   # Given a string UUID, find the object. NOTE: this is a raw lookup with no
   # authorization -- callers are responsible for authorizing the result.
