@@ -33,7 +33,7 @@ class CreateFamilies < ActiveRecord::Migration[8.1]
     # SUPERSEDED: this function body is broken (it references NEW during a
     # DELETE and OLD during an INSERT, both unassigned on the side that
     # doesn't apply) and is replaced by
-    # 20260805000003_fix_families_locked_list_trigger_delete.rb. Do not read
+    # 20260806000003_fix_families_locked_list_trigger_delete.rb. Do not read
     # this migration alone and believe it describes the function currently
     # installed; read migration 3 too.
     reversible do |dir|

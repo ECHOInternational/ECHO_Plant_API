@@ -217,10 +217,24 @@ module Types
     field :updated_at, GraphQL::Types::ISO8601DateTime,
           description: 'The date and time that the record was last updated',
           null: false
+    field :record_history, Types::ChangeEntryType::ChangeEntryConnectionWithTotalCountType,
+          description: 'Audit timeline for this plant and its common names, relation links and images, newest first. Visible only to users who may edit the plant.',
+          null: true,
+          connection: true,
+          max_page_size: 50
     # field :versions, Types::PlantType::PlantVersionConnectionWithTotalCountType, null: false, connection: true
 
     def images
       Pundit.policy_scope(context[:current_user], @object.images)
+    end
+
+    # Actor identity is sensitive, so history is gated by the same policy that
+    # gates editing. Raising here lets the schema-level rescue render the
+    # standard 401/403.
+    def record_history
+      raise Pundit::NotAuthorizedError.new(query: :update?, record: @object, policy: nil) unless resolved_policy.update?
+
+      ChangeHistory::Query.new(@object).relation
     end
 
     def visibility

@@ -1434,6 +1434,13 @@ CREATE INDEX index_versions_on_item_type_and_item_id ON public.versions USING bt
 
 
 --
+-- Name: index_versions_on_metadata_jsonb_path_ops; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_versions_on_metadata_jsonb_path_ops ON public.versions USING gin (metadata jsonb_path_ops);
+
+
+--
 -- Name: families families_locked_list; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -1871,8 +1878,9 @@ ALTER TABLE ONLY public.varieties
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
-('20260805000003'),
-('20260805000002'),
+('20260806000003'),
+('20260806000002'),
+('20260806000001'),
 ('20260805000001'),
 ('20260804000001'),
 ('20260713000007'),
