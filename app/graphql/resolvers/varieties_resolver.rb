@@ -35,6 +35,24 @@ module Resolvers
            type: GraphQL::Types::ID,
            with: :apply_owned_by_organization_id_filter,
            description: 'Returns only records owned by the specified organization (Relay global ID).'
+    option :has_pending_changes,
+           type: Boolean,
+           with: :apply_has_pending_changes_filter,
+           description: 'Restrict to records with (true) or without (false) an open draft'
+
+    # EXISTS rather than a join, so filtering never changes row multiplicity
+    # even if the one-draft-per-record uniqueness constraint is ever relaxed.
+    # value.nil? must be checked explicitly and treated as "filter absent":
+    # search_object still passes an argument bound to an explicit-null
+    # variable through to this method as `nil` (it only omits keys for
+    # arguments that were never supplied at all), so without the guard a
+    # `hasPendingChanges: $v` query with `$v: null` would silently fall into
+    # the false branch and exclude every draft-bearing record.
+    def apply_has_pending_changes_filter(scope, value)
+      return scope if value.nil?
+
+      scope.where("#{'NOT ' unless value}EXISTS (SELECT 1 FROM record_drafts WHERE draftable_type = 'Variety' AND draftable_id = varieties.id)")
+    end
 
     def apply_owned_by_filter(scope, value)
       return scope if value.blank?

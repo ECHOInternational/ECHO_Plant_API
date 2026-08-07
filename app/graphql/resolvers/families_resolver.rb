@@ -31,6 +31,18 @@ module Resolvers
            type: String,
            with: :apply_plant_type_filter,
            description: 'Restrict to a broad grouping such as Angiosperms or Fungi'
+    option :has_pending_changes,
+           type: Boolean,
+           with: :apply_has_pending_changes_filter,
+           description: 'Restrict to records with (true) or without (false) an open draft'
+
+    # EXISTS (not a join, nil is "filter absent" not false) -- see the fuller
+    # comment on the same method in varieties_resolver.rb.
+    def apply_has_pending_changes_filter(scope, value)
+      return scope if value.nil?
+
+      scope.where("#{'NOT ' unless value}EXISTS (SELECT 1 FROM record_drafts WHERE draftable_type = 'Family' AND draftable_id = families.id)")
+    end
 
     def apply_name_filter(scope, value)
       return scope if value.blank?
