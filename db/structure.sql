@@ -491,6 +491,23 @@ CREATE TABLE public.principals (
 
 
 --
+-- Name: record_drafts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.record_drafts (
+    id uuid DEFAULT public.gen_random_uuid() NOT NULL,
+    draftable_type character varying NOT NULL,
+    draftable_id uuid NOT NULL,
+    data jsonb DEFAULT '{}'::jsonb NOT NULL,
+    base_updated_at timestamp(6) without time zone NOT NULL,
+    author_principal_id uuid NOT NULL,
+    last_editor_principal_id uuid NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -842,6 +859,14 @@ ALTER TABLE ONLY public.plants
 
 ALTER TABLE ONLY public.principals
     ADD CONSTRAINT principals_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: record_drafts record_drafts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.record_drafts
+    ADD CONSTRAINT record_drafts_pkey PRIMARY KEY (id);
 
 
 --
@@ -1266,6 +1291,13 @@ CREATE UNIQUE INDEX index_principals_on_issuer_and_uid_partial ON public.princip
 
 
 --
+-- Name: index_record_drafts_on_draftable; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_record_drafts_on_draftable ON public.record_drafts USING btree (draftable_type, draftable_id);
+
+
+--
 -- Name: index_specimens_on_data_source_and_source_record; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1584,6 +1616,14 @@ ALTER TABLE ONLY public.antinutrients_plants
 
 
 --
+-- Name: record_drafts fk_rails_0fd32e2aef; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.record_drafts
+    ADD CONSTRAINT fk_rails_0fd32e2aef FOREIGN KEY (last_editor_principal_id) REFERENCES public.principals(id);
+
+
+--
 -- Name: varieties fk_rails_143fdc3592; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1645,6 +1685,14 @@ ALTER TABLE ONLY public.specimens
 
 ALTER TABLE ONLY public.growth_habits_varieties
     ADD CONSTRAINT fk_rails_5f4cf82393 FOREIGN KEY (variety_id) REFERENCES public.varieties(id);
+
+
+--
+-- Name: record_drafts fk_rails_5fff7a297f; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.record_drafts
+    ADD CONSTRAINT fk_rails_5fff7a297f FOREIGN KEY (author_principal_id) REFERENCES public.principals(id);
 
 
 --
@@ -1878,6 +1926,7 @@ ALTER TABLE ONLY public.varieties
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260807000001'),
 ('20260806000003'),
 ('20260806000002'),
 ('20260806000001'),
