@@ -118,15 +118,48 @@ RSpec.describe Drafts::Overlay do
       expect(Mobility.with_locale(:en) { plant.description }).to eq('Live English description')
     end
 
-    # The container column is jsonb NOT NULL, and Rails serializes an exactly
-    # empty hash to SQL NULL, so an overlay that could produce one would hand
-    # the publisher an unsavable record. Merging makes that unreachable.
-    it 'never leaves the container empty' do
-      emptied = create(:record_draft, draftable: plant, data: { 'translations' => {} })
+    it 'ignores a locale whose staged value is not a hash' do
+      broken = create(:record_draft, draftable: plant, data: { 'translations' => { 'sw' => 'not a hash' } })
 
-      described_class.apply(plant, emptied)
+      described_class.apply(plant, broken)
 
-      expect(plant.translations).not_to be_empty
+      expect(Mobility.with_locale(:en) { plant.description }).to eq('Live English description')
+    end
+
+    # The container column is jsonb NOT NULL and Rails writes an exactly empty
+    # hash as SQL NULL, so an overlay that leaves one hands the publisher a
+    # record that cannot be saved at all. The trap is not the hash handed to
+    # the writer -- assignment strips blank leaves through Container::Coder, so
+    # the emptiness only appears afterwards.
+    context 'when a draft empties the container' do
+      # Everything this record has in any locale, cleared by one draft.
+      let(:solo) { create(:plant, description: 'The only translated content') }
+      let(:clearing_draft) do
+        create(:record_draft, draftable: solo,
+                              data: { 'translations' => { 'en' => { 'description' => nil } } })
+      end
+
+      it 'honours the clear in memory' do
+        described_class.apply(solo, clearing_draft)
+
+        expect(Mobility.with_locale(:en) { solo.description }).to be_nil
+      end
+
+      it 'leaves the record savable, without an intervening translated read' do
+        described_class.apply(solo, clearing_draft)
+
+        expect { solo.save! }.not_to raise_error
+        expect(solo.reload.translations).to eq({})
+      end
+
+      it 'is a no-op when the draft stages an empty blob' do
+        emptied = create(:record_draft, draftable: plant, data: { 'translations' => {} })
+
+        described_class.apply(plant, emptied)
+
+        expect(plant.translations).to eq('en' => { 'description' => 'Live English description' })
+        expect(plant).not_to be_changed
+      end
     end
   end
 end

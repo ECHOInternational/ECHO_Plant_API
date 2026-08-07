@@ -35,7 +35,7 @@ module Drafts
     # `store :translations, coder: Container::Coder`, whose IndifferentCoder
     # casts whatever is assigned into a HashWithIndifferentAccess, so the
     # backend's `model[column_name][locale]` lookup finds a staged locale
-    # whether the draft blob arrived with string or symbol keys. Two things
+    # whether the draft blob arrived with string or symbol keys. Three things
     # still have to be handled by hand.
     #
     # 1. MERGE, NOT REPLACE. A draft stages only the locales an editor touched.
@@ -54,21 +54,51 @@ module Drafts
     #    the request, because the cache is consulted before the container is.
     #    Clearing is safe: it touches no ActiveRecord dirty state, so the
     #    record stays `changed?` and stays unsaved.
+    #
+    # 3. KEEP THE CONTAINER SAVABLE. See keep_container_savable below. This
+    #    overlay does not save, but Drafts' publisher saves what it overlays,
+    #    and one reachable draft leaves a record that cannot be saved at all.
     def overlay_translations(record, staged)
-      # A hand-written or older-format draft row. Serialization must not die on it.
+      # A hand-written or older-format draft row, at either level: the blob
+      # itself, or one locale inside it. Serialization must not die on it.
       return unless staged.is_a?(Hash)
 
-      merged = (record.translations || {}).deep_merge(staged)
-      # `translations` is jsonb NOT NULL, and Rails' Type::Serialized turns an
-      # exactly empty hash into SQL NULL (it equals `coder.load(nil)`), so a
-      # record left holding `{}` cannot be saved at all. Merging can only ever
-      # add keys, so this guard is unreachable in practice -- it exists so a
-      # future change to the merge cannot hand Drafts' publisher an unsavable
-      # record. See ChangeHistory::Restorer for the same trap on restore.
-      return if merged.empty?
+      usable = staged.select { |_locale, values| values.is_a?(Hash) }
+      return if usable.empty?
 
-      record.translations = merged
+      record.translations = (record.translations || {}).deep_merge(usable)
+      keep_container_savable(record, usable.keys)
       drop_mobility_cache(record)
+    end
+
+    # `translations` is `jsonb NOT NULL`, and Rails' Type::Serialized returns
+    # nil from #serialize for any value equal to `coder.load(nil)` -- an empty
+    # hash -- so a record whose container is exactly `{}` is written as SQL
+    # NULL and rejected by the constraint.
+    #
+    # The value to test is the one AFTER assignment, not the hash handed to the
+    # writer. Type::Serialized inherits the json subtype's mutable-value `cast`
+    # (`deserialize(serialize(value))`), so assignment round-trips through
+    # Container::Coder#dump, which strips every blank leaf and then every
+    # emptied locale. A draft that clears the last surviving translated field
+    # of the last surviving locale therefore assigns
+    # `{"en" => {"description" => nil}}` and leaves `{}` sitting on the record:
+    # in-memory reads are correct, and the next `save!` raises
+    # ActiveRecord::NotNullViolation. That is an ordinary publisher call
+    # pattern, not a hypothetical.
+    #
+    # Re-seeding the staged locales with empty hashes is exactly what the
+    # backend's own reader does (`model[column_name][locale] ||= {}`), and it
+    # is enough: `{"en" => {}}` is not equal to the sentinel, so it dumps to
+    # `{}` and persists as the empty container the column defaults to. The
+    # clear is honoured rather than silently dropped -- unlike
+    # ChangeHistory::Restorer, which resolves the same type-level trap by
+    # skipping the column and accepting a partial restore. It must be an
+    # in-place mutation: re-assigning would cast, strip and empty it again.
+    def keep_container_savable(record, locales)
+      return unless record.translations.empty?
+
+      locales.each { |locale| record.translations[locale.to_s] ||= {} }
     end
 
     def drop_mobility_cache(record)
