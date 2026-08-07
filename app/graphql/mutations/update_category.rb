@@ -19,6 +19,8 @@ module Mutations
     field :category, Types::CategoryType, null: true
     field :errors, [Types::MutationError], null: false
 
+    include Mutations::Concerns::DraftWriting
+
     def authorized?(category:, **attributes)
       authorize category, :update?
       authorize_visibility_transition(category, attributes[:visibility])
@@ -26,6 +28,11 @@ module Mutations
     end
 
     def resolve(category:, **attributes)
+      if attributes.delete(:save_as_draft)
+        draft = write_draft(category, attributes, language: attributes[:language])
+        return { category: category, errors: [] } if draft.persisted?
+      end
+
       # When transitioning to deleted, stamp deleted_by_principal_id.
       vis = attributes[:visibility]
       if vis && vis.to_s.casecmp('deleted').zero? && category.visibility.to_s != 'deleted'

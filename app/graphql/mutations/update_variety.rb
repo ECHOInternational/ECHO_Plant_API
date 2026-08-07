@@ -19,6 +19,7 @@ module Mutations
 
     include Mutations::Concerns::VarietyEditableArguments
     include Mutations::Concerns::RangeLiteralValidation
+    include Mutations::Concerns::DraftWriting
 
     field :variety, Types::VarietyType, null: true
     field :errors, [Types::MutationError], null: false
@@ -32,6 +33,11 @@ module Mutations
     def resolve(variety:, **attributes)
       range_errors = validate_range_literals(attributes)
       return { variety: variety, errors: range_errors } if range_errors.any?
+
+      if attributes.delete(:save_as_draft)
+        draft = write_draft(variety, attributes, language: attributes[:language])
+        return { variety: variety, errors: [] } if draft.persisted?
+      end
 
       language = attributes[:language] || I18n.locale
 
