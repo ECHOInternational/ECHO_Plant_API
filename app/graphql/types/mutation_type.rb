@@ -306,5 +306,11 @@ module Types
     field :update_family,
           mutation: Mutations::UpdateFamily,
           description: 'Updates the editable metadata on a family'
+    field :publish_draft,
+          mutation: Mutations::PublishDraft,
+          description: "Applies a record's pending draft to the live record. Returns conflictedFields, and publishes nothing, when the live record changed under the draft; retry with force to publish anyway"
+    field :discard_draft,
+          mutation: Mutations::DiscardDraft,
+          description: "Throws away a record's pending draft, leaving the live record untouched"
   end
 end
