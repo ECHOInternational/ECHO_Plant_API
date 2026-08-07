@@ -56,6 +56,19 @@ RSpec.describe ChangeHistory::Restorer, versioning: true do
       expect(Mobility.with_locale(:en) { plant.reload.uses }).to eq 'First use'
     end
 
+    it 'restores a changed family assignment' do
+      old_family = Family.importing { create(:family) }
+      new_family = Family.importing { create(:family) }
+      plant = create(:plant, family: old_family)
+      plant.update!(family: new_family)
+
+      version = versions_for(plant).first
+
+      described_class.new(record: plant, version_id: version.id).call
+
+      expect(plant.reload.family_id).to eq(old_family.id)
+    end
+
     it 'records the restore as a new version stamped with the source version' do
       create_version = versions_for(plant).first
       plant.update!(scientific_name: 'Second')

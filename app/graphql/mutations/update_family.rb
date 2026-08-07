@@ -37,6 +37,8 @@ module Mutations
     field :family, Types::FamilyType, null: true
     field :errors, [Types::MutationError], null: false
 
+    include Mutations::Concerns::DraftWriting
+
     TRANSLATED = %i[description seed_banking_notes].freeze
     PLAIN = %i[storage_physiology seed_longevity seed_banking_rank].freeze
 
@@ -48,6 +50,17 @@ module Mutations
       family = attributes[:family]
       language = attributes[:language] || I18n.locale
 
+      if attributes.delete(:save_as_draft)
+        draft = write_draft(family, attributes.except(:family), language: language)
+        return { family: family, errors: [] } if draft.persisted?
+      end
+
+      write_live(family, attributes, language)
+    end
+
+    private
+
+    def write_live(family, attributes, language)
       Mobility.with_locale(language) do
         TRANSLATED.each { |key| family.public_send("#{key}=", attributes[key]) if attributes.key?(key) }
         PLAIN.each { |key| family.public_send("#{key}=", attributes[key]) if attributes.key?(key) }

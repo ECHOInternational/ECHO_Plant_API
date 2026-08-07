@@ -10,15 +10,17 @@ module Resolvers
     type Types::PlantType::PlantConnectionWithTotalCountType, null: false
     description 'Returns a list of Plants'
 
-    # Eager-load the three associations the list/detail responses read per
-    # plant (primary_common_name resolves over common_names; the nested
-    # varieties connection resolves through the varieties association;
-    # family resolves the new Plant.family relation). Without this the
-    # mobile cache-priming query issues one common_names query per plant plus
-    # one varieties query per plant (the classic N+1). Rails de-duplicates this
-    # against the additional includes(:common_names) added by the name/any_name
-    # filters, so those branches keep working.
-    scope { Pundit.policy_scope(context[:current_user], Plant).i18n.includes(:common_names, :varieties, :family) }
+    # Eager-load the associations the list/detail responses read per plant
+    # (primary_common_name resolves over common_names; the nested varieties
+    # connection resolves through the varieties association; family resolves
+    # the new Plant.family relation; record_draft backs the draft field added
+    # by Types::Concerns::DraftFields). Without this the mobile cache-priming
+    # query issues one query per plant per association (the classic N+1).
+    # Rails de-duplicates this against the additional includes(:common_names)
+    # added by the name/any_name filters, so those branches keep working.
+    scope do
+      Pundit.policy_scope(context[:current_user], Plant).i18n.includes(:common_names, :varieties, :family, :record_draft)
+    end
 
     option :language,
            type: String,
@@ -51,6 +53,32 @@ module Resolvers
            type: GraphQL::Types::ID,
            with: :apply_owned_by_organization_id_filter,
            description: 'Returns only records owned by the specified organization (Relay global ID).'
+    option :has_pending_changes,
+           type: Boolean,
+           with: :apply_has_pending_changes_filter,
+           description: 'Restrict to records with (true) or without (false) an open draft. ' \
+                        'Permission-gated: callers without write access always see the empty ' \
+                        'set for true, since the draft field itself is null to them.'
+
+    # EXISTS rather than a join, so filtering never changes row multiplicity
+    # even if the one-draft-per-record uniqueness constraint is ever relaxed.
+    # value.nil? must be checked explicitly and treated as "filter absent":
+    # search_object still passes an argument bound to an explicit-null
+    # variable through to this method as `nil` (it only omits keys for
+    # arguments that were never supplied at all), so without the guard a
+    # `hasPendingChanges: $v` query with `$v: null` would silently fall into
+    # the false branch and exclude every draft-bearing record.
+    def apply_has_pending_changes_filter(scope, value)
+      return scope if value.nil?
+
+      # The draft metadata field is null for callers without update
+      # permission, so from their perspective NOTHING has a visible pending
+      # change; filtering true must yield the empty set rather than acting as
+      # an existence oracle over other people's drafts.
+      return value ? scope.none : scope unless context[:current_user]&.can_write?
+
+      scope.where("#{'NOT ' unless value}EXISTS (SELECT 1 FROM record_drafts WHERE draftable_type = 'Plant' AND draftable_id = plants.id)")
+    end
 
     def apply_owned_by_filter(scope, value)
       return scope if value.blank?

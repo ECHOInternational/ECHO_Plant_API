@@ -10,7 +10,10 @@ module Resolvers
     type Types::VarietyType::VarietyConnectionWithTotalCountType, null: false
     description 'Returns a list of Plant Varieties'
 
-    scope { Pundit.policy_scope(context[:current_user], Variety).i18n }
+    # record_draft is eager-loaded because it backs the draft field added by
+    # Types::Concerns::DraftFields; without it a list request for that field
+    # issues one record_drafts query per row.
+    scope { Pundit.policy_scope(context[:current_user], Variety).i18n.includes(:record_draft) }
 
     option :language,
            type: String,
@@ -35,6 +38,32 @@ module Resolvers
            type: GraphQL::Types::ID,
            with: :apply_owned_by_organization_id_filter,
            description: 'Returns only records owned by the specified organization (Relay global ID).'
+    option :has_pending_changes,
+           type: Boolean,
+           with: :apply_has_pending_changes_filter,
+           description: 'Restrict to records with (true) or without (false) an open draft. ' \
+                        'Permission-gated: callers without write access always see the empty ' \
+                        'set for true, since the draft field itself is null to them.'
+
+    # EXISTS rather than a join, so filtering never changes row multiplicity
+    # even if the one-draft-per-record uniqueness constraint is ever relaxed.
+    # value.nil? must be checked explicitly and treated as "filter absent":
+    # search_object still passes an argument bound to an explicit-null
+    # variable through to this method as `nil` (it only omits keys for
+    # arguments that were never supplied at all), so without the guard a
+    # `hasPendingChanges: $v` query with `$v: null` would silently fall into
+    # the false branch and exclude every draft-bearing record.
+    def apply_has_pending_changes_filter(scope, value)
+      return scope if value.nil?
+
+      # The draft metadata field is null for callers without update
+      # permission, so from their perspective NOTHING has a visible pending
+      # change; filtering true must yield the empty set rather than acting as
+      # an existence oracle over other people's drafts.
+      return value ? scope.none : scope unless context[:current_user]&.can_write?
+
+      scope.where("#{'NOT ' unless value}EXISTS (SELECT 1 FROM record_drafts WHERE draftable_type = 'Variety' AND draftable_id = varieties.id)")
+    end
 
     def apply_owned_by_filter(scope, value)
       return scope if value.blank?

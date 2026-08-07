@@ -7,6 +7,7 @@ module Types
     implements GraphQL::Types::Relay::Node
 
     include Types::Concerns::CapabilityFields
+    include Types::Concerns::DraftFields
 
     description 'A plant is a crop species available through the Plant API.'
 

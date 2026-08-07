@@ -127,7 +127,7 @@ Metrics/BlockNesting:
   Exclude:
     - 'app/models/concerns/organized_resource.rb'
 
-# Offense count: 5
+# Offense count: 6
 # Configuration parameters: Max, IgnoredMethods.
 Metrics/ClassLength:
   Exclude:
@@ -136,6 +136,7 @@ Metrics/ClassLength:
     - 'app/services/ownership_backfill.rb'
     - 'app/services/source_synchronizer.rb'
     - 'app/graphql/mutations/resolve_sync_conflict.rb'
+    - 'app/graphql/resolvers/plants_resolver.rb'
 
 # Offense count: 7
 # Configuration parameters: Max, IgnoredMethods.
@@ -182,6 +183,17 @@ Naming/PredicateMethod:
     - 'app/graphql/types/change_entry_type.rb'
     - 'app/graphql/types/concerns/capability_fields.rb'
     - 'app/graphql/types/life_cycle_event_type.rb'
+    - 'app/graphql/types/record_draft_info_type.rb'
+
+# Offense count: 1
+# The GraphQL field is named is_stale (isStale on the wire) to match the
+# camelCase-boolean convention used throughout this schema (see PlantType's
+# has_edible_green_leaves etc.); the resolver method name must match the
+# field name exactly for graphql-ruby's default method lookup, so it cannot
+# be renamed to stale?.
+Naming/PredicatePrefix:
+  Exclude:
+    - 'app/graphql/types/record_draft_info_type.rb'
 
 # Offense count: 2
 # This cop supports unsafe autocorrection (--autocorrect-all).

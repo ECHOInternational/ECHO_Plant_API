@@ -21,6 +21,7 @@ module Mutations
     include Mutations::Concerns::PlantEditableArguments
     include Mutations::Concerns::RangeLiteralValidation
     include Mutations::Concerns::FamilyAssignment
+    include Mutations::Concerns::DraftWriting
 
     field :plant, Types::PlantType, null: true
     field :errors, [Types::MutationError], null: false
@@ -34,6 +35,11 @@ module Mutations
     def resolve(plant:, **attributes) # rubocop:disable Metrics/AbcSize
       range_errors = validate_range_literals(attributes)
       return { plant: plant, errors: range_errors } if range_errors.any?
+
+      if attributes.delete(:save_as_draft)
+        draft = write_draft(plant, attributes, language: attributes[:language])
+        return { plant: plant, errors: [] } if draft.persisted?
+      end
 
       language = attributes[:language] || I18n.locale
       primary_common_name = attributes[:primary_common_name]

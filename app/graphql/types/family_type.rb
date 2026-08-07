@@ -6,6 +6,8 @@ module Types
     global_id_field :id
     implements GraphQL::Types::Relay::Node
 
+    include Types::Concerns::DraftFields
+
     description 'A family is a rank of biological classification, sourced from ' \
                 'the Catalogue of Life. The list is fixed; only its metadata is editable.'
 

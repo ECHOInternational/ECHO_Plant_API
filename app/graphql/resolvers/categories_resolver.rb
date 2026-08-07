@@ -10,7 +10,10 @@ module Resolvers
     type Types::CategoryType::CategoryConnectionWithTotalCountType, null: false
     description 'Returns a list of Plant Categories'
 
-    scope { Pundit.policy_scope(context[:current_user], Category).i18n }
+    # record_draft is eager-loaded because it backs the draft field added by
+    # Types::Concerns::DraftFields; without it a list request for that field
+    # issues one record_drafts query per row.
+    scope { Pundit.policy_scope(context[:current_user], Category).i18n.includes(:record_draft) }
 
     option :language,
            type: String,
@@ -31,6 +34,26 @@ module Resolvers
            type: String,
            with: :apply_owned_by_filter,
            description: 'Returns only records owned by the specified user'
+    option :has_pending_changes,
+           type: Boolean,
+           with: :apply_has_pending_changes_filter,
+           description: 'Restrict to records with (true) or without (false) an open draft. ' \
+                        'Permission-gated: callers without write access always see the empty ' \
+                        'set for true, since the draft field itself is null to them.'
+
+    # EXISTS (not a join, nil is "filter absent" not false) -- see the fuller
+    # comment on the same method in varieties_resolver.rb.
+    #
+    # The draft metadata field is null for callers without update permission,
+    # so from their perspective NOTHING has a visible pending change;
+    # filtering true must yield the empty set rather than acting as an
+    # existence oracle over other people's drafts.
+    def apply_has_pending_changes_filter(scope, value)
+      return scope if value.nil?
+      return value ? scope.none : scope unless context[:current_user]&.can_write?
+
+      scope.where("#{'NOT ' unless value}EXISTS (SELECT 1 FROM record_drafts WHERE draftable_type = 'Category' AND draftable_id = categories.id)")
+    end
 
     def apply_owned_by_filter(scope, value)
       return scope if value.blank?
