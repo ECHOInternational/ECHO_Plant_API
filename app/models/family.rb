@@ -22,6 +22,7 @@ class Family < ApplicationRecord
   STATUSES = %w[accepted superseded].freeze
 
   extend Mobility
+  include Draftable
   translates :description, :seed_banking_notes
 
   # Registered before the associations below so the immutability guard fires

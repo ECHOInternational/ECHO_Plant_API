@@ -17,17 +17,8 @@ module ChangeHistory
 
     ERROR_FIELD = 'versionId'
 
-    PLANT_ATTRIBUTES = (
-      %w[scientific_name family_names early_growth_phase life_cycle translations] +
-      Mutations::Concerns::PlantEditableArguments::BOOLEAN_FIELDS.map(&:to_s) +
-      Mutations::Concerns::RangeLiteralValidation::RANGE_FIELDS.map(&:to_s)
-    ).freeze
-
-    VARIETY_ATTRIBUTES = (
-      %w[translations] +
-      Mutations::Concerns::VarietyEditableArguments::BOOLEAN_FIELDS.map(&:to_s) +
-      Mutations::Concerns::RangeLiteralValidation::RANGE_FIELDS.map(&:to_s)
-    ).freeze
+    PLANT_ATTRIBUTES = DraftableAttributes::PLANT
+    VARIETY_ATTRIBUTES = DraftableAttributes::VARIETY
 
     RESTORABLE_ATTRIBUTES = {
       'Plant' => PLANT_ATTRIBUTES,

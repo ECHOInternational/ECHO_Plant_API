@@ -3,6 +3,7 @@
 # Categories are groupings of plant objects
 class Category < ApplicationRecord
   include OrganizedResource
+  include Draftable
 
   extend Mobility
   translates :name, :description
