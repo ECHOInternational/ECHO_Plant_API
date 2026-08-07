@@ -13,10 +13,11 @@ module Mutations
   # possible type to it would be wrong, and a new union type would be a fifth
   # near-identical polymorphic wrapper for no gain.
   class PublishDraft < BaseMutation
-    # Kept in step with DraftableAttributes::BY_MODEL, which is the real
-    # whitelist. Duplicated in DiscardDraft only because the two mutations may
-    # not share a concern file under this task's file budget.
-    DRAFTABLE_TYPES = %w[Plant Variety Family Category].freeze
+    # Derived from DraftableAttributes::BY_MODEL, the single real whitelist of
+    # which models can hold a draft, so this can never drift from it the way a
+    # hand-copied literal list did. Duplicated in DiscardDraft only because the
+    # two mutations may not share a concern file under this task's file budget.
+    DRAFTABLE_TYPES = DraftableAttributes::BY_MODEL.keys.freeze
 
     argument :record_id, ID,
              required: true,
@@ -32,7 +33,11 @@ module Mutations
 
     field :record, GraphQL::Types::Relay::Node,
           null: true,
-          description: 'The record as it now stands. On a refused publish this is the untouched live record.'
+          description: 'The record as it now stands. On a refusal by conflict (conflictedFields non-empty) ' \
+                       'this is the untouched live record. On a refusal by validation failure this is the ' \
+                       'in-memory record with the draft values applied but NOT saved -- do not treat its ' \
+                       'presence or shape as confirmation of what was persisted. `errors` is the authoritative ' \
+                       'signal for whether the publish succeeded.'
     field :conflicted_fields, [String],
           null: false,
           description: 'Fields the live record changed under this draft. Non-empty means nothing was published; ' \

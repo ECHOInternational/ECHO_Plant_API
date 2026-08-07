@@ -3,16 +3,16 @@
 require 'rails_helper'
 
 RSpec.describe 'plants(hasPendingChanges:)' do
-  let(:user) { build(:user, trust_level: 10) }
+  let(:user) { build(:user, :superadmin) }
   let!(:with_draft) { create(:plant, visibility: :public) }
   let!(:without_draft) { create(:plant, visibility: :public) }
 
   before { create(:record_draft, draftable: with_draft, base_updated_at: with_draft.updated_at) }
 
-  def ids(value)
+  def ids(value, current_user: user)
     result = PlantApiSchema.execute(
       'query($v: Boolean) { plants(hasPendingChanges: $v) { edges { node { uuid } } } }',
-      context: { current_user: user }, variables: { v: value }
+      context: { current_user: current_user }, variables: { v: value }
     )
     result.dig('data', 'plants', 'edges').map { |e| e.dig('node', 'uuid') }
   end
@@ -29,19 +29,36 @@ RSpec.describe 'plants(hasPendingChanges:)' do
   it 'returns everything when the filter is absent' do
     expect(ids(nil)).to include(with_draft.id, without_draft.id)
   end
+
+  it 'is permission-gated: an anonymous caller gets the empty set for true' do
+    expect(ids(true, current_user: nil)).to be_empty
+  end
+
+  it 'is permission-gated: an anonymous caller gets everything visible for false' do
+    expect(ids(false, current_user: nil)).to include(with_draft.id, without_draft.id)
+  end
+
+  it 'is permission-gated: a readonly caller gets the empty set for true' do
+    expect(ids(true, current_user: build(:user, :readonly))).to be_empty
+  end
+
+  it 'is permission-gated: a readonly caller gets everything visible for false' do
+    readonly_ids = ids(false, current_user: build(:user, :readonly))
+    expect(readonly_ids).to include(with_draft.id, without_draft.id)
+  end
 end
 
 RSpec.describe 'varieties(hasPendingChanges:)' do
-  let(:user) { build(:user, trust_level: 10) }
+  let(:user) { build(:user, :superadmin) }
   let!(:with_draft) { create(:variety, visibility: :public) }
   let!(:without_draft) { create(:variety, visibility: :public) }
 
   before { create(:record_draft, draftable: with_draft, base_updated_at: with_draft.updated_at) }
 
-  def ids(value)
+  def ids(value, current_user: user)
     result = PlantApiSchema.execute(
       'query($v: Boolean) { varieties(hasPendingChanges: $v) { edges { node { uuid } } } }',
-      context: { current_user: user }, variables: { v: value }
+      context: { current_user: current_user }, variables: { v: value }
     )
     result.dig('data', 'varieties', 'edges').map { |e| e.dig('node', 'uuid') }
   end
@@ -58,19 +75,36 @@ RSpec.describe 'varieties(hasPendingChanges:)' do
   it 'returns everything when the filter is absent' do
     expect(ids(nil)).to include(with_draft.id, without_draft.id)
   end
+
+  it 'is permission-gated: an anonymous caller gets the empty set for true' do
+    expect(ids(true, current_user: nil)).to be_empty
+  end
+
+  it 'is permission-gated: an anonymous caller gets everything visible for false' do
+    expect(ids(false, current_user: nil)).to include(with_draft.id, without_draft.id)
+  end
+
+  it 'is permission-gated: a readonly caller gets the empty set for true' do
+    expect(ids(true, current_user: build(:user, :readonly))).to be_empty
+  end
+
+  it 'is permission-gated: a readonly caller gets everything visible for false' do
+    readonly_ids = ids(false, current_user: build(:user, :readonly))
+    expect(readonly_ids).to include(with_draft.id, without_draft.id)
+  end
 end
 
 RSpec.describe 'categories(hasPendingChanges:)' do
-  let(:user) { build(:user, trust_level: 10) }
+  let(:user) { build(:user, :superadmin) }
   let!(:with_draft) { create(:category, visibility: :public) }
   let!(:without_draft) { create(:category, visibility: :public) }
 
   before { create(:record_draft, draftable: with_draft, base_updated_at: with_draft.updated_at) }
 
-  def ids(value)
+  def ids(value, current_user: user)
     result = PlantApiSchema.execute(
       'query($v: Boolean) { categories(hasPendingChanges: $v) { edges { node { uuid } } } }',
-      context: { current_user: user }, variables: { v: value }
+      context: { current_user: current_user }, variables: { v: value }
     )
     result.dig('data', 'categories', 'edges').map { |e| e.dig('node', 'uuid') }
   end
@@ -87,19 +121,36 @@ RSpec.describe 'categories(hasPendingChanges:)' do
   it 'returns everything when the filter is absent' do
     expect(ids(nil)).to include(with_draft.id, without_draft.id)
   end
+
+  it 'is permission-gated: an anonymous caller gets the empty set for true' do
+    expect(ids(true, current_user: nil)).to be_empty
+  end
+
+  it 'is permission-gated: an anonymous caller gets everything visible for false' do
+    expect(ids(false, current_user: nil)).to include(with_draft.id, without_draft.id)
+  end
+
+  it 'is permission-gated: a readonly caller gets the empty set for true' do
+    expect(ids(true, current_user: build(:user, :readonly))).to be_empty
+  end
+
+  it 'is permission-gated: a readonly caller gets everything visible for false' do
+    readonly_ids = ids(false, current_user: build(:user, :readonly))
+    expect(readonly_ids).to include(with_draft.id, without_draft.id)
+  end
 end
 
 RSpec.describe 'families(hasPendingChanges:)' do
-  let(:user) { build(:user, trust_level: 10) }
+  let(:user) { build(:user, :superadmin) }
   let!(:with_draft) { Family.importing { create(:family) } }
   let!(:without_draft) { Family.importing { create(:family) } }
 
   before { create(:record_draft, draftable: with_draft, base_updated_at: with_draft.updated_at) }
 
-  def ids(value)
+  def ids(value, current_user: user)
     result = PlantApiSchema.execute(
       'query($v: Boolean) { families(hasPendingChanges: $v) { edges { node { uuid } } } }',
-      context: { current_user: user }, variables: { v: value }
+      context: { current_user: current_user }, variables: { v: value }
     )
     result.dig('data', 'families', 'edges').map { |e| e.dig('node', 'uuid') }
   end
@@ -115,5 +166,22 @@ RSpec.describe 'families(hasPendingChanges:)' do
 
   it 'returns everything when the filter is absent' do
     expect(ids(nil)).to include(with_draft.id, without_draft.id)
+  end
+
+  it 'is permission-gated: an anonymous caller gets the empty set for true' do
+    expect(ids(true, current_user: nil)).to be_empty
+  end
+
+  it 'is permission-gated: an anonymous caller gets everything visible for false' do
+    expect(ids(false, current_user: nil)).to include(with_draft.id, without_draft.id)
+  end
+
+  it 'is permission-gated: a readonly caller gets the empty set for true' do
+    expect(ids(true, current_user: build(:user, :readonly))).to be_empty
+  end
+
+  it 'is permission-gated: a readonly caller gets everything visible for false' do
+    readonly_ids = ids(false, current_user: build(:user, :readonly))
+    expect(readonly_ids).to include(with_draft.id, without_draft.id)
   end
 end

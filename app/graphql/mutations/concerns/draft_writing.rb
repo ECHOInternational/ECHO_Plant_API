@@ -12,7 +12,11 @@ module Mutations
         base.argument :save_as_draft, GraphQL::Types::Boolean,
                       required: false,
                       default_value: false,
-                      description: 'Stage these changes on a draft instead of writing the live record.'
+                      description: 'Stage these changes on a draft instead of writing the live record. ' \
+                                   'Only draftable columns (DraftableAttributes) are staged: workflow ' \
+                                   'arguments such as visibility, publicationState and accessLevel, and any ' \
+                                   'other non-column argument sent alongside saveAsDraft, are silently ' \
+                                   'ignored rather than staged -- they take effect only on a live (non-draft) write.'
       end
 
       # Merges the supplied attributes into the record's draft, creating it on
@@ -74,11 +78,17 @@ module Mutations
       end
 
       # Merges the newly staged fields into whatever translations blob is
-      # already on the draft (or, on first save, the live record), so saving
-      # one locale never clobbers another.
+      # already on the draft, so saving one locale never clobbers another.
+      #
+      # Deliberately NOT seeded from record.translations on first save: the
+      # draft blob holds only the locales/fields the editor actually staged,
+      # not a full snapshot of the live translations. Overlay and Publisher
+      # both deep-merge the draft onto the live record when reading/publishing,
+      # so a "changed keys only" blob renders and publishes identically to a
+      # full snapshot while staying small and free of stale-copy drift.
       def merged_translations_blob(record, staged_translations, language)
         locale = (language || Mobility.locale).to_s
-        blob = (record.record_draft&.data&.dig('translations') || record.translations || {}).deep_dup
+        blob = (record.record_draft&.data&.dig('translations') || {}).deep_dup
         blob[locale] = (blob[locale] || {}).merge(staged_translations)
         blob
       end

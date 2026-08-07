@@ -10,6 +10,31 @@
 
 **Design spec:** `docs/superpowers/specs/2026-08-07-draft-publish-design.md` (PR #108). Read it before starting — it records why PaperTrail is not the storage mechanism and why several obvious alternatives were rejected.
 
+## Corrections applied during execution
+
+This plan (and the design spec above) contained a few inaccuracies caught in
+the final whole-branch review and corrected in the shipped code and docs, not
+in this plan text. When reading either document, keep these in mind:
+
+- **Conflict detection is strictly-greater-than, not inclusive.** The range
+  test is `created_at > draft.base_updated_at`; the version at exactly the
+  boundary IS the base state the draft was staged against, not a conflict.
+- **Publish does not "replay through the normal update path."** The shipped
+  `Drafts::Publisher` assigns the draft's staged values onto the loaded record
+  in memory via `Drafts::Overlay`, then explicitly applies the family-name
+  mirror and the publication-state flip itself, then saves once. There is no
+  mutation-layer replay.
+- **User specs use factory traits, not `trust_level:`.** `build(:user,
+  trust_level: 10)` is a dead parameter -- the factory only takes trust levels
+  via traits (`build(:user, :superadmin)`, `:admin`, `:readwrite`,
+  `:readonly`).
+- **The empty-translations savability guard lives in `Drafts::Overlay`**
+  (`keep_container_savable`), not in the publisher or the mutation layer.
+
+For the full history of how these were found and fixed, see the `.superpowers`
+ledger history in git rather than treating this plan as current truth on these
+points.
+
 ## Global Constraints
 
 - **The frozen mobile contract must not change.** `spec/contracts/mobile_*` passing untouched is the regression proof for this whole plan. Never modify those files.

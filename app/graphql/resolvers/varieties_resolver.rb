@@ -41,7 +41,9 @@ module Resolvers
     option :has_pending_changes,
            type: Boolean,
            with: :apply_has_pending_changes_filter,
-           description: 'Restrict to records with (true) or without (false) an open draft'
+           description: 'Restrict to records with (true) or without (false) an open draft. ' \
+                        'Permission-gated: callers without write access always see the empty ' \
+                        'set for true, since the draft field itself is null to them.'
 
     # EXISTS rather than a join, so filtering never changes row multiplicity
     # even if the one-draft-per-record uniqueness constraint is ever relaxed.
@@ -53,6 +55,12 @@ module Resolvers
     # the false branch and exclude every draft-bearing record.
     def apply_has_pending_changes_filter(scope, value)
       return scope if value.nil?
+
+      # The draft metadata field is null for callers without update
+      # permission, so from their perspective NOTHING has a visible pending
+      # change; filtering true must yield the empty set rather than acting as
+      # an existence oracle over other people's drafts.
+      return value ? scope.none : scope unless context[:current_user]&.can_write?
 
       scope.where("#{'NOT ' unless value}EXISTS (SELECT 1 FROM record_drafts WHERE draftable_type = 'Variety' AND draftable_id = varieties.id)")
     end

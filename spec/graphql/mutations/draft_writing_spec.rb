@@ -87,3 +87,48 @@ RSpec.describe 'updatePlant saveAsDraft' do
     end
   end
 end
+
+RSpec.describe 'updateFamily saveAsDraft' do
+  let(:user) { build(:user, :superadmin) }
+  let(:family) { Family.importing { create(:family, description: 'Live description') } }
+  let(:global_id) { PlantApiSchema.id_from_object(family, Family, {}) }
+  let(:mutation) do
+    <<~GRAPHQL
+      mutation($input: UpdateFamilyInput!) {
+        updateFamily(input: $input) {
+          family { id description }
+          errors { code field message }
+        }
+      }
+    GRAPHQL
+  end
+
+  def execute(input)
+    PlantApiSchema.execute(mutation, context: { current_user: user },
+                                     variables: { input: input })
+  end
+
+  # Exercises the mobility_attributes-driven translations staging path
+  # (DraftWriting#stageable_data) for a model other than Plant, since Family
+  # translates description/seed_banking_notes the same way.
+  it 'stages translatable fields under translations, keyed by locale, and leaves live untouched' do
+    execute(
+      {
+        familyId: global_id,
+        description: 'Draft description',
+        seedBankingNotes: 'Draft seed banking notes',
+        language: 'en',
+        saveAsDraft: true
+      }
+    )
+
+    data = family.reload.record_draft.data
+    expect(data.dig('translations', 'en', 'description')).to eq('Draft description')
+    expect(data.dig('translations', 'en', 'seed_banking_notes')).to eq('Draft seed banking notes')
+    expect(data).not_to have_key('description')
+    expect(data).not_to have_key('seed_banking_notes')
+
+    expect(family.reload.description).to eq('Live description')
+    expect(family.reload.seed_banking_notes).to be_nil
+  end
+end

@@ -7,9 +7,12 @@ module Mutations
   #
   # See PublishDraft for why `record` is the Relay Node interface.
   class DiscardDraft < BaseMutation
-    # Duplicated from PublishDraft only because the two mutations may not share
-    # a concern file under this task's file budget.
-    DRAFTABLE_TYPES = %w[Plant Variety Family Category].freeze
+    # Derived from DraftableAttributes::BY_MODEL, the single real whitelist of
+    # which models can hold a draft, so this can never drift from it the way a
+    # hand-copied literal list did. Duplicated from PublishDraft only because
+    # the two mutations may not share a concern file under this task's file
+    # budget.
+    DRAFTABLE_TYPES = DraftableAttributes::BY_MODEL.keys.freeze
 
     argument :record_id, ID,
              required: true,

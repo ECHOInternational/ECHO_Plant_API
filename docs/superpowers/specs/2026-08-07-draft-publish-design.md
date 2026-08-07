@@ -74,7 +74,12 @@ tightly coupled to a project's own authorization and read paths.
 ### Storage: a separate pending-changes table
 
 The live row is never touched by editing. A `record_drafts` row holds the
-working copy. Publishing replays it through the normal update path.
+working copy. Publishing does not replay through the mutation layer: the
+shipped `Drafts::Publisher` loads the live record, applies the draft's staged
+values onto it in memory through `Drafts::Overlay` (which owns the
+translations-container merge semantics), explicitly applies the family-name
+mirror and the publication-state flip, then saves once. See "Publish,
+conflict, discard" below for the mechanism in full.
 
 Rejected alternative, **shadow row** (a draft as a real row in `plants` with a
 `draft_of_id` self-FK): every existing validation, resolver, and form would
@@ -120,9 +125,11 @@ immediately, as today.
 
 `plants.family_id` is an ordinary column and is therefore staged. Note that
 `Mutations::Concerns::FamilyAssignment` mirrors `family.name` into the legacy
-`family_names` column when blank; that mirror must run on publish, which it
-does because publish replays through the existing update path rather than
-writing columns directly.
+`family_names` column when blank; that mirror must also run on publish, but
+`FamilyAssignment` is mutation-layer code that publish does not go through.
+The shipped `Drafts::Publisher` reproduces the mirror explicitly
+(`apply_family_names_mirror`), keyed on the draft having staged `family_id`
+at all, immediately after applying the overlay and before the single save.
 
 ### Entities: Plant, Variety, Family, Category
 
@@ -339,11 +346,15 @@ In a transaction, with `with_lock` on the record:
 
 1. Re-run conflict detection. The check at dialog-open time is advisory; this
    one is authoritative.
-2. Apply `data` through the normal update path, so validations, the family
-   mirror, the `OrganizedResource` dual-write, and PaperTrail all run as they
-   do for a direct edit.
-3. If `publication_state` is `draft`, flip it to `published`.
-4. Destroy the draft.
+2. Apply `data` onto the loaded record in memory through `Drafts::Overlay`
+   (not by replaying it through a mutation or `record.update`), then
+   explicitly apply the family-name mirror. Validations, the
+   `OrganizedResource` dual-write, and PaperTrail all still run, because they
+   are triggered by the single `save!` in the next step, not by the update
+   path itself.
+3. If `publication_state` is `draft`, flip it to `published` (also applied
+   explicitly, not via the mutation layer).
+4. Save once, then destroy the draft.
 
 One PaperTrail version results, whose changeset is the real before/after. The
 history drawer stays a record of what the public actually saw.

@@ -6709,7 +6709,11 @@ type PublishDraftPayload {
   errors: [MutationError!]!
 
   """
-  The record as it now stands. On a refused publish this is the untouched live record.
+  The record as it now stands. On a refusal by conflict (conflictedFields
+  non-empty) this is the untouched live record. On a refusal by validation
+  failure this is the in-memory record with the draft values applied but NOT
+  saved -- do not treat its presence or shape as confirmation of what was
+  persisted. `errors` is the authoritative signal for whether the publish succeeded.
   """
   record: Node
 }
@@ -6782,7 +6786,9 @@ type Query {
     first: Int
 
     """
-    Restrict to records with (true) or without (false) an open draft
+    Restrict to records with (true) or without (false) an open draft.
+    Permission-gated: callers without write access always see the empty set for
+    true, since the draft field itself is null to them.
     """
     hasPendingChanges: Boolean
 
@@ -6850,7 +6856,9 @@ type Query {
     first: Int
 
     """
-    Restrict to records with (true) or without (false) an open draft
+    Restrict to records with (true) or without (false) an open draft.
+    Permission-gated: callers without write access always see the empty set for
+    true, since the draft field itself is null to them.
     """
     hasPendingChanges: Boolean
 
@@ -7131,7 +7139,9 @@ type Query {
     first: Int
 
     """
-    Restrict to records with (true) or without (false) an open draft
+    Restrict to records with (true) or without (false) an open draft.
+    Permission-gated: callers without write access always see the empty set for
+    true, since the draft field itself is null to them.
     """
     hasPendingChanges: Boolean
 
@@ -7307,7 +7317,9 @@ type Query {
     first: Int
 
     """
-    Restrict to records with (true) or without (false) an open draft
+    Restrict to records with (true) or without (false) an open draft.
+    Permission-gated: callers without write access always see the empty set for
+    true, since the draft field itself is null to them.
     """
     hasPendingChanges: Boolean
 
@@ -7373,7 +7385,9 @@ type RecordDraftInfo {
   changedFields: [String!]!
 
   """
-  True when the live record changed a drafted field since this draft was started.
+  True when the live record changed a drafted field since this draft was
+  started. Computing this queries the record's PaperTrail audit trail on every
+  resolution -- avoid requesting it across large lists; batching it is a tracked follow-up.
   """
   isStale: Boolean!
 
@@ -8526,7 +8540,11 @@ input UpdateCategoryInput {
   publicationState: PublicationStateEnum
 
   """
-  Stage these changes on a draft instead of writing the live record.
+  Stage these changes on a draft instead of writing the live record. Only
+  draftable columns (DraftableAttributes) are staged: workflow arguments such as
+  visibility, publicationState and accessLevel, and any other non-column
+  argument sent alongside saveAsDraft, are silently ignored rather than staged
+  -- they take effect only on a live (non-draft) write.
   """
   saveAsDraft: Boolean = false
   visibility: Visibility
@@ -8763,7 +8781,11 @@ input UpdateFamilyInput {
   language: String
 
   """
-  Stage these changes on a draft instead of writing the live record.
+  Stage these changes on a draft instead of writing the live record. Only
+  draftable columns (DraftableAttributes) are staged: workflow arguments such as
+  visibility, publicationState and accessLevel, and any other non-column
+  argument sent alongside saveAsDraft, are silently ignored rather than staged
+  -- they take effect only on a live (non-draft) write.
   """
   saveAsDraft: Boolean = false
 
@@ -9697,7 +9719,11 @@ input UpdatePlantInput {
   publicationState: PublicationStateEnum
 
   """
-  Stage these changes on a draft instead of writing the live record.
+  Stage these changes on a draft instead of writing the live record. Only
+  draftable columns (DraftableAttributes) are staged: workflow arguments such as
+  visibility, publicationState and accessLevel, and any other non-column
+  argument sent alongside saveAsDraft, are silently ignored rather than staged
+  -- they take effect only on a live (non-draft) write.
   """
   saveAsDraft: Boolean = false
   scientificName: String
@@ -10397,7 +10423,11 @@ input UpdateVarietyInput {
   publicationState: PublicationStateEnum
 
   """
-  Stage these changes on a draft instead of writing the live record.
+  Stage these changes on a draft instead of writing the live record. Only
+  draftable columns (DraftableAttributes) are staged: workflow arguments such as
+  visibility, publicationState and accessLevel, and any other non-column
+  argument sent alongside saveAsDraft, are silently ignored rather than staged
+  -- they take effect only on a live (non-draft) write.
   """
   saveAsDraft: Boolean = false
 

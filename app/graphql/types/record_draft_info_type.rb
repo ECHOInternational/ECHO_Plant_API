@@ -11,7 +11,10 @@ module Types
     field :changed_fields, [String], null: false,
                                      description: 'Attribute names this draft changes.'
     field :is_stale, Boolean, null: false,
-                              description: 'True when the live record changed a drafted field since this draft was started.'
+                              description: 'True when the live record changed a drafted field since this draft was ' \
+                                           'started. Computing this queries the record\'s PaperTrail audit trail on ' \
+                                           'every resolution -- avoid requesting it across large lists; batching it ' \
+                                           'is a tracked follow-up.'
 
     def author
       object.author&.display_name
