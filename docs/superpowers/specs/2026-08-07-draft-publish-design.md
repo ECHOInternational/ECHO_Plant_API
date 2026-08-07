@@ -453,6 +453,56 @@ Two projects, in order.
    separately.
 2. **Draft and publish**, as designed above.
 
+## Considered and deferred: staging relations
+
+Recorded so the next person to notice `paper_trail-association_tracking` does
+not re-litigate this.
+
+**The gem is not the mechanism, and should not be adopted.** Drafts live in
+`record_drafts.data`, not in PaperTrail, so staging relations means putting
+`category_ids: [...]` in a jsonb blob. The gem is irrelevant to that. It should
+not be adopted on its own merits either:
+
+- Its README recommends `active_snapshot` instead, calling itself "mostly a
+  blackbox solution which encourages you to set it up and then assume it just
+  works, which can make for major data problems later."
+- It documents incompatibility with transactional tests (our whole suite) and
+  with STI (our life-cycle events), the latter tracked as
+  <https://github.com/paper-trail-gem/paper_trail/issues/594>.
+- Its purpose is already served here. `VersionedUnderRoot` is applied to all
+  seven join models plus `CommonName` and `Image`, stamping `{root_type,
+  root_id}` into each child version's metadata so the aggregated history picks
+  them up with one GIN-indexed containment lookup. Relation, common-name, and
+  image changes already appear in `recordHistory`. The gem would duplicate a
+  working mechanism.
+
+**Staging relations is deferred, not rejected.** The three unstaged groups
+differ sharply in cost:
+
+- Relation sets (4 on plant, 3 on variety) are cheap to write (id arrays,
+  published by replaying the existing `UpdateRelations*` mutations) but the
+  perspective overlay would have to override association readers on an
+  in-memory record, which is where the design gets muddy.
+- Common names are medium-hard: rows with their own translations, primary
+  flags, and four mutations; staging means an intended set with synthetic ids.
+- Images are hard and probably wrong to stage. Uploads PUT to S3 before any DB
+  record exists, so a discarded draft orphans S3 objects and needs a reaping
+  story.
+
+Deferring is safe because it is not a one-way door: `data` is schemaless jsonb
+so relation keys need no migration, publish already replays through existing
+mutations, and the perspective overlay would be extended rather than
+redesigned.
+
+It is also substantively right. Staging earns its cost for things with a
+half-finished state. A 2,000-word translation has one; "add tolerance:
+drought" is a single atomic click.
+
+Accepted cost: an editor preparing a revision who also adds two categories
+sees the categories go live immediately while the text waits. The changed-field
+markers make this legible, but it is the most likely source of a "why did that
+publish?" question.
+
 ## Explicitly out of scope
 
 - autosave
