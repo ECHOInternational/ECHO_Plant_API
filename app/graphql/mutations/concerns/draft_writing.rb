@@ -50,10 +50,27 @@ module Mutations
       def stageable_data(record, attributes, permitted, language)
         attrs = attributes.stringify_keys
         scalars = attrs.slice(*permitted)
+        scalars = stage_family_id(scalars, attributes, permitted)
         staged_translations = attrs.slice(*record.class.mobility_attributes.map(&:to_s))
         return scalars if staged_translations.empty?
 
         scalars.merge('translations' => merged_translations_blob(record, staged_translations, language))
+      end
+
+      # plants.family_id is an ordinary draftable column (design doc), but
+      # UpdatePlant's familyId argument uses `loads:`, so graphql-ruby hands
+      # resolve a loaded Family record (or explicit nil) under :family, never
+      # a literal family_id string -- the generic slice above can never see
+      # it. Stage it explicitly, mirroring the `attributes.key?(:family)`
+      # idiom FamilyAssignment#apply_family already uses, so `familyId: null`
+      # (key present, value nil) stages a clear rather than being skipped as
+      # absent. Guarded on the whitelist so this is a no-op for models (and
+      # UpdateFamily's own `family` kwarg, which names the record being
+      # edited, not an assignment) that don't draft family_id at all.
+      def stage_family_id(scalars, attributes, permitted)
+        return scalars unless permitted.include?('family_id') && attributes.key?(:family)
+
+        scalars.merge('family_id' => attributes[:family]&.id)
       end
 
       # Merges the newly staged fields into whatever translations blob is

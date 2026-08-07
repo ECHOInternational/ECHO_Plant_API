@@ -64,4 +64,26 @@ RSpec.describe 'updatePlant saveAsDraft' do
     expect(data.dig('translations', 'en', 'description')).to eq('Draft description')
     expect(data).not_to have_key('description')
   end
+
+  # family_id arrives via the loads: family_id argument as a loaded Family
+  # record (or explicit nil) under :family, never as a literal family_id
+  # string, so it needs its own explicit staging path -- see
+  # DraftWriting#stage_family_id.
+  describe 'staging familyId' do
+    let(:family) { Family.importing { create(:family, name: 'Fabaceae') } }
+
+    it 'stages the family id and leaves the live row untouched' do
+      family_gid = PlantApiSchema.id_from_object(family, Family, {})
+      execute({ plantId: global_id, familyId: family_gid, saveAsDraft: true })
+      expect(plant.reload.record_draft.data).to include('family_id' => family.id)
+      expect(plant.reload.family_id).to be_nil
+    end
+
+    it 'stages an explicit clear as family_id => nil, leaving the live family intact' do
+      plant.update!(family: family)
+      execute({ plantId: global_id, familyId: nil, saveAsDraft: true })
+      expect(plant.reload.record_draft.data).to include('family_id' => nil)
+      expect(plant.reload.family_id).to eq(family.id)
+    end
+  end
 end
