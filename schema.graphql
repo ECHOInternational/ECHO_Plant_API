@@ -1197,6 +1197,11 @@ type Category implements Node {
   A translated description of a category
   """
   description: String
+
+  """
+  Pending staged changes, or null. Visible only to users who may edit.
+  """
+  draft: RecordDraftInfo
   id: ID!
 
   """
@@ -3170,6 +3175,11 @@ type Family implements Node {
   The translated description of a family
   """
   description: String
+
+  """
+  Pending staged changes, or null. Visible only to users who may edit.
+  """
+  draft: RecordDraftInfo
   id: ID!
 
   """
@@ -5671,6 +5681,18 @@ type PageInfo {
   startCursor: String
 }
 
+enum Perspective {
+  """
+  The record with staged changes applied. Requires edit permission.
+  """
+  DRAFT
+
+  """
+  The published record.
+  """
+  PUBLISHED
+}
+
 """
 Actions taken when insects or other pests are observed
 """
@@ -5910,6 +5932,11 @@ type Plant implements Node {
   A translated description of a plant
   """
   description: String
+
+  """
+  Pending staged changes, or null. Visible only to users who may edit.
+  """
+  draft: RecordDraftInfo
 
   """
   Describes how vigorously a plant grows during early growth stages
@@ -6796,6 +6823,11 @@ type Query {
     Request returned fields in a specific languge. Overrides ACCEPT-LANGUAGE header.
     """
     language: String
+
+    """
+    PUBLISHED (default) or DRAFT. DRAFT requires edit permission.
+    """
+    perspective: Perspective = PUBLISHED
   ): Category
 
   """
@@ -6858,6 +6890,11 @@ type Query {
     Request returned fields in a specific language. Overrides ACCEPT-LANGUAGE header.
     """
     language: String
+
+    """
+    PUBLISHED (default) or DRAFT. DRAFT requires edit permission.
+    """
+    perspective: Perspective = PUBLISHED
   ): Family
 
   """
@@ -7062,6 +7099,11 @@ type Query {
     Request returned fields in a specific languge. Overrides ACCEPT-LANGUAGE header.
     """
     language: String
+
+    """
+    PUBLISHED (default) or DRAFT. DRAFT requires edit permission.
+    """
+    perspective: Perspective = PUBLISHED
   ): Plant
 
   """
@@ -7311,7 +7353,35 @@ type Query {
     Request returned fields in a specific languge. Overrides ACCEPT-LANGUAGE header.
     """
     language: String
+
+    """
+    PUBLISHED (default) or DRAFT. DRAFT requires edit permission.
+    """
+    perspective: Perspective = PUBLISHED
   ): Variety
+}
+
+type RecordDraftInfo {
+  """
+  Display name of the principal who started this draft.
+  """
+  author: String
+
+  """
+  Attribute names this draft changes.
+  """
+  changedFields: [String!]!
+
+  """
+  True when the live record changed a drafted field since this draft was started.
+  """
+  isStale: Boolean!
+
+  """
+  Display name of the principal who last edited it.
+  """
+  lastEditor: String
+  updatedAt: ISO8601DateTime!
 }
 
 """
@@ -10636,6 +10706,11 @@ type Variety implements Node {
   A translated description of a variety
   """
   description: String
+
+  """
+  Pending staged changes, or null. Visible only to users who may edit.
+  """
+  draft: RecordDraftInfo
 
   """
   Describes how vigorously a variety grows during early growth stages
