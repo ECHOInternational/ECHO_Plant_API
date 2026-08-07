@@ -10,7 +10,10 @@ module Resolvers
     type Types::CategoryType::CategoryConnectionWithTotalCountType, null: false
     description 'Returns a list of Plant Categories'
 
-    scope { Pundit.policy_scope(context[:current_user], Category).i18n }
+    # record_draft is eager-loaded because it backs the draft field added by
+    # Types::Concerns::DraftFields; without it a list request for that field
+    # issues one record_drafts query per row.
+    scope { Pundit.policy_scope(context[:current_user], Category).i18n.includes(:record_draft) }
 
     option :language,
            type: String,

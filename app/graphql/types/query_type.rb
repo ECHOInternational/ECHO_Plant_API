@@ -72,11 +72,17 @@ module Types
                type: String,
                required: false,
                description: 'Request returned fields in a specific languge. Overrides ACCEPT-LANGUAGE header.'
+      argument :perspective,
+               type: Types::PerspectiveEnum,
+               required: false,
+               default_value: :published,
+               description: 'PUBLISHED (default) or DRAFT. DRAFT requires edit permission.'
     end
-    def plant(id:, language: nil)
+    def plant(id:, language: nil, perspective: :published)
       item_id = decode_global_id(id)
       Mobility.locale = language || I18n.locale
-      Pundit.policy_scope(context[:current_user], Plant).find(item_id)
+      record = Pundit.policy_scope(context[:current_user], Plant).find(item_id)
+      apply_perspective(record, perspective)
     end
     field :variety, Types::VarietyType, null: true do
       description 'Find a variety by ID'
@@ -87,11 +93,17 @@ module Types
                type: String,
                required: false,
                description: 'Request returned fields in a specific languge. Overrides ACCEPT-LANGUAGE header.'
+      argument :perspective,
+               type: Types::PerspectiveEnum,
+               required: false,
+               default_value: :published,
+               description: 'PUBLISHED (default) or DRAFT. DRAFT requires edit permission.'
     end
-    def variety(id:, language: nil)
+    def variety(id:, language: nil, perspective: :published)
       item_id = decode_global_id(id)
       Mobility.locale = language || I18n.locale
-      Pundit.policy_scope(context[:current_user], Variety).find(item_id)
+      record = Pundit.policy_scope(context[:current_user], Variety).find(item_id)
+      apply_perspective(record, perspective)
     end
 
     field :category, Types::CategoryType, null: true do
@@ -103,11 +115,17 @@ module Types
                type: String,
                required: false,
                description: 'Request returned fields in a specific languge. Overrides ACCEPT-LANGUAGE header.'
+      argument :perspective,
+               type: Types::PerspectiveEnum,
+               required: false,
+               default_value: :published,
+               description: 'PUBLISHED (default) or DRAFT. DRAFT requires edit permission.'
     end
-    def category(id:, language: nil)
+    def category(id:, language: nil, perspective: :published)
       item_id = decode_global_id(id)
       Mobility.locale = language || I18n.locale
-      Pundit.policy_scope(context[:current_user], Category).find(item_id)
+      record = Pundit.policy_scope(context[:current_user], Category).find(item_id)
+      apply_perspective(record, perspective)
     end
 
     field :specimen, Types::SpecimenType, null: true do
@@ -215,11 +233,17 @@ module Types
                type: String,
                required: false,
                description: 'Request returned fields in a specific language. Overrides ACCEPT-LANGUAGE header.'
+      argument :perspective,
+               type: Types::PerspectiveEnum,
+               required: false,
+               default_value: :published,
+               description: 'PUBLISHED (default) or DRAFT. DRAFT requires edit permission.'
     end
-    def family(id:, language: nil)
+    def family(id:, language: nil, perspective: :published)
       item_id = decode_global_id(id)
       Mobility.locale = language || I18n.locale
-      Family.find(item_id)
+      record = Family.find(item_id)
+      apply_perspective(record, perspective)
     end
 
     field :organization, Types::OrganizationType, null: true do
@@ -281,6 +305,18 @@ module Types
     }.freeze
 
     private
+
+    # Applies the draft overlay when DRAFT was asked for AND the caller may
+    # edit. A reader holding only show? gets published content back rather than
+    # an error: perspective is a view preference, not an assertion of rights,
+    # and 403ing here would turn an ordinary page load into a failure for
+    # anyone browsing.
+    def apply_perspective(record, perspective)
+      return record unless perspective == :draft
+      return record unless Pundit.policy(context[:current_user], record).update?
+
+      Drafts::Overlay.apply(record, record.record_draft)
+    end
 
     # Authorized Relay node lookup shared by node()/nodes(). Identity/provenance
     # types are never node-addressable (would enumerate emails/org names);

@@ -13,7 +13,10 @@ module Resolvers
     # Ordered by the untranslated scientific name, so unlike the other lookups
     # this does not need the .i18n scope for ordering. id breaks ties so the
     # offset-paginated connection cannot skip or repeat a row between pages.
-    scope { Family.accepted.order(name: :asc).order(id: :asc) }
+    # record_draft is eager-loaded because it backs the draft field added by
+    # Types::Concerns::DraftFields; without it a list request for that field
+    # issues one record_drafts query per row.
+    scope { Family.accepted.includes(:record_draft).order(name: :asc).order(id: :asc) }
 
     option :language,
            type: String,
