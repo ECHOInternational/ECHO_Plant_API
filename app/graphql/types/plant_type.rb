@@ -8,6 +8,7 @@ module Types
 
     include Types::Concerns::CapabilityFields
     include Types::Concerns::DraftFields
+    include Types::Concerns::RangeLiteralFields
 
     description 'A plant is a crop species available through the Plant API.'
 
