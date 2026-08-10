@@ -7375,7 +7375,7 @@ type Query {
 
 type RecordDraftInfo {
   """
-  Display name of the principal who started this draft.
+  Display name of the principal who started this draft, falling back to their email when no display name is on file.
   """
   author: String
 
@@ -7392,7 +7392,7 @@ type RecordDraftInfo {
   isStale: Boolean!
 
   """
-  Display name of the principal who last edited it.
+  Display name of the principal who last edited it, falling back to their email when no display name is on file.
   """
   lastEditor: String
   updatedAt: ISO8601DateTime!

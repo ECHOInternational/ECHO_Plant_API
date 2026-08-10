@@ -8,6 +8,7 @@ module Types
 
     include Types::Concerns::CapabilityFields
     include Types::Concerns::DraftFields
+    include Types::Concerns::RangeLiteralFields
 
     description 'A variety represents a more precisely defined subgroup of plants with a common set of characteristics.'
 
