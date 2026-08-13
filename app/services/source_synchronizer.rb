@@ -167,7 +167,7 @@ class SourceSynchronizer
   # rubocop:disable Metrics/MethodLength
   def compare_and_sync(record, incoming_attrs, src_at, report)
     base  = base_attrs(record)
-    local = record.attributes.slice(*@source_attributes)
+    local = local_attrs(record)
 
     local_digest    = canonical_digest(local)
     incoming_digest = canonical_digest(incoming_attrs)
@@ -245,6 +245,27 @@ class SourceSynchronizer
   end
   # rubocop:enable Metrics/MethodLength
 
+  # Local state for the source-managed attributes.
+  #
+  # Deliberately NOT record.attributes.slice(*@source_attributes). Mobility is
+  # configured with `backend :container` and without the `attribute_methods`
+  # plugin (config/initializers/mobility.rb), so translated attributes
+  # (description, uses, cultivation, ...) live inside the `translations` jsonb
+  # and never appear in #attributes. Slicing there yields {} for them, so local
+  # reads as permanently different from the stored snapshot: an unchanged
+  # re-sync is scored `locally_modified` and a genuine upstream edit is silently
+  # dropped rather than applied. Reading through the public reader treats
+  # column-backed and translated attributes identically.
+  #
+  # Note on fallbacks: the Mobility `fallbacks` plugin means reading a missing
+  # locale returns the :en value. Sync writes and reads within the same locale,
+  # so the comparison stays symmetric.
+  def local_attrs(record)
+    @source_attributes.each_with_object({}) do |attr, acc|
+      acc[attr] = record.public_send(attr) if record.respond_to?(attr)
+    end
+  end
+
   # base = last accepted source snapshot, sliced to source_attributes
   def base_attrs(record)
     snap = record.source_snapshot
@@ -287,7 +308,7 @@ class SourceSynchronizer
   end
 
   def handle_source_deletion(record, report)
-    local = record.attributes.slice(*@source_attributes)
+    local = local_attrs(record)
 
     existing = SyncConflict.where(
       syncable: record,
