@@ -138,6 +138,3 @@ Style/SlicingWithRange:
     Enabled: true
 Style/StringConcatenation:
     Enabled: true
-Metrics/ClassLength:
-    Exclude:
-        - 'lib/ec_plant_importer.rb'

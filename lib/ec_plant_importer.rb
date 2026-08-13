@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative 'ec_range_parser'
+
 # Imports plants exported from ECHOcommunity during the plant-data ownership
 # migration.
 #
@@ -41,19 +43,6 @@ class EcPlantImporter
     result = Result.new(created: 0, skipped: 0, failed: 0, errors: [])
     records.each { |row| import_row(row, result) }
     result
-  end
-
-  # "25..32" -> 25..32, "5.0..7.0" -> 5.0..7.0. The seed task used eval for
-  # this; parsing avoids executing data.
-  def self.parse_range(str)
-    return nil if str.blank?
-
-    lo, hi = str.split('..', 2)
-    return nil if hi.nil?
-
-    return Range.new(lo.to_f, hi.to_f) if lo.include?('.') || hi.include?('.')
-
-    Range.new(lo.to_i, hi.to_i)
   end
 
   private
@@ -102,7 +91,7 @@ class EcPlantImporter
   # "unknown", which is how the 2020 export left 174 of 322 plants claiming
   # exactly that.
   def range_attributes(row)
-    RANGE_FIELDS.index_with { |f| self.class.parse_range(row[f]) }
+    RANGE_FIELDS.index_with { |f| EcRangeParser.parse(row[f]) }
                 .transform_keys(&:to_sym)
   end
 
