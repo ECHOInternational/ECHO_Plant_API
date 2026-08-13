@@ -16,7 +16,8 @@
 # ECHOcommunity no longer lists is an editorial act, not a migration one.
 class EcCommonNameSync
   Result = Struct.new(:created, :present, :primary_set, :primary_cleared,
-                      :missing_plants, :failed, :errors, keyword_init: true)
+                      :recased, :missing_plants, :failed, :errors,
+                      keyword_init: true)
 
   def initialize(apply: false)
     @apply = apply
@@ -24,8 +25,8 @@ class EcCommonNameSync
 
   def sync(plants)
     result = Result.new(created: 0, present: 0, primary_set: 0,
-                        primary_cleared: 0, missing_plants: 0, failed: 0,
-                        errors: [])
+                        primary_cleared: 0, recased: 0, missing_plants: 0,
+                        failed: 0, errors: [])
     plants.each { |uuid, names| sync_plant(uuid, names, result) }
     result
   end
@@ -63,11 +64,26 @@ class EcCommonNameSync
 
   def update_primary(record, row, result)
     result.present += 1
+    changes = recase(record, row, result).merge(reflag(record, row, result))
+    record.update!(changes) if @apply && changes.any?
+  end
+
+  # Names match case-insensitively, so "Velvet Bean" and "velvet bean" are the
+  # same name. ECHOcommunity's casing is the curated one, so adopt it rather
+  # than leaving the API holding a variant that gets pushed back later.
+  def recase(record, row, result)
+    return {} if record.name == row['name']
+
+    result.recased += 1
+    { name: row['name'] }
+  end
+
+  def reflag(record, row, result)
     wanted = row['primary'] || false
-    return if record.primary == wanted
+    return {} if record.primary == wanted
 
     wanted ? result.primary_set += 1 : result.primary_cleared += 1
-    record.update!(primary: wanted) if @apply
+    { primary: wanted }
   end
 
   def key(name, language)

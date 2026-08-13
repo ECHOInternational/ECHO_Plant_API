@@ -27,6 +27,7 @@ namespace :plants do
     puts "  names already present: #{result.present}"
     puts "  primary set: #{result.primary_set}"
     puts "  primary cleared: #{result.primary_cleared}"
+    puts "  names recased to match ECHOcommunity: #{result.recased}"
     puts "  plants not in this database: #{result.missing_plants}"
     puts "  failed: #{result.failed}"
     result.errors.first(20).each { |e| puts "    #{e}" }

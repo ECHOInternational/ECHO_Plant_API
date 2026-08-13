@@ -53,6 +53,19 @@ RSpec.describe EcCommonNameSync do
     expect(cn.reload.primary).to be false
   end
 
+  # Names match case-insensitively, so these are the same name. ECHOcommunity's
+  # casing is the curated one; leaving the API holding a variant means that
+  # variant gets pushed back to ECHOcommunity by the title sync.
+  it 'adopts ECHOcommunity casing for an existing name' do
+    cn = CommonName.create!(plant: plant, name: 'velvet bean', language: 'EN',
+                            primary: true)
+    result = sync({ plant.id => [row('Velvet Bean', primary: true)] })
+
+    expect(result.recased).to eq 1
+    expect(result.created).to eq 0
+    expect(cn.reload.name).to eq 'Velvet Bean'
+  end
+
   it 'reports a plant it has never heard of instead of failing' do
     result = sync({ SecureRandom.uuid => [row('Baobab')] })
 
