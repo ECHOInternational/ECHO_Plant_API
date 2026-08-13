@@ -17,7 +17,11 @@ RSpec.describe 'plants:import', type: :task do
     Principal.create!(kind: 'service', email: 'echo@echonet.org',
                       identity_issuer: 'spec')
   end
-  let(:task) { Rake::Task['plants:import'].tap(&:reenable) }
+  # A method, not a let: a memoised task cannot be re-invoked within one
+  # example, and rake refuses to run an already-invoked task twice.
+  def task
+    Rake::Task['plants:import'].tap(&:reenable)
+  end
   let(:uuid) { SecureRandom.uuid }
 
   # Hold a reference: a Tempfile deletes itself when garbage collected, and the
@@ -34,6 +38,7 @@ RSpec.describe 'plants:import', type: :task do
   def record(overrides = {})
     {
       'uuid' => uuid,
+      'visibility' => 'public',
       'scientific_name' => 'Adansonia digitata',
       'family_names' => 'Malvaceae',
       'life_cycle' => 'perennial',
@@ -114,6 +119,17 @@ RSpec.describe 'plants:import', type: :task do
 
     expect { run(path) }.not_to change(Plant, :count)
     expect(Plant.find(uuid).scientific_name).to eq 'Edited locally'
+  end
+
+  # ECHOcommunity status arrives as a visibility so a draft is never created
+  # public and hidden a moment later. Anything unrecognised errs to draft.
+  it 'honours the exported visibility, defaulting an unknown value to draft' do
+    run(write_fixture([record({ 'visibility' => 'draft' })]))
+    expect(Plant.find(uuid).visibility).to eq 'draft'
+
+    other = SecureRandom.uuid
+    run(write_fixture([record({ 'uuid' => other, 'visibility' => 'nonsense' })]))
+    expect(Plant.find(other).visibility).to eq 'draft'
   end
 
   it 'writes nothing without APPLY' do

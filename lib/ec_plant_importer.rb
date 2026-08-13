@@ -25,6 +25,11 @@ class EcPlantImporter
     early_growth_phase life_cycle
   ].freeze
 
+  # The export carries ECHOcommunity's status as a visibility, so a draft is
+  # never created public and hidden a moment later. Anything unrecognised is
+  # treated as draft: erring towards invisible is the safe direction.
+  VISIBILITIES = %w[public draft private deleted].freeze
+
   def initialize(organization:, principal:, owner_email:, apply: false)
     @organization = organization
     @principal = principal
@@ -81,7 +86,7 @@ class EcPlantImporter
   def base_attributes(row)
     attrs = {
       id: row['uuid'], owned_by: @owner_email, created_by: @owner_email,
-      visibility: :public, owner_organization_id: @organization.id,
+      visibility: visibility_for(row), owner_organization_id: @organization.id,
       source_organization_id: @organization.id,
       created_by_principal_id: @principal.id
     }
@@ -99,6 +104,11 @@ class EcPlantImporter
   def range_attributes(row)
     RANGE_FIELDS.index_with { |f| self.class.parse_range(row[f]) }
                 .transform_keys(&:to_sym)
+  end
+
+  def visibility_for(row)
+    value = row['visibility'].to_s
+    VISIBILITIES.include?(value) ? value.to_sym : :draft
   end
 
   def apply_translations(plant, row)
