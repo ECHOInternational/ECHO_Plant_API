@@ -19,6 +19,7 @@ Metrics/BlockLength:
         - 'db/schema.rb'
         - 'db/migrate/*.rb'
         - 'lib/tasks/ownership.rake'
+        - 'lib/tasks/plant_import.rake'
 Metrics/MethodLength:
     Exclude:
         - 'db/migrate/*.rb'
