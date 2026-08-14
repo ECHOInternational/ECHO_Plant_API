@@ -34,6 +34,13 @@ module Types
           description: 'A list of categories to which a plant belongs',
           null: true,
           connection: true
+    field :koppen_zones, Types::KoppenZoneType::KoppenZoneConnectionWithTotalCountType,
+          description: 'The Köppen-Geiger climate zones a plant is suited to. Most ' \
+                       'assignments sit at the subgroup level (Cf, BS) rather than a ' \
+                       'full class, which records what is known without asserting a ' \
+                       'summer-temperature class.',
+          null: true,
+          connection: true
     field :varieties, Types::VarietyType::VarietyConnectionWithTotalCountType,
           null: true,
           connection: true

@@ -38,6 +38,7 @@ module Types
     field :antinutrients, resolver: Resolvers::AntinutrientsResolver, connection: true
     field :tolerances, resolver: Resolvers::TolerancesResolver, connection: true
     field :growth_habits, resolver: Resolvers::GrowthHabitsResolver, connection: true
+    field :koppen_zones, resolver: Resolvers::KoppenZonesResolver, connection: true
     field :plants, resolver: Resolvers::PlantsResolver, connection: true
     field :varieties, resolver: Resolvers::VarietiesResolver, connection: true
     field :specimens, resolver: Resolvers::SpecimensResolver, connection: true

@@ -3890,6 +3890,131 @@ type ImageEdge {
 }
 
 """
+A Köppen-Geiger climate zone. The list is fixed; only the translated name and description are editable.
+"""
+type KoppenZone implements Node {
+  """
+  True when this zone appears in Beck et al. 2018, the published map legend: the
+  5 groups and 30 classes. The 8 subgroups are an ECHO intermediate level, and
+  BSn/BWn record frequent fog, which map rasters do not resolve. False is a
+  statement about the map product, not about legitimacy.
+  """
+  authoritative: Boolean!
+
+  """
+  The zones one level down
+  """
+  children: [KoppenZone!]!
+
+  """
+  The classification this row was modelled on
+  """
+  classificationSource: String!
+
+  """
+  The source release this row was loaded from
+  """
+  classificationVersion: String!
+
+  """
+  The Köppen code, for example Cfa. Not translated: codes are defined by the classification and do not change.
+  """
+  code: String!
+
+  """
+  The translated description of a climate zone
+  """
+  description: String
+  id: ID!
+
+  """
+  group (A-E), subgroup (Cf, BS, ...) or class (Cfa, BSh, ...)
+  """
+  level: String!
+
+  """
+  The translated name of a climate zone
+  """
+  name: String
+
+  """
+  The zone one level up: Cfa -> Cf -> C
+  """
+  parent: KoppenZone
+
+  """
+  The date of the source release
+  """
+  snapshotDate: ISO8601Date!
+
+  """
+  Translations of translatable climate zone fields
+  """
+  translations: [KoppenZoneTranslation!]!
+
+  """
+  The internal database ID for a climate zone
+  """
+  uuid: ID!
+}
+
+"""
+The connection type for KoppenZone.
+"""
+type KoppenZoneConnectionWithTotalCount {
+  """
+  A list of edges.
+  """
+  edges: [KoppenZoneEdge]
+
+  """
+  A list of nodes.
+  """
+  nodes: [KoppenZone]
+
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+"""
+An edge in a connection.
+"""
+type KoppenZoneEdge {
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+
+  """
+  The item at the end of the edge.
+  """
+  node: KoppenZone
+}
+
+"""
+Translated fields for a climate zone
+"""
+type KoppenZoneTranslation {
+  """
+  The translated description of a climate zone
+  """
+  description: String
+
+  """
+  The locale for this translation
+  """
+  locale: String!
+
+  """
+  The translated name of a climate zone
+  """
+  name: String
+}
+
+"""
 Notation of Plant Lifecycle Events from planting to end-of-life
 """
 interface LifeCycleEvent {
@@ -6060,6 +6185,33 @@ type Plant implements Node {
   infoSheetDescription: String
 
   """
+  The Köppen-Geiger climate zones a plant is suited to. Most assignments sit at
+  the subgroup level (Cf, BS) rather than a full class, which records what is
+  known without asserting a summer-temperature class.
+  """
+  koppenZones(
+    """
+    Returns the elements in the list that come after the specified cursor.
+    """
+    after: String
+
+    """
+    Returns the elements in the list that come before the specified cursor.
+    """
+    before: String
+
+    """
+    Returns the first _n_ elements from the list.
+    """
+    first: Int
+
+    """
+    Returns the last _n_ elements from the list.
+    """
+    last: Int
+  ): KoppenZoneConnectionWithTotalCount
+
+  """
   Describes how long a plant takes to complete their entire life cycle
   """
   lifeCycle: LifeCycleValue
@@ -6998,6 +7150,51 @@ type Query {
     """
     name: String
   ): ImageAttributeConnectionWithTotalCount!
+
+  """
+  Returns a list of Köppen-Geiger climate zones
+  """
+  koppenZones(
+    """
+    Returns the elements in the list that come after the specified cursor.
+    """
+    after: String
+
+    """
+    Restrict to zones that do (true) or do not (false) appear in Beck et al. 2018
+    """
+    authoritative: Boolean
+
+    """
+    Returns the elements in the list that come before the specified cursor.
+    """
+    before: String
+
+    """
+    Exact, case-insensitive match on the Köppen code
+    """
+    code: String
+
+    """
+    Returns the first _n_ elements from the list.
+    """
+    first: Int
+
+    """
+    Request returned fields in a specific language. Overrides ACCEPT-LANGUAGE header.
+    """
+    language: String
+
+    """
+    Returns the last _n_ elements from the list.
+    """
+    last: Int
+
+    """
+    Restrict to group, subgroup or class
+    """
+    level: String
+  ): KoppenZoneConnectionWithTotalCount!
 
   """
   Find a life cycle event by ID
