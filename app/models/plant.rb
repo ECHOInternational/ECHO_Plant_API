@@ -22,6 +22,9 @@ class Plant < ApplicationRecord # rubocop:disable Metrics/ClassLength
   has_many :growth_habits_plants, dependent: :destroy
   has_many :growth_habits, through: :growth_habits_plants, dependent: :destroy
 
+  has_many :koppen_zones_plants, dependent: :destroy
+  has_many :koppen_zones, through: :koppen_zones_plants, dependent: :destroy
+
   has_many :tolerances_plants, dependent: :destroy
   has_many :tolerances, through: :tolerances_plants, dependent: :destroy
 

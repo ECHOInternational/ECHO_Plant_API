@@ -390,6 +390,19 @@ CREATE TABLE public.koppen_zones (
 
 
 --
+-- Name: koppen_zones_plants; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.koppen_zones_plants (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    koppen_zone_id uuid NOT NULL,
+    plant_id uuid NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
 -- Name: life_cycle_events; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -872,6 +885,14 @@ ALTER TABLE ONLY public.koppen_zones
 
 
 --
+-- Name: koppen_zones_plants koppen_zones_plants_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.koppen_zones_plants
+    ADD CONSTRAINT koppen_zones_plants_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: life_cycle_events life_cycle_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1247,6 +1268,27 @@ CREATE UNIQUE INDEX index_koppen_zones_on_lower_code ON public.koppen_zones USIN
 --
 
 CREATE INDEX index_koppen_zones_on_parent_id ON public.koppen_zones USING btree (parent_id);
+
+
+--
+-- Name: index_koppen_zones_plants_on_koppen_zone_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_koppen_zones_plants_on_koppen_zone_id ON public.koppen_zones_plants USING btree (koppen_zone_id);
+
+
+--
+-- Name: index_koppen_zones_plants_on_koppen_zone_id_and_plant_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_koppen_zones_plants_on_koppen_zone_id_and_plant_id ON public.koppen_zones_plants USING btree (koppen_zone_id, plant_id);
+
+
+--
+-- Name: index_koppen_zones_plants_on_plant_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_koppen_zones_plants_on_plant_id ON public.koppen_zones_plants USING btree (plant_id);
 
 
 --
@@ -1901,6 +1943,14 @@ ALTER TABLE ONLY public.common_names
 
 
 --
+-- Name: koppen_zones_plants fk_rails_e2dd31b318; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.koppen_zones_plants
+    ADD CONSTRAINT fk_rails_e2dd31b318 FOREIGN KEY (koppen_zone_id) REFERENCES public.koppen_zones(id);
+
+
+--
 -- Name: image_attributes_images fk_rails_e3ccc8f28f; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1922,6 +1972,14 @@ ALTER TABLE ONLY public.tolerances_varieties
 
 ALTER TABLE ONLY public.organizations
     ADD CONSTRAINT fk_rails_efc215b305 FOREIGN KEY (principal_id) REFERENCES public.principals(id);
+
+
+--
+-- Name: koppen_zones_plants fk_rails_fcdfb0822a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.koppen_zones_plants
+    ADD CONSTRAINT fk_rails_fcdfb0822a FOREIGN KEY (plant_id) REFERENCES public.plants(id);
 
 
 --
@@ -2019,6 +2077,7 @@ ALTER TABLE ONLY public.varieties
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260814000002'),
 ('20260814000001'),
 ('20260807000001'),
 ('20260806000003'),
