@@ -125,6 +125,19 @@ class SourceSynchronizer
     report
   end
 
+  # Local state for a set of source-managed attributes, read through the public
+  # readers. See the note on the private instance method below for why this must
+  # never become record.attributes.slice.
+  #
+  # Class-level because Mutations::ResolveSyncConflict needs exactly this read
+  # when it adopts local state as the new snapshot, and reimplemented it with
+  # the slice - reintroducing the bug this method exists to prevent.
+  def self.local_attrs(record, attributes)
+    attributes.each_with_object({}) do |attr, acc|
+      acc[attr] = record.public_send(attr) if record.respond_to?(attr)
+    end
+  end
+
   private
 
   def process_row(row, report)
@@ -261,9 +274,7 @@ class SourceSynchronizer
   # locale returns the :en value. Sync writes and reads within the same locale,
   # so the comparison stays symmetric.
   def local_attrs(record)
-    @source_attributes.each_with_object({}) do |attr, acc|
-      acc[attr] = record.public_send(attr) if record.respond_to?(attr)
-    end
+    self.class.local_attrs(record, @source_attributes)
   end
 
   # base = last accepted source snapshot, sliced to source_attributes

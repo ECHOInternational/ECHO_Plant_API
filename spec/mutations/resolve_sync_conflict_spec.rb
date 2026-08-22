@@ -129,6 +129,44 @@ RSpec.describe 'ResolveSyncConflict Mutation', type: :graphql_mutation do
         expect(plant.source_snapshot).to be_present
       end
 
+      # Regression: apply_keep_local adopted local state with
+      # record.attributes.slice, which omits every Mobility-translated attribute
+      # (backend :container, no attribute_methods plugin). The snapshot it wrote
+      # therefore had no `description`, so the next real sync still scored the
+      # record changed and raised the conflict the curator had just resolved.
+      # Keeping a local edit to a narrative field could never quiesce.
+      #
+      # The existing specs here could not catch it: they resolve conflicts on
+      # scientific_name, a real column. This one drives a translated attribute
+      # through the mutation and then runs an actual synchronizer pass.
+      it 'quiesces a translated attribute, not just a column-backed one' do
+        Mobility.with_locale(:en) { plant.update!(description: 'Curator text') }
+        translated_conflict = create(
+          :sync_conflict, syncable: plant, data_source: data_source,
+                          conflict_type: 'content', status: 'open',
+                          base_payload: { 'description' => 'Original upstream' },
+                          local_payload: { 'description' => 'Curator text' },
+                          incoming_payload: { 'description' => 'Divergent upstream' }
+        )
+
+        execute(translated_conflict, 'KEEP_LOCAL', user)
+        plant.reload
+
+        expect(plant.source_snapshot['description']).to eq('Curator text'),
+                                                        'the adopted snapshot must carry the translated value, not omit it'
+        expect(plant.source_digest).to be_present, 'a stale digest reopens the conflict by another route'
+
+        report = SourceSynchronizer.new(
+          data_source: data_source, model: Plant,
+          source_attributes: %w[description], run_id: SecureRandom.hex(4)
+        ).apply([{ source_record_id: plant.source_record_id, deleted: false,
+                   attributes: { 'description' => 'Curator text' },
+                   source_updated_at: 1.hour.ago }])
+
+        expect(report.conflicts_created).to eq(0),
+                                            'a resolved keep_local must not immediately reopen on the next sync'
+      end
+
       it 'follow-up sync with same incoming creates NO new conflict after keep_local' do
         execute(content_conflict, 'KEEP_LOCAL', user)
         plant.reload

@@ -93,14 +93,23 @@ module Mutations
     end
 
     # KEEP_LOCAL: mark conflict resolved; adopt current local attrs as new snapshot.
+    #
+    # Reads through SourceSynchronizer.local_attrs, NOT record.attributes.slice.
+    # Mobility is configured with `backend :container` and no attribute_methods
+    # plugin, so translated attributes live in the `translations` jsonb and never
+    # appear in #attributes. Slicing there wrote a snapshot missing every
+    # narrative field, so the next sync still saw local as changed and raised the
+    # same conflict again - keeping a local edit to a description could never
+    # quiesce. The digest is recomputed from the same hash for the same reason:
+    # leaving it stale re-opens the conflict by another route.
     def apply_keep_local(conflict)
       record         = conflict.syncable
-      data_source    = conflict.data_source
-      source_attrs   = data_source_source_attributes(data_source, record)
-      local_snapshot = record.attributes.slice(*source_attrs)
+      source_attrs   = data_source_source_attributes(conflict.data_source, record)
+      local_snapshot = SourceSynchronizer.local_attrs(record, source_attrs)
 
       record.update_columns(
         source_snapshot: local_snapshot,
+        source_digest: canonical_digest(local_snapshot),
         sync_state: 'locally_modified'
       )
 
