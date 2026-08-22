@@ -138,6 +138,18 @@ class SourceSynchronizer
     end
   end
 
+  # Canonical digest of a hash: SHA256 of JSON with sorted keys. Returns nil
+  # for a nil hash.
+  #
+  # Class-level alongside .local_attrs, and for the same reason: the digest
+  # defines what "unchanged" means, so every caller must compute it the same
+  # way. The resolve mutation and the record linker both need it.
+  def self.canonical_digest(hash)
+    return nil if hash.nil?
+
+    Digest::SHA256.hexdigest(JSON.generate(hash.sort.to_h))
+  end
+
   private
 
   def process_row(row, report)
@@ -392,8 +404,6 @@ class SourceSynchronizer
   # Canonical digest of a hash: SHA256 of JSON with sorted keys.
   # Returns nil for a nil hash.
   def canonical_digest(hash)
-    return nil if hash.nil?
-
-    Digest::SHA256.hexdigest(JSON.generate(hash.sort.to_h))
+    self.class.canonical_digest(hash)
   end
 end
