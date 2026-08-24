@@ -183,10 +183,10 @@ module Mutations
       end
     end
 
+    # Delegated so the mutation and the synchronizer cannot drift on what
+    # "unchanged" means.
     def canonical_digest(hash)
-      return nil if hash.nil?
-
-      Digest::SHA256.hexdigest(JSON.generate(hash.sort.to_h))
+      SourceSynchronizer.canonical_digest(hash)
     end
   end
 end
