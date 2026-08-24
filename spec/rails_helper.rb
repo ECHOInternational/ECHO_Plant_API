@@ -68,6 +68,24 @@ RSpec.configure do |config|
     warn "before(:suite) cleanup skipped: #{e.class}: #{e.message}"
   end
 
+  # Reset the per-request store between examples, which is what production
+  # already does and the suite does not.
+  #
+  # Mobility keeps the active locale in RequestStore.store (mobility.rb#storage),
+  # and several resolvers set it with `Mobility.locale = language if language`
+  # without restoring it — deliberately, because RequestStore's Rack middleware
+  # clears the store at the end of every request, so a leak cannot outlive one.
+  # RSpec never runs that middleware, so the locale set by one example survived
+  # into the next: an example querying `language: "es"` left the whole process
+  # in Spanish, and later examples wrote translations under `es` while asserting
+  # on `en`. That produced order-dependent failures in specs that never mention
+  # a locale (spec/services/drafts/overlay_spec.rb under seed 40107), which
+  # looked like a bug in whatever change happened to shift the shuffle.
+  #
+  # Clearing the store is exactly what the middleware does, so this makes the
+  # suite behave like a sequence of requests rather than one long-lived thread.
+  config.before { RequestStore.clear! }
+
   # You can uncomment this line to turn off ActiveRecord support entirely.
   # config.use_active_record = false
 
