@@ -23,6 +23,7 @@ Metrics/BlockLength:
         - 'lib/tasks/sync.rake'
         - 'lib/tasks/plant_translations.rake'
         - 'lib/tasks/plant_sync.rake'
+        - 'lib/tasks/variety_import.rake'
         - 'lib/tasks/plant_categories.rake'
 Metrics/MethodLength:
     Exclude:
