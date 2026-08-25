@@ -132,9 +132,16 @@ class SourceSynchronizer
   # Class-level because Mutations::ResolveSyncConflict needs exactly this read
   # when it adopts local state as the new snapshot, and reimplemented it with
   # the slice - reintroducing the bug this method exists to prevent.
+  #
+  # Values are stringified so that nil and '' compare equal. An attribute that
+  # was never set reads nil, while both a JSON feed and the 2020 export carry ''
+  # for absent text - so without this, every empty field on every record reads
+  # as an edit on both sides at once, and the first run turns into a conflict
+  # per record. For narrative text "no value" and "empty value" are the same
+  # thing, and this is the one place all three callers share.
   def self.local_attrs(record, attributes)
     attributes.each_with_object({}) do |attr, acc|
-      acc[attr] = record.public_send(attr) if record.respond_to?(attr)
+      acc[attr] = record.public_send(attr).to_s if record.respond_to?(attr)
     end
   end
 
