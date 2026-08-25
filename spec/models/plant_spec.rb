@@ -15,6 +15,16 @@ RSpec.describe Plant, type: :model do
     plant = build(:plant, owned_by: nil)
     expect(plant).to_not be_valid
   end
+  it 'has no fabricated defaults for its range columns (issue #114)' do
+    plant = Plant.new
+    expect(plant.n_accumulation_range).to be_nil
+    expect(plant.biomass_production_range).to be_nil
+    expect(plant.optimal_temperature_range).to be_nil
+    expect(plant.optimal_rainfall_range).to be_nil
+    expect(plant.optimal_altitude_range).to be_nil
+    expect(plant.ph_range).to be_nil
+  end
+
   it "has a default visibility of 'private'" do
     plant = build(:plant)
     expect(plant).to be_valid
@@ -51,8 +61,8 @@ RSpec.describe Plant, type: :model do
   describe 'range attributes' do
     let(:plant) { build(:plant) }
     describe 'nitrogen accumulation (integer)' do
-      it 'has a default range of 0 to 0' do
-        expect(plant.n_accumulation_range).to eq 0...1
+      it 'has no default (nil, issue #114)' do
+        expect(plant.n_accumulation_range).to be_nil
       end
       it 'can be set to a different range' do
         plant.n_accumulation_range = 12..14
@@ -62,8 +72,8 @@ RSpec.describe Plant, type: :model do
       end
     end
     describe 'biomass production (float)' do
-      it 'has a default range of 0.0 to 0.0' do
-        expect(plant.biomass_production_range).to eq 0.0..0.0
+      it 'has no default (nil, issue #114)' do
+        expect(plant.biomass_production_range).to be_nil
       end
       it 'can be set to a different range' do
         plant.biomass_production_range = 10..12.5
@@ -79,11 +89,8 @@ RSpec.describe Plant, type: :model do
       end
     end
     describe 'optimal rainfall range (default 0 to infinity)' do
-      it 'has a default range of 0.0 to infinity' do
-        expect(plant.optimal_rainfall_range.include?(0)).to be true
-        expect(plant.optimal_rainfall_range.include?(-1)).to be false
-        expect(plant.optimal_rainfall_range.include?(1500)).to be true
-        expect(plant.optimal_rainfall_range.include?(4.75)).to be true
+      it 'has no default (nil, issue #114)' do
+        expect(plant.optimal_rainfall_range).to be_nil
       end
       it 'can be set to a different range' do
         plant.optimal_rainfall_range = 12..45
