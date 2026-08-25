@@ -102,6 +102,35 @@ RSpec.describe EcTranslationBackfill do
     expect(plant.reload.translations['es']['uses']).to eq 'Texto español'
   end
 
+  # A review pile that is mostly markup trains its reader to skim. The first
+  # staging run reported 473 differences of which 452 were entities and
+  # whitespace; only 21 said anything different.
+  describe 'markup differences' do
+    it 'treats text that differs only in markup as already present' do
+      Mobility.with_locale(:es) { plant.update!(uses: '<p>Uso&nbsp;principal</p>') }
+
+      result = backfill({ plant.id => { 'es' => { 'uses' => '<div>Uso principal</div>' } } })
+
+      expect(result.already_present).to eq 1
+      expect(result.differs).to eq(0), 'markup alone is not an editorial disagreement'
+    end
+
+    it 'keeps the API copy rather than rewriting its punctuation' do
+      Mobility.with_locale(:es) { plant.update!(uses: '<p>Uso&nbsp;principal</p>') }
+      backfill({ plant.id => { 'es' => { 'uses' => '<div>Uso principal</div>' } } })
+
+      expect(plant.reload.translations['es']['uses']).to eq '<p>Uso&nbsp;principal</p>'
+    end
+
+    it 'still reports a genuine wording difference' do
+      Mobility.with_locale(:es) { plant.update!(uses: '<p>Uso principal</p>') }
+
+      result = backfill({ plant.id => { 'es' => { 'uses' => '<p>Otro uso completamente</p>' } } })
+
+      expect(result.differs).to eq 1
+    end
+  end
+
   it 'skips a plant that is not in this database' do
     result = backfill({ SecureRandom.uuid => { 'es' => { 'uses' => 'x' } } })
 
