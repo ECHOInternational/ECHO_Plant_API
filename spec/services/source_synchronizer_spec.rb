@@ -472,4 +472,42 @@ RSpec.describe SourceSynchronizer, type: :service do
       expect(svc_principal.email).to eq "sync+#{data_source.source_system_key}@plant-api.echocommunity.org"
     end
   end
+
+  # Regression from the first real run: two of 723 plants raised conflicts, and
+  # one of them had local_payload identical to incoming_payload. Both sides had
+  # moved from the 2020 base to the same text - an earlier migration had written
+  # it into ECHOcommunity and into the API separately. There was nothing to
+  # decide, but it still landed in the review pile.
+  describe 'when both sides changed to the same value' do
+    let(:org) { create(:organization, :real) }
+    let(:data_source) { create(:data_source, organization: org) }
+
+    def sync(attrs)
+      described_class.new(data_source: data_source, model: Plant,
+                          source_attributes: attrs, run_id: SecureRandom.hex(4))
+    end
+
+    it 'treats it as converged rather than a conflict' do
+      plant = create(:plant, owner_organization_id: org.id, source_organization_id: org.id,
+                             scientific_name: 'Agreed name')
+      plant.update_columns(data_source_id: data_source.id, source_record_id: 'conv-1',
+                           source_snapshot: { 'scientific_name' => 'The old base' },
+                           source_digest: described_class.canonical_digest(
+                             { 'scientific_name' => 'The old base' }
+                           ))
+
+      report = sync(%w[scientific_name]).apply(
+        [{ source_record_id: 'conv-1', deleted: false,
+           attributes: { 'scientific_name' => 'Agreed name' },
+           source_updated_at: 1.hour.ago }]
+      )
+
+      aggregate_failures do
+        expect(report.conflicts_created).to eq(0), 'both sides agree; nothing to review'
+        expect(report.synced).to eq 1
+        expect(plant.reload.sync_state).to eq 'synced'
+        expect(plant.source_snapshot).to eq('scientific_name' => 'Agreed name')
+      end
+    end
+  end
 end
