@@ -229,7 +229,23 @@ class SourceSynchronizer
     local_changed    = base_digest != local_digest
     incoming_changed = base_digest != incoming_digest
 
-    if !local_changed && !incoming_changed
+    # Convergence, not conflict. Both sides moved from the base, but they moved
+    # to the SAME value - two people making the same correction independently,
+    # or an earlier migration writing the same text into both systems. There is
+    # nothing for a reviewer to decide, so adopting it is the only sensible
+    # answer; raising a conflict here would put converged records in the review
+    # pile and teach people that the pile is noise.
+    if local_changed && incoming_changed && local_digest == incoming_digest
+      record.update_columns(
+        'source_snapshot' => incoming_attrs,
+        'source_digest' => incoming_digest,
+        'source_updated_at' => src_at,
+        'last_synced_at' => Time.current,
+        'sync_state' => 'synced'
+      )
+      report.synced += 1
+
+    elsif !local_changed && !incoming_changed
       # unchanged / unchanged -- touch only
       record.update_columns(
         last_synced_at: Time.current,
