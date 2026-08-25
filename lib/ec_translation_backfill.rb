@@ -34,6 +34,34 @@ class EcTranslationBackfill
                       :missing_plants, :failed, :conflicts, :errors,
                       keyword_init: true)
 
+  # Markup, entities and whitespace differ constantly between the two systems
+  # without the words differing at all - one stores `&nbsp;`, the other a space;
+  # one wraps a paragraph the other does not. Comparing raw, the first staging
+  # run reported 473 values "different on both sides"; comparing the text, 452
+  # of those were identical and only 21 said anything different.
+  #
+  # A review pile that is 95% markup is worse than a larger one: it trains
+  # whoever reads it to skim, and the 21 that matter get skimmed with it. So the
+  # comparison is on normalised text. Nothing is rewritten - where the API
+  # already holds the same words, it keeps its own copy, punctuation and all.
+  def self.same_text?(one, other)
+    normalise(one) == normalise(other)
+  end
+
+  # Nokogiri rather than a regex and CGI.unescapeHTML, which decodes only the
+  # basic five entities and leaves `&nbsp;` sitting there as literal text - so a
+  # hand-rolled version still reported markup as disagreement. Parsing the
+  # fragment strips the tags and decodes the whole entity set in one pass; the
+  # remaining tr flattens the U+00A0 that `&nbsp;` and `&#160;` both become.
+  def self.normalise(value)
+    # Tags become a SPACE before the fragment is parsed, not nothing. Nokogiri's
+    # #text concatenates, so `<p>one</p><p>two</p>` would come out as "onetwo"
+    # and compare unequal to the same words wrapped differently - which is
+    # exactly the markup-only disagreement this is meant to ignore.
+    spaced = value.to_s.gsub(/<[^>]+>/, ' ')
+    Nokogiri::HTML.fragment(spaced).text.tr("\u00a0", ' ').gsub(/\s+/, ' ').strip
+  end
+
   def initialize(apply: false, attributes: EcDataSource::PLANT_ATTRIBUTES)
     @apply = apply
     @attributes = attributes
@@ -99,7 +127,7 @@ class EcTranslationBackfill
   # resolved.
   def record_existing(plant, where, values, result)
     current, incoming = values
-    return result.already_present += 1 if current == incoming
+    return result.already_present += 1 if self.class.same_text?(current, incoming)
 
     result.differs += 1
     result.conflicts << { plant: plant.id, locale: where[:locale],
