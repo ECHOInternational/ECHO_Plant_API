@@ -51,6 +51,58 @@ RSpec.describe 'range literal read/write symmetry', type: :graphql_mutation do
     expect(read['nAccumulationRange']).to eq '[10,]'
   end
 
+  it 'round-trips an unbounded-lower integer literal' do
+    result = update(nAccumulationRange: '[,10]')
+    expect(result.dig('data', 'updatePlant', 'errors')).to eq([])
+
+    expect(read['nAccumulationRange']).to eq '[,10]'
+  end
+
+  it 'round-trips a fully unbounded integer literal' do
+    result = update(nAccumulationRange: '[,]')
+    expect(result.dig('data', 'updatePlant', 'errors')).to eq([])
+
+    expect(read['nAccumulationRange']).to eq '[,]'
+  end
+
+  it 'round-trips an unbounded-lower numrange literal' do
+    result = update(phRange: '[,10]')
+    expect(result.dig('data', 'updatePlant', 'errors')).to eq([])
+
+    expect(read['phRange']).to eq '[,10]'
+  end
+
+  it 'round-trips a fully unbounded numrange literal' do
+    result = update(phRange: '[,]')
+    expect(result.dig('data', 'updatePlant', 'errors')).to eq([])
+
+    expect(read['phRange']).to eq '[,]'
+  end
+
+  it 'round-trips a finite exclusive-upper numrange literal (raw-data shape)' do
+    result = update(phRange: '[1,2)')
+    expect(result.dig('data', 'updatePlant', 'errors')).to eq([])
+
+    expect(read['phRange']).to eq '[1,2)'
+  end
+
+  it 'rejects an open-lower-bound literal as a clean payload error instead of ' \
+     'raising a cast error (Ruby Range cannot represent an exclusive lower bound)' do
+    original_ph_range = read['phRange']
+
+    result = update(phRange: '(5,10]')
+    errors = result.dig('data', 'updatePlant', 'errors')
+
+    expect(errors).to eq(
+      [{ 'field' => 'phRange',
+         'message' => 'phRange is not a valid range literal (expected e.g. "[0,10]")',
+         'code' => 400 }]
+    )
+    # The value is untouched -- the mutation short-circuited before any save,
+    # rather than raising an ArgumentError mid-save.
+    expect(read['phRange']).to eq original_ph_range
+  end
+
   it 'round-trips a finite inclusive integer literal, decrementing back from ' \
      "Postgres's canonicalized exclusive-upper storage" do
     result = update(nAccumulationRange: '[500,2000]')
