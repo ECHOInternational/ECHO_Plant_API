@@ -10,7 +10,19 @@ module Mutations
         optimal_rainfall_range seasonality_days_range optimal_altitude_range ph_range
       ].freeze
 
-      RANGE_LITERAL = /\A[\[(]\s*(-?(\d+\.?\d*|\.\d+))?\s*,\s*(-?(\d+\.?\d*|\.\d+))?\s*[\])]\z/.freeze
+      # The opening bracket must always be "[" (never "("): Ruby's Range class
+      # has no way to represent an open/exclusive lower bound at all -- when
+      # the lower side carries a real value, assigning a literal like
+      # "(5,10]" to a range attribute raises ActiveRecord::PostgreSQL's
+      # underlying ArgumentError ("does not support excluding the beginning
+      # of a Range") instead of failing validation. Excluding "(" here keeps
+      # the promise in this module's file comment -- invalid literals become
+      # payload errors, never raised cast errors -- and matches
+      # RangeLiteral.serialize, which likewise never emits "(" as the lower
+      # bracket (see app/services/range_literal.rb). The closing bracket
+      # stays either "]" or ")": a finite exclusive upper bound (e.g.
+      # "[1,2)") is a real, round-trippable literal the serializer can emit.
+      RANGE_LITERAL = /\A\[\s*(-?(\d+\.?\d*|\.\d+))?\s*,\s*(-?(\d+\.?\d*|\.\d+))?\s*[\])]\z/.freeze
 
       def validate_range_literals(attributes)
         RANGE_FIELDS.filter_map do |field|
