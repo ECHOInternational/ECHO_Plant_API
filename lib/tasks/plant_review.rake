@@ -27,6 +27,7 @@ def report_review_counts(result, apply)
     'already identical, untouched' => result.already_applied,
     'blank incoming, refused' => result.blank_refused,
     'attribute not governed, refused' => result.not_governed,
+    'range already held, refused' => result.range_occupied,
     'plants not in this database' => result.missing_plants,
     'failed' => result.failed }.each do |label, count|
     puts format('  %-33<label>s %<count>d', label: label, count: count)

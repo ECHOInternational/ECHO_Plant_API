@@ -16,14 +16,24 @@ require Rails.root.join('lib/ec_translation_backfill')
 # Guards:
 #
 #   * **Only the governed narrative attributes** (EcDataSource::PLANT_ATTRIBUTES)
-#     can be written; anything else in the payload is refused and counted.
+#     and the four public range columns can be written; anything else in the
+#     payload is refused and counted.
 #   * **A blank incoming value is refused** — a ruling cannot blank a field.
 #   * **Idempotent**: where the API already holds the same normalised text the
 #     entry is counted and skipped, so a re-run (or an overlapping batch)
 #     changes nothing.
+#   * **Range rulings are additive only** (D-055): a range the API already
+#     holds is refused, because the only reviewed case is "API holds nothing".
+#     Overwriting a disputed range would need its own ruling and its own code.
 class EcReviewApplier
+  # Range rulings carry 'lo'/'hi' instead of 'value'/'locale'; a nil 'hi' is an
+  # open upper bound ("1500 m and up"), which EcRangeParser cannot express.
+  RANGE_ATTRIBUTES = %w[
+    optimal_temperature_range ph_range optimal_rainfall_range optimal_altitude_range
+  ].freeze
+
   Result = Struct.new(:applied, :already_applied, :blank_refused, :not_governed,
-                      :missing_plants, :failed, :changes, :errors,
+                      :range_occupied, :missing_plants, :failed, :changes, :errors,
                       keyword_init: true)
 
   def initialize(apply: false)
@@ -33,8 +43,8 @@ class EcReviewApplier
   # @param rulings [Array<Hash>] each {'plant_id','locale','attribute','value'}
   def apply(rulings)
     result = Result.new(applied: 0, already_applied: 0, blank_refused: 0,
-                        not_governed: 0, missing_plants: 0, failed: 0,
-                        changes: [], errors: [])
+                        not_governed: 0, range_occupied: 0, missing_plants: 0,
+                        failed: 0, changes: [], errors: [])
     rulings.each { |ruling| apply_ruling(ruling, result) }
     result
   end
@@ -45,16 +55,25 @@ class EcReviewApplier
     refusal = refuse(ruling)
     return result[refusal] += 1 if refusal
 
-    write(ruling, result)
+    if RANGE_ATTRIBUTES.include?(ruling['attribute'].to_s)
+      write_range(ruling, result)
+    else
+      write(ruling, result)
+    end
   rescue StandardError => e
     result.failed += 1
     result.errors << "#{ruling['plant_id']}: #{e.class}: #{e.message}"
   end
 
   def refuse(ruling)
-    return :not_governed unless EcDataSource::PLANT_ATTRIBUTES.include?(ruling['attribute'].to_s)
-    return :blank_refused if ruling['value'].to_s.strip.empty?
-
+    attr = ruling['attribute'].to_s
+    if RANGE_ATTRIBUTES.include?(attr)
+      return :blank_refused if ruling['lo'].nil?
+    elsif EcDataSource::PLANT_ATTRIBUTES.include?(attr)
+      return :blank_refused if ruling['value'].to_s.strip.empty?
+    else
+      return :not_governed
+    end
     nil
   end
 
@@ -78,6 +97,26 @@ class EcReviewApplier
     return unless @apply
 
     Mobility.with_locale(locale) { plant.public_send("#{attr}=", value) }
+    plant.save!
+  end
+
+  # Additive only: the reviewed case is "ECHOcommunity holds a value, the API
+  # holds nothing" (D-055). An occupied range is refused, never merged.
+  def write_range(ruling, result)
+    plant = Plant.unscoped.find_by(id: ruling['plant_id'])
+    return result.missing_plants += 1 if plant.nil?
+    return result.range_occupied += 1 unless plant.public_send(ruling['attribute']).nil?
+
+    apply_range(plant, ruling, result)
+  end
+
+  def apply_range(plant, ruling, result)
+    attr, low, high = ruling.values_at('attribute', 'lo', 'hi')
+    result.applied += 1
+    result.changes << "#{plant.id} #{attr}: nil -> [#{low},#{high || 'open'}]"
+    return unless @apply
+
+    plant.public_send("#{attr}=", Range.new(low, high))
     plant.save!
   end
 end
