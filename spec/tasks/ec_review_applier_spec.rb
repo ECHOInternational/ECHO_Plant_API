@@ -85,6 +85,50 @@ RSpec.describe EcReviewApplier do
     expect(Mobility.with_locale(:es) { plant.reload.uses }).to eq 'Texto viejo'
   end
 
+  def range_ruling(low: 1500, high: nil, attribute: 'optimal_altitude_range',
+                   plant_id: plant.id)
+    { 'plant_id' => plant_id, 'attribute' => attribute, 'lo' => low, 'hi' => high }
+  end
+
+  # int4range canonicalizes an inclusive write to an exclusive upper bound
+  # ([500,2000] -> [500,2001)), and an open bound reads back as Infinity —
+  # the same storage behaviour D-053 documented. Expectations match storage.
+  it 'writes an open-ended range over nothing (D-055)' do
+    result = apply([range_ruling])
+
+    expect(result.applied).to eq 1
+    expect(plant.reload.optimal_altitude_range).to eq(1500...Float::INFINITY)
+  end
+
+  it 'writes a bounded range over nothing' do
+    apply([range_ruling(low: 500, high: 2000)])
+
+    expect(plant.reload.optimal_altitude_range).to eq(500...2001)
+  end
+
+  it 'refuses to touch a range the API already holds — additive only' do
+    plant.update!(optimal_altitude_range: 0..900)
+
+    result = apply([range_ruling])
+
+    expect(result.range_occupied).to eq 1
+    expect(result.applied).to eq 0
+    expect(plant.reload.optimal_altitude_range).to eq(0...901)
+  end
+
+  it 'refuses a range ruling with no lower bound' do
+    result = apply([range_ruling(low: nil)])
+
+    expect(result.blank_refused).to eq 1
+  end
+
+  it 'writes no range on a dry run' do
+    result = apply([range_ruling], apply: false)
+
+    expect(result.applied).to eq 1
+    expect(plant.reload.optimal_altitude_range).to be_nil
+  end
+
   it 'writes only the named locale and attribute, nothing else on the record' do
     Mobility.with_locale(:es) { plant.update!(uses: 'viejo', cultivation: 'cultivo') }
     en_uses = Mobility.with_locale(:en) { plant.uses }
