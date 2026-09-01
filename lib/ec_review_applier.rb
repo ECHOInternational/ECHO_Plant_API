@@ -25,6 +25,10 @@ require Rails.root.join('lib/ec_translation_backfill')
 #   * **Range rulings are additive only** (D-055): a range the API already
 #     holds is refused, because the only reviewed case is "API holds nothing".
 #     Overwriting a disputed range would need its own ruling and its own code.
+#   * **Flag rulings are checked against what the reviewer saw** (D-056): a
+#     boolean has only two states, so "already holds the ruled value" cannot
+#     tell "untouched since the review" from "flipped twice". A flag ruling may
+#     carry 'was'; if the database no longer holds it, the row is refused.
 class EcReviewApplier
   # Range rulings carry 'lo'/'hi' instead of 'value'/'locale'; a nil 'hi' is an
   # open upper bound ("1500 m and up"), which EcRangeParser cannot express.
@@ -32,9 +36,16 @@ class EcReviewApplier
     optimal_temperature_range ph_range optimal_rainfall_range optimal_altitude_range
   ].freeze
 
+  # Flag rulings carry 'flag' (true/false) instead of 'value'/'locale', and
+  # optionally 'was' — the API value the review page showed the reviewer.
+  FLAG_ATTRIBUTES = %w[
+    can_be_used_for_fodder has_edible_green_leaves
+    has_edible_immature_fruit has_edible_mature_fruit
+  ].freeze
+
   Result = Struct.new(:applied, :already_applied, :blank_refused, :not_governed,
-                      :range_occupied, :missing_plants, :failed, :changes, :errors,
-                      keyword_init: true)
+                      :range_occupied, :stale_refused, :missing_plants, :failed,
+                      :changes, :errors, keyword_init: true)
 
   def initialize(apply: false)
     @apply = apply
@@ -43,8 +54,8 @@ class EcReviewApplier
   # @param rulings [Array<Hash>] each {'plant_id','locale','attribute','value'}
   def apply(rulings)
     result = Result.new(applied: 0, already_applied: 0, blank_refused: 0,
-                        not_governed: 0, range_occupied: 0, missing_plants: 0,
-                        failed: 0, changes: [], errors: [])
+                        not_governed: 0, range_occupied: 0, stale_refused: 0,
+                        missing_plants: 0, failed: 0, changes: [], errors: [])
     rulings.each { |ruling| apply_ruling(ruling, result) }
     result
   end
@@ -55,10 +66,10 @@ class EcReviewApplier
     refusal = refuse(ruling)
     return result[refusal] += 1 if refusal
 
-    if RANGE_ATTRIBUTES.include?(ruling['attribute'].to_s)
-      write_range(ruling, result)
-    else
-      write(ruling, result)
+    case ruling['attribute'].to_s
+    when *RANGE_ATTRIBUTES then write_range(ruling, result)
+    when *FLAG_ATTRIBUTES then write_flag(ruling, result)
+    else write(ruling, result)
     end
   rescue StandardError => e
     result.failed += 1
@@ -67,14 +78,24 @@ class EcReviewApplier
 
   def refuse(ruling)
     attr = ruling['attribute'].to_s
-    if RANGE_ATTRIBUTES.include?(attr)
-      return :blank_refused if ruling['lo'].nil?
-    elsif EcDataSource::PLANT_ATTRIBUTES.include?(attr)
-      return :blank_refused if ruling['value'].to_s.strip.empty?
-    else
-      return :not_governed
-    end
+    return :not_governed unless governed?(attr)
+    return :blank_refused if blank_ruling?(attr, ruling)
+
     nil
+  end
+
+  def governed?(attr)
+    RANGE_ATTRIBUTES.include?(attr) || FLAG_ATTRIBUTES.include?(attr) ||
+      EcDataSource::PLANT_ATTRIBUTES.include?(attr)
+  end
+
+  # Each kind carries its value under its own key; none of them may blank a
+  # field, so a missing or wrong-shaped value is a refusal, not a nil write.
+  def blank_ruling?(attr, ruling)
+    return ruling['lo'].nil? if RANGE_ATTRIBUTES.include?(attr)
+    return [true, false].exclude?(ruling['flag']) if FLAG_ATTRIBUTES.include?(attr)
+
+    ruling['value'].to_s.strip.empty?
   end
 
   # Same honest read as the backfill: the stored container, not the Mobility
@@ -117,6 +138,30 @@ class EcReviewApplier
     return unless @apply
 
     plant.public_send("#{attr}=", Range.new(low, high))
+    plant.save!
+  end
+
+  # An overwrite by design: the reviewer saw both values side by side and chose
+  # one. The 'was' guard is what keeps that from becoming a blind write — see
+  # the class comment.
+  def write_flag(ruling, result)
+    plant = Plant.unscoped.find_by(id: ruling['plant_id'])
+    return result.missing_plants += 1 if plant.nil?
+
+    current = plant.public_send(ruling['attribute'])
+    return result.stale_refused += 1 if ruling.key?('was') && current != ruling['was']
+    return result.already_applied += 1 if current == ruling['flag']
+
+    set_flag(plant, ruling, current, result)
+  end
+
+  def set_flag(plant, ruling, current, result)
+    attr, flag = ruling.values_at('attribute', 'flag')
+    result.applied += 1
+    result.changes << "#{plant.id} #{attr}: #{current.inspect} -> #{flag.inspect}"
+    return unless @apply
+
+    plant.public_send("#{attr}=", flag)
     plant.save!
   end
 end

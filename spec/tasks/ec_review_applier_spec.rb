@@ -139,4 +139,83 @@ RSpec.describe EcReviewApplier do
     expect(Mobility.with_locale(:es) { reloaded.cultivation }).to eq 'cultivo'
     expect(Mobility.with_locale(:en) { reloaded.uses }).to eq en_uses
   end
+
+  def flag_ruling(attribute: 'has_edible_mature_fruit', flag: true,
+                  plant_id: plant.id, **extra)
+    { 'plant_id' => plant_id, 'attribute' => attribute, 'flag' => flag }
+      .merge(extra.transform_keys(&:to_s))
+  end
+
+  it 'flips a flag the reviewer ruled against' do
+    plant.update!(has_edible_mature_fruit: false)
+
+    result = apply([flag_ruling(flag: true)])
+
+    expect(result.applied).to eq 1
+    expect(plant.reload.has_edible_mature_fruit).to be true
+  end
+
+  it 'writes false as readily as true — a ruling is not a truthiness test' do
+    plant.update!(can_be_used_for_fodder: true)
+
+    result = apply([flag_ruling(attribute: 'can_be_used_for_fodder', flag: false)])
+
+    expect(result.applied).to eq 1
+    expect(plant.reload.can_be_used_for_fodder).to be false
+  end
+
+  it 'counts a flag already at the ruled value as already applied' do
+    plant.update!(has_edible_mature_fruit: true)
+
+    result = apply([flag_ruling(flag: true)])
+
+    expect(result.applied).to eq 0
+    expect(result.already_applied).to eq 1
+  end
+
+  # The Earleaf Acacia lesson: a ruling is a snapshot of a review, and a
+  # curator may have moved since. Two states means 'already applied' cannot
+  # detect that, so the reviewed value travels with the ruling.
+  it 'refuses a flag whose current value is not what the review showed' do
+    plant.update!(has_edible_mature_fruit: true)
+
+    result = apply([flag_ruling(flag: false, was: false)])
+
+    expect(result.stale_refused).to eq 1
+    expect(result.applied).to eq 0
+    expect(plant.reload.has_edible_mature_fruit).to be true
+  end
+
+  it 'applies a flag whose current value still matches what the review showed' do
+    plant.update!(has_edible_mature_fruit: false)
+
+    result = apply([flag_ruling(flag: true, was: false)])
+
+    expect(result.applied).to eq 1
+    expect(plant.reload.has_edible_mature_fruit).to be true
+  end
+
+  it 'refuses a flag ruling carrying no boolean — it cannot blank a flag' do
+    plant.update!(has_edible_mature_fruit: true)
+
+    result = apply([flag_ruling(flag: nil)])
+
+    expect(result.blank_refused).to eq 1
+    expect(plant.reload.has_edible_mature_fruit).to be true
+  end
+
+  it 'writes no flag on a dry run' do
+    plant.update!(has_edible_mature_fruit: false)
+
+    result = apply([flag_ruling(flag: true)], apply: false)
+
+    expect(result.applied).to eq 1
+    expect(plant.reload.has_edible_mature_fruit).to be false
+  end
+
+  it 'refuses a boolean-looking attribute that is not a governed flag' do
+    result = apply([flag_ruling(attribute: 'is_tree')])
+
+    expect(result.not_governed).to eq 1
+  end
 end

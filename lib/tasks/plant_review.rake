@@ -8,7 +8,13 @@ require Rails.root.join('lib/ec_review_applier')
 #   APPLY=true bin/rails plants:apply_review[tmp/rulings.json]   # write
 #
 # Payload: {"decision": "D-054", "rulings": [
-#   {"plant_id": "<uuid>", "locale": "es", "attribute": "uses", "value": "..."}]}
+#   {"plant_id": "<uuid>", "locale": "es", "attribute": "uses", "value": "..."},
+#   {"plant_id": "<uuid>", "attribute": "optimal_altitude_range", "lo": 1500, "hi": null},
+#   {"plant_id": "<uuid>", "attribute": "has_edible_mature_fruit",
+#    "flag": true, "was": false}]}
+#
+# 'was' is optional and flag-only: the value the review page showed. If the
+# database has moved on since the ruling, the row is refused, not overwritten.
 #
 # This OVERWRITES, which the backfill never does — every payload names the
 # decision-log entry that authorised it, and the log is where the ruling and
@@ -28,6 +34,7 @@ def report_review_counts(result, apply)
     'blank incoming, refused' => result.blank_refused,
     'attribute not governed, refused' => result.not_governed,
     'range already held, refused' => result.range_occupied,
+    'changed since review, refused' => result.stale_refused,
     'plants not in this database' => result.missing_plants,
     'failed' => result.failed }.each do |label, count|
     puts format('  %-33<label>s %<count>d', label: label, count: count)
