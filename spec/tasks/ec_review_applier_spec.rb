@@ -5,6 +5,7 @@ require Rails.root.join('lib/ec_review_applier')
 
 RSpec.describe EcReviewApplier do
   let(:org) { create(:organization, :real) }
+  let(:principal) { create(:principal) }
   let(:plant) do
     create(:plant, owner_organization_id: org.id, source_organization_id: org.id)
   end
@@ -16,7 +17,8 @@ RSpec.describe EcReviewApplier do
   end
 
   def apply(rulings, apply: true)
-    described_class.new(apply: apply).apply(rulings)
+    described_class.new(principal: principal, decision: 'D-056',
+                        apply: apply).apply(rulings)
   end
 
   # The one thing the backfill must never do is the one thing this exists for.
@@ -28,6 +30,20 @@ RSpec.describe EcReviewApplier do
     expect(result.applied).to eq 1
     expect(Mobility.with_locale(:es) { plant.reload.uses })
       .to eq 'Texto de ECHOcommunity'
+  end
+
+  # D-056 shipped writing versions with a blank whodunnit: 29 of 29 production
+  # versions from D-054/D-055/D-056 carry NULL, so the history cannot say the
+  # edit came from the migration rather than from plant-admin.
+  it 'attributes the write to the migration principal and its decision', :versioning do
+    Mobility.with_locale(:es) { plant.update!(uses: 'Texto viejo del API') }
+
+    apply([ruling])
+
+    version = PaperTrail::Version.where(item_type: 'Plant', item_id: plant.id).last
+    expect(version.whodunnit).to eq principal.id
+    expect(version.metadata['origin']).to eq 'review-apply'
+    expect(version.metadata['decision']).to eq 'D-056'
   end
 
   it 'is idempotent: a second run changes nothing' do

@@ -18,7 +18,9 @@ require Rails.root.join('lib/ec_review_applier')
 #
 # This OVERWRITES, which the backfill never does — every payload names the
 # decision-log entry that authorised it, and the log is where the ruling and
-# its exceptions live.
+# its exceptions live. That decision rides into each PaperTrail version's
+# metadata, so the history points back at the ruling; the writes are attributed
+# to ECHO_OWNER_EMAIL (default echo@echonet.org), matching variety_restore.
 
 # Reporting lives outside the namespace block so the task body stays within
 # RuboCop's BlockLength and AbcSize limits, matching variety_publish.rake.
@@ -53,12 +55,16 @@ namespace :plants do
     decision = payload['decision'] or
       abort "no 'decision' key in #{path} — every review payload must name its decision-log entry"
     apply = ENV['APPLY'] == 'true'
+    owner = ENV.fetch('ECHO_OWNER_EMAIL', 'echo@echonet.org')
+    principal = Principal.find_by(email: owner) or abort "no principal for #{owner}"
 
     puts "#{apply ? 'APPLYING' : 'DRY RUN'} #{rulings.size} reviewed rulings (#{decision})"
     puts "  source: #{payload['source'] || 'unknown'}"
+    puts "  attributed to: #{owner} (origin: review-apply, decision: #{decision})"
     puts
 
-    result = EcReviewApplier.new(apply: apply).apply(rulings)
+    result = EcReviewApplier.new(principal: principal, decision: decision,
+                                 apply: apply).apply(rulings)
     report_review_changes(result)
     report_review_counts(result, apply)
     abort 'review apply finished with failures' if result.failed.positive?
