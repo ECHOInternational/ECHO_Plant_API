@@ -29,6 +29,17 @@ require Rails.root.join('lib/ec_translation_backfill')
 #     boolean has only two states, so "already holds the ruled value" cannot
 #     tell "untouched since the review" from "flipped twice". A flag ruling may
 #     carry 'was'; if the database no longer holds it, the row is refused.
+#
+# Every write is attributed. These overwrite curated plant-admin content on a
+# human's ruling, so a blank whodunnit would leave the history unable to say
+# the edit came from the migration rather than from a person working in
+# plant-admin. The version carries the migration principal, an origin of
+# 'review-apply', and the decision-log entry that authorised the batch, so a
+# reader can get from any changed field back to the ruling behind it.
+# rubocop:disable Metrics/ClassLength -- 102/100: three ruling kinds write
+# three different column shapes, and each one's guard is the reviewed
+# decision it enforces. Splitting them by line count would scatter those
+# guards; the repo takes the same inline exemption for Plant and PlantType.
 class EcReviewApplier
   # Range rulings carry 'lo'/'hi' instead of 'value'/'locale'; a nil 'hi' is an
   # open upper bound ("1500 m and up"), which EcRangeParser cannot express.
@@ -47,7 +58,9 @@ class EcReviewApplier
                       :range_occupied, :stale_refused, :missing_plants, :failed,
                       :changes, :errors, keyword_init: true)
 
-  def initialize(apply: false)
+  def initialize(principal:, decision:, apply: false)
+    @principal = principal
+    @decision = decision
     @apply = apply
   end
 
@@ -56,24 +69,43 @@ class EcReviewApplier
     result = Result.new(applied: 0, already_applied: 0, blank_refused: 0,
                         not_governed: 0, range_occupied: 0, stale_refused: 0,
                         missing_plants: 0, failed: 0, changes: [], errors: [])
-    rulings.each { |ruling| apply_ruling(ruling, result) }
+    attributed do
+      rulings.each { |ruling| apply_ruling(ruling, result) }
+    end
     result
   end
 
   private
 
+  # Wraps the whole batch, not each write: one run is one authorising decision,
+  # and the dry run takes the same path so a missing principal fails before the
+  # write run rather than during it.
+  def attributed(&)
+    info = { metadata: { origin: 'review-apply', decision: @decision } }
+    PaperTrail.request(whodunnit: @principal.id, controller_info: info, &)
+  end
+
   def apply_ruling(ruling, result)
     refusal = refuse(ruling)
     return result[refusal] += 1 if refusal
 
-    case ruling['attribute'].to_s
-    when *RANGE_ATTRIBUTES then write_range(ruling, result)
-    when *FLAG_ATTRIBUTES then write_flag(ruling, result)
-    else write(ruling, result)
-    end
+    plant = Plant.unscoped.find_by(id: ruling['plant_id'])
+    return result.missing_plants += 1 if plant.nil?
+
+    dispatch(plant, ruling, result)
   rescue StandardError => e
     result.failed += 1
     result.errors << "#{ruling['plant_id']}: #{e.class}: #{e.message}"
+  end
+
+  # Each kind writes a different column shape, so they cannot share a writer;
+  # what they do share is the lookup and the refusals, which run above.
+  def dispatch(plant, ruling, result)
+    case ruling['attribute'].to_s
+    when *RANGE_ATTRIBUTES then write_range(plant, ruling, result)
+    when *FLAG_ATTRIBUTES then write_flag(plant, ruling, result)
+    else write(plant, ruling, result)
+    end
   end
 
   def refuse(ruling)
@@ -100,10 +132,7 @@ class EcReviewApplier
 
   # Same honest read as the backfill: the stored container, not the Mobility
   # reader, whose fallbacks would answer with English for a missing locale.
-  def write(ruling, result)
-    plant = Plant.unscoped.find_by(id: ruling['plant_id'])
-    return result.missing_plants += 1 if plant.nil?
-
+  def write(plant, ruling, result)
     locale, attr, value = ruling.values_at('locale', 'attribute', 'value')
     current = (plant.translations[locale] || {})[attr].to_s
     return result.already_applied += 1 if EcTranslationBackfill.same_text?(current, value)
@@ -123,9 +152,7 @@ class EcReviewApplier
 
   # Additive only: the reviewed case is "ECHOcommunity holds a value, the API
   # holds nothing" (D-055). An occupied range is refused, never merged.
-  def write_range(ruling, result)
-    plant = Plant.unscoped.find_by(id: ruling['plant_id'])
-    return result.missing_plants += 1 if plant.nil?
+  def write_range(plant, ruling, result)
     return result.range_occupied += 1 unless plant.public_send(ruling['attribute']).nil?
 
     apply_range(plant, ruling, result)
@@ -144,10 +171,7 @@ class EcReviewApplier
   # An overwrite by design: the reviewer saw both values side by side and chose
   # one. The 'was' guard is what keeps that from becoming a blind write — see
   # the class comment.
-  def write_flag(ruling, result)
-    plant = Plant.unscoped.find_by(id: ruling['plant_id'])
-    return result.missing_plants += 1 if plant.nil?
-
+  def write_flag(plant, ruling, result)
     current = plant.public_send(ruling['attribute'])
     return result.stale_refused += 1 if ruling.key?('was') && current != ruling['was']
     return result.already_applied += 1 if current == ruling['flag']
@@ -165,3 +189,4 @@ class EcReviewApplier
     plant.save!
   end
 end
+# rubocop:enable Metrics/ClassLength
