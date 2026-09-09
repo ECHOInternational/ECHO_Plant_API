@@ -523,7 +523,12 @@ CREATE TABLE public.plants (
     deleted_at timestamp with time zone,
     deleted_by_principal_id uuid,
     source_snapshot jsonb,
-    family_id uuid
+    family_id uuid,
+    safety_level character varying DEFAULT 'none'::character varying NOT NULL,
+    edibility_uncertain boolean DEFAULT false NOT NULL,
+    safety_warning boolean GENERATED ALWAYS AS (((safety_level)::text <> 'none'::text)) STORED,
+    scientific_name_authority character varying,
+    CONSTRAINT plants_safety_level_check CHECK (((safety_level)::text = ANY ((ARRAY['none'::character varying, 'caution'::character varying, 'poisonous'::character varying])::text[])))
 );
 
 
@@ -1389,6 +1394,13 @@ CREATE INDEX index_plants_on_owner_organization_id ON public.plants USING btree 
 
 
 --
+-- Name: index_plants_on_safety_level_flagged; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_plants_on_safety_level_flagged ON public.plants USING btree (safety_level) WHERE ((safety_level)::text <> 'none'::text);
+
+
+--
 -- Name: index_plants_on_visibility; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2076,6 +2088,8 @@ ALTER TABLE ONLY public.varieties
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260909000002'),
+('20260909000001'),
 ('20260825000001'),
 ('20260814000002'),
 ('20260814000001'),

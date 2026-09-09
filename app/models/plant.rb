@@ -4,11 +4,26 @@
 class Plant < ApplicationRecord # rubocop:disable Metrics/ClassLength
   include OrganizedResource
   include Draftable
+  include RelationSets
+
+  # Join rows the sync engine manages as one attribute each (decision 17).
+  relation_set :common_name_set, serializer: RelationSets::CommonNames
+  relation_set :category_set, serializer: RelationSets::Categories
 
   # Rails 7.2 deprecates the keyword-definition form (enum name: {...}, removed
   # in Rails 8.0); the positional form is the supported syntax on Ruby 3.3.
   enum :early_growth_phase, { slow: 'slow', intermediate: 'intermediate', fast: 'fast' }
   enum :life_cycle, { annual: 'annual', biennial: 'biennial', perennial: 'perennial' }
+  # Safety concept (fpi-connector decisions 23, 32): a controlled level, an
+  # orthogonal uncertainty flag, and a translated note. The prefix is
+  # mandatory -- a bare `none` scope would shadow Relation#none -- and
+  # `validate: true` turns an unknown level into a validation error (which the
+  # sync engine counts as `invalid`, with a message) instead of an
+  # ArgumentError (which it counts as `errored`).
+  enum :safety_level, { none: 'none', caution: 'caution', poisonous: 'poisonous' },
+       prefix: :safety, validate: true
+  # An incoming '' (the sync engine's "absent") stores NULL and reads back ''.
+  normalizes :scientific_name_authority, with: :presence.to_proc
   validates :owned_by, :created_by, :visibility, presence: true
   enum :visibility, { private: 0, public: 1, draft: 2, deleted: 3 }, prefix: :visibility
   has_many :images, as: :imageable, dependent: :destroy
@@ -68,7 +83,17 @@ class Plant < ApplicationRecord # rubocop:disable Metrics/ClassLength
              :early_growth_phase_note,
              :altitude_note,
              :ph_note,
-             :growth_habits_note
+             :growth_habits_note,
+             :safety_note,
+             :habitat,
+             :notes
+
+  # Postgres maintains the stored generated column; answering from the level
+  # here keeps an unsaved record consistent with a reloaded one. The name is
+  # the column's, so it cannot take the predicate question mark.
+  def safety_warning # rubocop:disable Naming/PredicateMethod
+    !safety_none?
+  end
 
   def genus
     return unless scientific_name
@@ -142,7 +167,10 @@ class Plant < ApplicationRecord # rubocop:disable Metrics/ClassLength
         early_growth_phase_note: attributes['early_growth_phase_note'],
         altitude_note: attributes['altitude_note'],
         ph_note: attributes['ph_note'],
-        growth_habits_note: attributes['growth_habits_note']
+        growth_habits_note: attributes['growth_habits_note'],
+        safety_note: attributes['safety_note'],
+        habitat: attributes['habitat'],
+        notes: attributes['notes']
       }
     end
   end

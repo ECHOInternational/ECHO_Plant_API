@@ -1999,6 +1999,7 @@ input CreatePlantInput {
   The translatable early growth phase note of the plant
   """
   earlyGrowthPhaseNote: String
+  edibilityUncertain: Boolean
 
   """
   The translatable edible green leaves note of the plant
@@ -2029,6 +2030,11 @@ input CreatePlantInput {
   The translatable growth habits note of the plant
   """
   growthHabitsNote: String
+
+  """
+  The translatable habitat of the plant
+  """
+  habitat: String
 
   """
   The translatable harvesting and seed production of the plant
@@ -2063,6 +2069,11 @@ input CreatePlantInput {
   Postgres range literal, e.g. "[0,10]"
   """
   nAccumulationRange: String
+
+  """
+  The translatable notes of the plant
+  """
+  notes: String
 
   """
   Postgres range literal, e.g. "[0,10]"
@@ -2125,9 +2136,24 @@ input CreatePlantInput {
   primaryCommonName: String!
 
   """
+  The recorded safety level; NONE means no warning recorded
+  """
+  safetyLevel: SafetyLevel
+
+  """
+  The translatable safety note of the plant
+  """
+  safetyNote: String
+
+  """
   The scientific name of the plant
   """
   scientificName: String
+
+  """
+  The taxonomic authority of the scientific name, e.g. "L."
+  """
+  scientificNameAuthority: String
 
   """
   Postgres range literal, e.g. "[0,10]"
@@ -6074,6 +6100,11 @@ type Plant implements Node {
   earlyGrowthPhaseNote: String
 
   """
+  True when the source is unsure that this plant, or one of its parts, is edible at all
+  """
+  edibilityUncertain: Boolean!
+
+  """
   Translated full text description of whther or not a plant has edible green leaves
   """
   edibleGreenLeavesNote: String
@@ -6132,6 +6163,11 @@ type Plant implements Node {
   Translated full text description of the growth habits for a plant
   """
   growthHabitsNote: String
+
+  """
+  A translated description of the climate, soils and altitudes the plant grows in
+  """
+  habitat: String
 
   """
   A translated descripion on the harvesting and seed production of a plant
@@ -6232,6 +6268,11 @@ type Plant implements Node {
   nAccumulationRange: String
 
   """
+  Translated free-form curator notes on the plant
+  """
+  notes: String
+
+  """
   Describes the optimal range of altitudes for a plant in meters
   """
   optimalAltitudeRange: String
@@ -6328,9 +6369,29 @@ type Plant implements Node {
   ): ChangeEntryConnectionWithTotalCount
 
   """
+  The safety warning recorded against this plant. NONE means no warning recorded, not that the plant is safe
+  """
+  safetyLevel: SafetyLevel!
+
+  """
+  A translated note on the safety warning: which part, preparation or quantity is harmful
+  """
+  safetyNote: String
+
+  """
+  True when a safety warning of any level is recorded
+  """
+  safetyWarning: Boolean!
+
+  """
   The scientific name for a plant (always render italicized)
   """
   scientificName: String
+
+  """
+  The taxonomic authority of the scientific name, e.g. "L." or "(L.) Merr."; not part of the name itself
+  """
+  scientificNameAuthority: String
 
   """
   Describes a range of the number of days to maturity or havest
@@ -6540,6 +6601,11 @@ type PlantTranslation {
   growthHabitsNote: String
 
   """
+  A translated description of the climate, soils and altitudes the plant grows in
+  """
+  habitat: String
+
+  """
   A translated descripion on the harvesting and seed production of a plant
   """
   harvestingAndSeedProduction: String
@@ -6563,6 +6629,11 @@ type PlantTranslation {
   Translated full text description of the capacity for nitrogen accumulation for plant
   """
   nAccumulationNote: String
+
+  """
+  Translated free-form curator notes on the plant
+  """
+  notes: String
 
   """
   Translated full text description of a plant's rainfall needs
@@ -6593,6 +6664,11 @@ type PlantTranslation {
   Translated planting instructions for a plant
   """
   plantingInstructions: String
+
+  """
+  A translated note on the safety warning: which part, preparation or quantity is harmful
+  """
+  safetyNote: String
 
   """
   Translated full text description of a plant's seasonal cycle
@@ -7343,6 +7419,11 @@ type Query {
     hasPendingChanges: Boolean
 
     """
+    Restrict to records with (true) or without (false) a recorded safety warning of any level.
+    """
+    hasSafetyWarning: Boolean
+
+    """
     Request returned fields in a specific language. Overrides ACCEPT-LANGUAGE header.
     """
     language: String
@@ -7366,6 +7447,11 @@ type Query {
     Returns only records owned by the specified organization (Relay global ID).
     """
     ownedByOrganizationId: ID
+
+    """
+    Restrict to records whose recorded safety level is exactly this value.
+    """
+    safetyLevel: SafetyLevel
 
     """
     Performs a case-insensitive LIKE match on scientific names
@@ -7794,6 +7880,27 @@ type RestoreVarietyVersionPayload {
   clientMutationId: String
   errors: [MutationError!]!
   variety: Variety
+}
+
+"""
+The safety warning recorded against a plant. NONE means no warning has been
+recorded; it is not an assertion that the plant is safe to eat.
+"""
+enum SafetyLevel {
+  """
+  The source flags this plant for caution: some part, preparation or quantity is known to be harmful.
+  """
+  CAUTION
+
+  """
+  No warning recorded. Not an assertion of safety.
+  """
+  NONE
+
+  """
+  The source marks this plant, or one of its parts, as poisonous or toxic.
+  """
+  POISONOUS
 }
 
 """
@@ -9801,6 +9908,7 @@ input UpdatePlantInput {
   The translatable early growth phase note of the plant
   """
   earlyGrowthPhaseNote: String
+  edibilityUncertain: Boolean
 
   """
   The translatable edible green leaves note of the plant
@@ -9827,6 +9935,11 @@ input UpdatePlantInput {
   The translatable growth habits note of the plant
   """
   growthHabitsNote: String
+
+  """
+  The translatable habitat of the plant
+  """
+  habitat: String
 
   """
   The translatable harvesting and seed production of the plant
@@ -9857,6 +9970,11 @@ input UpdatePlantInput {
   Postgres range literal, e.g. "[0,10]"
   """
   nAccumulationRange: String
+
+  """
+  The translatable notes of the plant
+  """
+  notes: String
 
   """
   Postgres range literal, e.g. "[0,10]"
@@ -9916,6 +10034,16 @@ input UpdatePlantInput {
   publicationState: PublicationStateEnum
 
   """
+  The recorded safety level; NONE means no warning recorded
+  """
+  safetyLevel: SafetyLevel
+
+  """
+  The translatable safety note of the plant
+  """
+  safetyNote: String
+
+  """
   Stage these changes on a draft instead of writing the live record. Only
   draftable columns (DraftableAttributes) are staged: workflow arguments such as
   visibility, publicationState and accessLevel, and any other non-column
@@ -9924,6 +10052,11 @@ input UpdatePlantInput {
   """
   saveAsDraft: Boolean = false
   scientificName: String
+
+  """
+  The taxonomic authority of the scientific name, e.g. "L."
+  """
+  scientificNameAuthority: String
 
   """
   Postgres range literal, e.g. "[0,10]"
