@@ -109,15 +109,19 @@ class FpiPlantFeed
   end
 
   def canonical(uuid, attribute, value)
-    serializer = FpiDataSource::RELATION_SETS[attribute]
+    serializer = FpiDataSource.relation_sets[attribute]
     return serializer.dump(serializer.parse(value)) if serializer
 
     text = value.nil? ? '' : value.to_s.delete("\u0000")
-    malformed_id = attribute == 'family_id' && !text.empty? && !UUID.match?(text)
-    raise IncompleteRow, "#{uuid}: family_id is not a lower-case UUID: #{text.inspect}" if malformed_id
-
+    check_family_id!(uuid, text) if attribute == 'family_id'
     text
   rescue ArgumentError, JSON::ParserError => e
     raise IncompleteRow, "#{uuid}: #{attribute}: #{e.message}"
+  end
+
+  def check_family_id!(uuid, text)
+    return if text.empty? || UUID.match?(text)
+
+    raise IncompleteRow, "#{uuid}: family_id is not a lower-case UUID: #{text.inspect}"
   end
 end

@@ -33,21 +33,27 @@ module FpiDataSource
   ].freeze
 
   # The base value of a key upstream has never sent (item 2). Every other key: ''.
+  # The two set values are the serializers' `empty` strings, written out here
+  # because this file is required by the rake tasks before the application
+  # constants can be autoloaded.
   EMPTY_VALUES = {
     'safety_level' => 'none',
     'edibility_uncertain' => 'false',
-    'common_name_set' => RelationSets::CommonNames.empty,
-    'category_set' => RelationSets::Categories.empty
-  }.freeze
-
-  RELATION_SETS = {
-    'common_name_set' => RelationSets::CommonNames,
-    'category_set' => RelationSets::Categories
+    'common_name_set' => '[]',
+    'category_set' => '[]'
   }.freeze
 
   class << self
     def empty_value(attribute)
       EMPTY_VALUES.fetch(attribute, '')
+    end
+
+    # Resolved at call time, never at load time, for the same reason as above.
+    def relation_sets
+      {
+        'common_name_set' => RelationSets::CommonNames,
+        'category_set' => RelationSets::Categories
+      }
     end
 
     # Idempotent. The owning organization is FPI's own, mirrored from the IdP.
