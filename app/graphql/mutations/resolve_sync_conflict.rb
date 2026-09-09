@@ -3,6 +3,10 @@
 module Mutations
   # Resolves a SyncConflict either by keeping local values or accepting the
   # incoming source values (including accepting an upstream deletion).
+  #
+  # Authorization lives here; the data change is SyncConflictResolution, which
+  # the fpi:resolve_conflicts task shares so a bulk ruling and a one-off
+  # ruling can never diverge.
   class ResolveSyncConflict < BaseMutation
     DENY_LIST = SourceSynchronizer::DENY_LIST
 
@@ -66,12 +70,7 @@ module Mutations
         }
       end
 
-      case resolution.to_s
-      when 'KEEP_LOCAL'
-        apply_keep_local(conflict)
-      when 'ACCEPT_INCOMING'
-        apply_accept_incoming(conflict)
-      end
+      SyncConflictResolution.new(conflict: conflict, principal_id: current_principal_id).apply!(resolution)
 
       { sync_conflict: conflict, errors: [] }
     end
@@ -90,119 +89,6 @@ module Mutations
 
     def current_principal_id
       context[:current_user]&.principal&.id
-    end
-
-    # KEEP_LOCAL: mark conflict resolved and make the kept local values stick.
-    #
-    # For a CONTENT conflict the new base is the INCOMING payload of the conflict
-    # being resolved, not the local state. A recurring source (Food Plants
-    # International, fpi-connector decision 30) re-sends the same upstream value
-    # on every run: with base = local, the next run would see local unchanged
-    # and incoming changed, and overwrite the value the reviewer just chose to
-    # keep. With base = incoming, the next run sees incoming unchanged and local
-    # changed, scores the record locally_modified, and leaves it alone until
-    # upstream genuinely changes again -- which correctly raises a fresh
-    # conflict. The payload is read from this conflict, never from the oldest
-    # conflict of any status.
-    #
-    # For a SOURCE_DELETION conflict the incoming payload is empty, so the base
-    # is the current local state, read through SourceSynchronizer.local_attrs
-    # and NOT record.attributes.slice: Mobility keeps translated attributes in
-    # the translations jsonb, and slicing #attributes wrote a snapshot with no
-    # narrative fields, so a kept edit to a description could never quiesce.
-    # The digest is recomputed from the same hash in both cases: a stale digest
-    # reopens the conflict by another route.
-    def apply_keep_local(conflict)
-      record   = conflict.syncable
-      snapshot = keep_local_base(conflict, record)
-
-      record.update_columns(
-        source_snapshot: snapshot,
-        source_digest: canonical_digest(snapshot),
-        sync_state: 'locally_modified'
-      )
-
-      resolve_conflict!(conflict, 'keep_local')
-    end
-
-    def keep_local_base(conflict, record)
-      incoming = conflict.incoming_payload
-      return incoming if conflict.conflict_type == 'content' && incoming.present?
-
-      SourceSynchronizer.local_attrs(record, data_source_source_attributes(conflict.data_source, record))
-    end
-
-    # ACCEPT_INCOMING: apply incoming payload or soft-delete the record.
-    def apply_accept_incoming(conflict)
-      if conflict.conflict_type == 'source_deletion'
-        apply_accept_source_deletion(conflict)
-      else
-        incoming = conflict.incoming_payload || {}
-        denied   = incoming.keys & DENY_LIST
-        raise ArgumentError, "incoming_payload contains deny-listed keys: #{denied.join(', ')}" if denied.any?
-
-        incoming_digest = canonical_digest(incoming)
-        record          = conflict.syncable
-
-        # Full save (not update_columns): accepting upstream content is a
-        # user-driven change and must be validated and PaperTrail-versioned
-        # with the acting principal as whodunnit.
-        record.assign_attributes(
-          incoming.merge(
-            'source_snapshot' => incoming,
-            'source_digest' => incoming_digest,
-            'sync_state' => 'synced'
-          )
-        )
-        record.save!
-
-        resolve_conflict!(conflict, 'accept_incoming')
-      end
-    end
-
-    def apply_accept_source_deletion(conflict)
-      record = conflict.syncable
-
-      record.update!(visibility: :deleted)
-
-      # Set deleted_by_principal_id if not already set by callback
-      record.update_columns(deleted_by_principal_id: current_principal_id) unless record.deleted_by_principal_id.present?
-
-      resolve_conflict!(conflict, 'accept_incoming')
-    end
-
-    def resolve_conflict!(conflict, resolution_value)
-      conflict.update_columns(
-        status: 'resolved',
-        resolution: resolution_value,
-        resolved_by_principal_id: current_principal_id,
-        resolved_at: Time.current
-      )
-    end
-
-    # Infers source_attributes from the conflict's data source (uses keys from
-    # incoming_payload as a proxy -- they are exactly the source-managed attrs).
-    def data_source_source_attributes(data_source, record)
-      # Prefer the keys from the conflict's own incoming_payload (content conflict),
-      # or fall back to source_snapshot keys on the record.
-      conflict_source = SyncConflict.where(
-        syncable: record,
-        data_source: data_source
-      ).where.not(incoming_payload: nil).first
-
-      if conflict_source&.incoming_payload.present?
-        conflict_source.incoming_payload.keys
-      elsif record.source_snapshot.present?
-        record.source_snapshot.keys
-      else
-        []
-      end
-    end
-
-    # Delegated so the mutation and the synchronizer cannot drift on what
-    # "unchanged" means.
-    def canonical_digest(hash)
-      SourceSynchronizer.canonical_digest(hash)
     end
   end
 end

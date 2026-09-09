@@ -93,6 +93,21 @@ RSpec.describe FpiSyncRun do
       expect(totals.created).to eq(0)
     end
 
+    it 'predicts the run on a dry run and refuses an applied run over the conflict cap' do
+      run(apply: true, run_id: 'run-1').run
+      Plant.find_by(source_record_id: '495A01C7-C950-4432-B603-EFA260631E03').update!(scientific_name: 'Curator edit')
+      changed = shard.sub('"scientific_name": "Abelmoschus moschatus"', '"scientific_name": "Upstream edit"')
+      write_payload(changed, deletions)
+
+      dry = run.run
+      expect(dry.prediction.to_h).to include(conflict: 1, synced: 1, unknown_deleted: 1, rows: 3)
+
+      capped = described_class.new(data_source: data_source, payload_dir: payload_dir, run_id: 'run-2', apply: true, out_dir: out_dir, conflict_cap: 0)
+      expect { capped.run }.to raise_error(FpiSyncRun::CapExceeded, /1 conflicts predicted, over the cap of 0/)
+      expect(SyncConflict.count).to eq(0)
+      expect(Plant.find_by(source_record_id: '495A01C7-C950-4432-B603-EFA260631E03').scientific_name).to eq('Curator edit')
+    end
+
     it 'counts an invalid row as a failed run' do
       bad = shard.sub('"safety_level": "poisonous"', '"safety_level": "lethal"')
       write_payload(bad, deletions)

@@ -4,6 +4,8 @@ require Rails.root.join('lib/fpi_data_source')
 require Rails.root.join('lib/fpi_plant_feed')
 require Rails.root.join('lib/fpi_sync_run')
 require Rails.root.join('lib/fpi_rebaseline')
+require Rails.root.join('lib/fpi_conflict_rulings')
+require Rails.root.join('lib/fpi_rollback')
 
 # The Food Plants International import (fpi-connector plan, milestone M2).
 #
@@ -42,6 +44,13 @@ def report_fpi_totals(totals, data_source)
   totals.invalid_details.first(10).each { |d| puts "    invalid: #{d}" }
   totals.error_details.first(10).each { |d| puts "    error:   #{d}" }
   puts "  open conflicts now: #{SyncConflict.where(data_source: data_source, status: 'open').count}"
+end
+
+def report_fpi_prediction(prediction, cap)
+  return if prediction.nil?
+
+  line = FpiRunPredictor::OUTCOMES.map { |o| "#{o} #{prediction[o]}" }.join(', ')
+  puts "  predicted: #{line}  (conflict cap #{cap})"
 end
 
 def report_fpi_rebaseline(result, data_source, apply)
@@ -86,14 +95,52 @@ namespace :fpi do
     run_id = ENV['RUN_ID'].presence || (apply ? abort('RUN_ID is required with APPLY=true; the connector supplies it') : "dry-#{SecureRandom.hex(4)}")
 
     puts "#{apply ? 'SYNCING' : 'DRY RUN'} #{path} as run #{run_id}  (data source #{data_source.name}, #{data_source.id})"
-    totals = FpiSyncRun.new(data_source: data_source, payload_dir: path, run_id: run_id, apply: apply, out_dir: ENV['OUT_DIR'].presence).run
+    cap = ENV['CONFLICT_CAP'].presence&.to_i || FpiSyncRun::DEFAULT_CONFLICT_CAP
+    totals = FpiSyncRun.new(data_source: data_source, payload_dir: path, run_id: run_id, apply: apply,
+                            out_dir: ENV['OUT_DIR'].presence, conflict_cap: cap).run
     puts "  shards / rows: #{totals.shards} / #{totals.rows}"
+    report_fpi_prediction(totals.prediction, cap)
     next puts('  dry run: every row built, nothing sent') unless apply
 
     report_fpi_totals(totals, data_source)
     abort 'sync finished with errored or invalid rows' if FpiSyncRun.failed?(totals)
-  rescue FpiSyncRun::PreflightFailed, FpiPlantFeed::IncompleteRow, FpiPlantFeed::VersionMismatch => e
+  rescue FpiSyncRun::PreflightFailed, FpiSyncRun::CapExceeded, FpiPlantFeed::IncompleteRow, FpiPlantFeed::VersionMismatch => e
     abort "sync refused: #{e.message}"
+  end
+end
+
+namespace :fpi do
+  desc 'Apply a rulings file to open FPI conflicts (dry run unless APPLY=true)'
+  task :resolve_conflicts, [:path] => :environment do |_t, args|
+    path = args[:path] or abort 'usage: bin/rails fpi:resolve_conflicts[path/to/rulings.json]'
+    abort "file not found: #{path}" unless File.exist?(path)
+    payload = JSON.parse(File.read(path))
+    decision = payload['decision'].presence or abort "no 'decision' in #{path}: every rulings file names its decision-log entry"
+    reviewer = Principal.find_by(email: payload['reviewer'].to_s) or abort "no principal for reviewer #{payload['reviewer'].inspect}"
+    rulings = payload['rulings'] or abort "no 'rulings' in #{path}"
+    apply = ENV['APPLY'] == 'true'
+
+    puts "#{apply ? 'APPLYING' : 'DRY RUN'} #{rulings.size} ruling(s) from #{path} (decision #{decision}, reviewer #{reviewer.email})"
+    result = FpiConflictRulings.new(data_source: fpi_data_source!, principal: reviewer, decision: decision, apply: apply).apply(rulings)
+    { "rulings #{apply ? 'applied' : 'to apply'}" => result.applied, 'conflict not open' => result.not_open,
+      'conflict not found for this source' => result.missing, 'refused' => result.refused, 'failed' => result.failed }
+      .each { |label, count| puts format('  %-34<label>s %<count>d', label: label, count: count) }
+    result.errors.first(20).each { |e| puts "    #{e}" }
+    abort 'rulings finished with failures' if result.failed.positive?
+  end
+end
+
+namespace :fpi do
+  desc 'Remove the plants an FPI run created, across every table (dry run unless APPLY=true)'
+  task :rollback, [:run_id] => :environment do |_t, args|
+    run_id = args[:run_id].presence
+    abort 'usage: bin/rails fpi:rollback[run_id]  (or ALL=true to remove every FPI plant)' if run_id.nil? && ENV['ALL'] != 'true'
+    apply = ENV['APPLY'] == 'true'
+    plan = FpiRollback.new(data_source: fpi_data_source!, run_id: run_id, apply: apply).run
+    puts "#{apply ? 'ROLLED BACK' : 'DRY RUN'} #{run_id ? "run #{run_id}" : 'every FPI plant'}"
+    { plants: plan.plants, record_drafts: plan.record_drafts, sync_conflicts: plan.sync_conflicts, images: plan.images, versions: plan.versions }
+      .merge(plan.joins).each { |label, count| puts format('  %-24<label>s %<count>d', label: label, count: count) }
+    puts '  S3 objects behind image rows are not removed here.' if plan.images.positive?
   end
 end
 

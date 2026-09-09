@@ -3,6 +3,8 @@
 require Rails.root.join('lib/fpi_data_source')
 require Rails.root.join('lib/fpi_plant_feed')
 require Rails.root.join('lib/fpi_run_outcomes')
+require Rails.root.join('lib/fpi_run_predictor')
+require Rails.root.join('lib/fpi_run_totals')
 
 # One synchronisation run of an fpi-connector payload directory
 # (fpi-connector schema-delta item 4; risks A6, D4, D6, E4).
@@ -32,29 +34,18 @@ class FpiSyncRun
     97f62354-166d-4b75-a85d-2ea493ae2e03
   ].freeze
 
-  COUNTS = %i[created applied synced locally_modified conflicts_created conflicts_updated
-              source_deletion_conflicts tombstone_kept unknown_deleted invalid errored].freeze
+  DEFAULT_CONFLICT_CAP = 500
 
-  Totals = Struct.new(:shards, :rows, *COUNTS, :invalid_details, :error_details, keyword_init: true) do
-    def self.empty
-      new(shards: 0, rows: 0, invalid_details: [], error_details: [], **COUNTS.index_with { 0 })
-    end
+  class CapExceeded < StandardError; end
 
-    def merge!(report)
-      return unless report
-
-      COUNTS.each { |k| self[k] += report.public_send(k) }
-      invalid_details.concat(report.invalid_details)
-      error_details.concat(report.error_details)
-    end
-  end
-
-  def initialize(data_source:, payload_dir:, run_id:, apply: false, out_dir: nil)
+  # options: out_dir (default tmp/fpi/<run_id>), conflict_cap (default DEFAULT_CONFLICT_CAP; nil disables)
+  def initialize(data_source:, payload_dir:, run_id:, apply: false, **options)
     @data_source = data_source
     @payload_dir = Pathname(payload_dir)
     @run_id = run_id
     @apply = apply
-    @out_dir = out_dir || Rails.root.join('tmp', 'fpi', run_id)
+    @out_dir = options[:out_dir] || Rails.root.join('tmp', 'fpi', run_id)
+    @conflict_cap = options.fetch(:conflict_cap, DEFAULT_CONFLICT_CAP)
   end
 
   def manifest
@@ -70,34 +61,49 @@ class FpiSyncRun
     facts.merge(verify_files, principal: @data_source.service_principal!.email)
   end
 
+  # Builds every row first (the strict feed contract over the whole payload),
+  # predicts the run and enforces the conflict cap, then applies shard by
+  # shard. The prediction is the dry run's report and the applied run's guard:
+  # a systematic connector change that would open thousands of conflicts is
+  # refused before a single row is written (risks D5, G1).
   def run
     preflight!
-    totals = Totals.empty
+    totals = FpiRunTotals.new
     started_at = Time.current
-    manifest['shards'].each { |entry| apply_file(totals, entry['file'], :build) }
-    apply_deletions(totals)
+    batches = build_batches(totals)
+    totals.prediction = FpiRunPredictor.new(data_source: @data_source).predict(batches.flat_map(&:last))
+    enforce_cap!(totals.prediction)
+    batches.each { |feed, rows| totals.merge!(feed.run(rows, apply: @apply).report) }
     write_outcomes(totals, started_at) if @apply
     totals
   end
 
   def self.failed?(totals)
-    totals.errored.positive? || totals.invalid.positive?
+    totals.failed?
   end
 
   private
 
-  def apply_file(totals, file, builder)
+  # [[feed, rows], ...]: one feed (one synchronizer) per shard, then the deletions.
+  def build_batches(totals)
+    batches = manifest['shards'].map { |entry| build_batch(totals, entry['file'], :build) }
+    batches << build_batch(totals, manifest['deletions']['file'], :build_deletions) if manifest['deletions']
+    batches
+  end
+
+  def build_batch(totals, file, builder)
     feed = FpiPlantFeed.new(data_source: @data_source, run_id: @run_id)
     rows = feed.public_send(builder, JSON.parse(@payload_dir.join(file).read))
     totals.shards += 1 if builder == :build
     totals.rows += rows.size
-    totals.merge!(feed.run(rows, apply: @apply).report)
+    [feed, rows]
   end
 
-  def apply_deletions(totals)
-    return unless manifest['deletions']
+  def enforce_cap!(prediction)
+    return unless @apply && @conflict_cap && prediction.conflict > @conflict_cap
 
-    apply_file(totals, manifest['deletions']['file'], :build_deletions)
+    raise CapExceeded, "#{prediction.conflict} conflicts predicted, over the cap of #{@conflict_cap}; nothing written. " \
+                       'Review the dry run, then raise CONFLICT_CAP only for a change you expect.'
   end
 
   def write_outcomes(totals, started_at)
