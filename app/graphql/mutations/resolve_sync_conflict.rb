@@ -92,28 +92,44 @@ module Mutations
       context[:current_user]&.principal&.id
     end
 
-    # KEEP_LOCAL: mark conflict resolved; adopt current local attrs as new snapshot.
+    # KEEP_LOCAL: mark conflict resolved and make the kept local values stick.
     #
-    # Reads through SourceSynchronizer.local_attrs, NOT record.attributes.slice.
-    # Mobility is configured with `backend :container` and no attribute_methods
-    # plugin, so translated attributes live in the `translations` jsonb and never
-    # appear in #attributes. Slicing there wrote a snapshot missing every
-    # narrative field, so the next sync still saw local as changed and raised the
-    # same conflict again - keeping a local edit to a description could never
-    # quiesce. The digest is recomputed from the same hash for the same reason:
-    # leaving it stale re-opens the conflict by another route.
+    # For a CONTENT conflict the new base is the INCOMING payload of the conflict
+    # being resolved, not the local state. A recurring source (Food Plants
+    # International, fpi-connector decision 30) re-sends the same upstream value
+    # on every run: with base = local, the next run would see local unchanged
+    # and incoming changed, and overwrite the value the reviewer just chose to
+    # keep. With base = incoming, the next run sees incoming unchanged and local
+    # changed, scores the record locally_modified, and leaves it alone until
+    # upstream genuinely changes again -- which correctly raises a fresh
+    # conflict. The payload is read from this conflict, never from the oldest
+    # conflict of any status.
+    #
+    # For a SOURCE_DELETION conflict the incoming payload is empty, so the base
+    # is the current local state, read through SourceSynchronizer.local_attrs
+    # and NOT record.attributes.slice: Mobility keeps translated attributes in
+    # the translations jsonb, and slicing #attributes wrote a snapshot with no
+    # narrative fields, so a kept edit to a description could never quiesce.
+    # The digest is recomputed from the same hash in both cases: a stale digest
+    # reopens the conflict by another route.
     def apply_keep_local(conflict)
-      record         = conflict.syncable
-      source_attrs   = data_source_source_attributes(conflict.data_source, record)
-      local_snapshot = SourceSynchronizer.local_attrs(record, source_attrs)
+      record   = conflict.syncable
+      snapshot = keep_local_base(conflict, record)
 
       record.update_columns(
-        source_snapshot: local_snapshot,
-        source_digest: canonical_digest(local_snapshot),
+        source_snapshot: snapshot,
+        source_digest: canonical_digest(snapshot),
         sync_state: 'locally_modified'
       )
 
       resolve_conflict!(conflict, 'keep_local')
+    end
+
+    def keep_local_base(conflict, record)
+      incoming = conflict.incoming_payload
+      return incoming if conflict.conflict_type == 'content' && incoming.present?
+
+      SourceSynchronizer.local_attrs(record, data_source_source_attributes(conflict.data_source, record))
     end
 
     # ACCEPT_INCOMING: apply incoming payload or soft-delete the record.
