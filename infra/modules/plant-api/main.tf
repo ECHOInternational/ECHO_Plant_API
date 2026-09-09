@@ -32,7 +32,14 @@ locals {
     { name = "DATABASE_PORT", value = tostring(var.database_port) },
   ]
 
-  container_environment = local.base_env
+  # SOURCE_PAYLOADS_S3_BUCKET: the private bucket data-source connectors deliver
+  # sync payloads to through the createSourceUpload mutation, and the fpi sync
+  # task reads from. Absent until the environment has one; the mutation then
+  # refuses payload uploads with a clear message.
+  container_environment = concat(
+    local.base_env,
+    var.source_payloads_s3_bucket == "" ? [] : [{ name = "SOURCE_PAYLOADS_S3_BUCKET", value = var.source_payloads_s3_bucket }],
+  )
 
   # -------------------------------------------------------------------------
   # Secrets Manager ARNs for the task secrets block.
@@ -296,6 +303,25 @@ data "aws_iam_policy_document" "task_s3" {
       "arn:aws:s3:::${var.images_s3_bucket}",
       "arn:aws:s3:::${var.images_s3_bucket}/*",
     ]
+  }
+
+  # The task signs the presigned PUTs connectors use and reads the payloads
+  # back during a sync run, so it needs both directions on the private bucket.
+  dynamic "statement" {
+    for_each = var.source_payloads_s3_bucket == "" ? [] : [var.source_payloads_s3_bucket]
+    content {
+      sid    = "SourcePayloadsS3Access"
+      effect = "Allow"
+      actions = [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:ListBucket",
+      ]
+      resources = [
+        "arn:aws:s3:::${statement.value}",
+        "arn:aws:s3:::${statement.value}/*",
+      ]
+    }
   }
 }
 

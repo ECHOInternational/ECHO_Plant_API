@@ -173,6 +173,12 @@ variable "images_s3_bucket" {
   type        = string
 }
 
+variable "source_payloads_s3_bucket" {
+  description = "Private S3 bucket that data-source connectors deliver sync payloads to (createSourceUpload) and the sync task reads from. Empty disables payload uploads."
+  type        = string
+  default     = ""
+}
+
 # ============================================================================
 # Application runtime
 # ============================================================================

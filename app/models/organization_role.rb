@@ -7,6 +7,10 @@
 # Roles are strings as delivered by the IdP JWT organizations claim
 # (roles: { "plant" => "editor" }). Unknown role strings grant nothing,
 # which makes future IdP-side role additions forward-compatible.
+#
+# deliver_source_data: may obtain presigned uploads for the organization's data
+# source (payload shards, source images) -- the connector operator's capability
+# (fpi-connector decisions 36, 42, 43).
 module OrganizationRole
   ROLES = %w[member contributor editor steward org_admin].freeze
 
@@ -16,10 +20,11 @@ module OrganizationRole
     'editor' => %i[read create update_own update_any
                    resolve_conflicts].freeze,
     'steward' => %i[read create update_own update_any resolve_conflicts
-                    soft_delete restore accept_source_deletion].freeze,
+                    soft_delete restore accept_source_deletion
+                    deliver_source_data].freeze,
     'org_admin' => %i[read create update_own update_any resolve_conflicts
                       soft_delete restore accept_source_deletion
-                      manage_org].freeze
+                      deliver_source_data manage_org].freeze
   }.freeze
 
   def self.capable?(role, capability)
