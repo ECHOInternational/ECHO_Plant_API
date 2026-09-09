@@ -33,8 +33,8 @@ def fpi_payload_dir(path)
   dir
 end
 
-def fpi_publish_outcomes(path, out_dir)
-  uri = FpiPayloadStore.publish_outcomes(path, out_dir)
+def fpi_publish_outcomes(path, out_dir, run_id)
+  uri = FpiPayloadStore.publish_outcomes(path, out_dir, run_id: run_id)
   puts "  outcomes published to #{uri}" if uri
 end
 
@@ -118,7 +118,7 @@ namespace :fpi do
     next puts('  dry run: every row built, nothing sent') unless apply
 
     report_fpi_totals(totals, data_source)
-    fpi_publish_outcomes(path, out_dir)
+    fpi_publish_outcomes(path, out_dir, run_id)
     abort 'sync finished with errored or invalid rows' if FpiSyncRun.failed?(totals)
   rescue FpiSyncRun::PreflightFailed, FpiSyncRun::CapExceeded, FpiPlantFeed::IncompleteRow, FpiPlantFeed::VersionMismatch,
          FpiPayloadStore::NotFound => e
