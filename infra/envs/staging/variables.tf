@@ -96,6 +96,12 @@ variable "images_s3_bucket" {
   type = string
 }
 
+variable "source_payloads_s3_bucket" {
+  description = "Private bucket data-source connectors deliver sync payloads to; empty disables payload uploads."
+  type        = string
+  default     = ""
+}
+
 variable "cors_origins" {
   type = string
 }

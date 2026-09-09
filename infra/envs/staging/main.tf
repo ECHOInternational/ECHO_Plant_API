@@ -60,6 +60,7 @@ module "plant_api" {
 
   # S3
   images_s3_bucket = var.images_s3_bucket
+  source_payloads_s3_bucket = var.source_payloads_s3_bucket
 
   # Application
   cors_origins = var.cors_origins
