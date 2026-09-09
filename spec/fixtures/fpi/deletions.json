@@ -1,0 +1,12 @@
+{
+  "attributes_version": 1,
+  "deleted": {
+    "0B7B6B5C-1E7B-4B7E-9B3C-000000000001": {
+      "last_seen_snapshot_id": "75a1e28247034ace",
+      "scientific_name": "Gone plant",
+      "source_updated_at": "2026-09-09T01:44:29Z"
+    }
+  },
+  "previous_snapshot_id": "75a1e28247034ace",
+  "snapshot_id": "3c8a266f0bf557e1"
+}

@@ -51,6 +51,21 @@ module Types
     field :scientific_name, String,
           description: 'The scientific name for a plant (always render italicized)',
           null: true
+    field :scientific_name_authority, String,
+          description: 'The taxonomic authority of the scientific name, e.g. "L." or "(L.) Merr."; ' \
+                       'not part of the name itself',
+          null: true
+    field :safety_level, Types::SafetyLevelEnum,
+          description: 'The safety warning recorded against this plant. NONE means no warning ' \
+                       'recorded, not that the plant is safe',
+          null: false
+    field :safety_warning, Boolean,
+          description: 'True when a safety warning of any level is recorded',
+          null: false
+    field :edibility_uncertain, Boolean,
+          description: 'True when the source is unsure that this plant, or one of its parts, is ' \
+                       'edible at all',
+          null: false
     field :family_names, String,
           description: 'The family names for a plant',
           null: true
@@ -102,6 +117,17 @@ module Types
     # Translated Fields
     field :description, String,
           description: 'A translated description of a plant',
+          null: true
+    field :safety_note, String,
+          description: 'A translated note on the safety warning: which part, preparation or ' \
+                       'quantity is harmful',
+          null: true
+    field :habitat, String,
+          description: 'A translated description of the climate, soils and altitudes the plant ' \
+                       'grows in',
+          null: true
+    field :notes, String,
+          description: 'Translated free-form curator notes on the plant',
           null: true
     field :created_by, String,
           description: "The user ID of a plant's creator",

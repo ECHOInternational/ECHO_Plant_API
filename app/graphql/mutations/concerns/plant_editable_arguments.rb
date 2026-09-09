@@ -13,11 +13,13 @@ module Mutations
         asia_regional_info life_cycle_note n_accumulation_note biomass_production_note
         optimal_temperature_note optimal_rainfall_note seasonality_note
         early_growth_phase_note altitude_note ph_note growth_habits_note
+        safety_note habitat notes
       ].freeze
 
       BOOLEAN_FIELDS = %i[
         has_edible_green_leaves has_edible_immature_fruit
         has_edible_mature_fruit can_be_used_for_fodder
+        edibility_uncertain
       ].freeze
 
       def self.included(base)
@@ -30,6 +32,10 @@ module Mutations
         end
         base.argument :early_growth_phase, Types::EarlyGrowthPhaseEnum, required: false
         base.argument :life_cycle, Types::LifeCycleEnum, required: false
+        base.argument :safety_level, Types::SafetyLevelEnum, required: false,
+                                                             description: 'The recorded safety level; NONE means no warning recorded'
+        base.argument :scientific_name_authority, String, required: false,
+                                                          description: 'The taxonomic authority of the scientific name, e.g. "L."'
         RangeLiteralValidation::RANGE_FIELDS.each do |name|
           base.argument name, String, required: false,
                                       description: 'Postgres range literal, e.g. "[0,10]"'

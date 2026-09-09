@@ -15,7 +15,8 @@ module DraftableAttributes
   module_function
 
   PLANT = (
-    %w[scientific_name family_names family_id early_growth_phase life_cycle translations] +
+    %w[scientific_name scientific_name_authority family_names family_id early_growth_phase life_cycle
+       safety_level translations] +
     Mutations::Concerns::PlantEditableArguments::BOOLEAN_FIELDS.map(&:to_s) +
     Mutations::Concerns::RangeLiteralValidation::RANGE_FIELDS.map(&:to_s)
   ).freeze

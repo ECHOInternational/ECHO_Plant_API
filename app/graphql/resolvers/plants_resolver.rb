@@ -53,6 +53,15 @@ module Resolvers
            type: GraphQL::Types::ID,
            with: :apply_owned_by_organization_id_filter,
            description: 'Returns only records owned by the specified organization (Relay global ID).'
+    option :safety_level,
+           type: Types::SafetyLevelEnum,
+           with: :apply_safety_level_filter,
+           description: 'Restrict to records whose recorded safety level is exactly this value.'
+    option :has_safety_warning,
+           type: Boolean,
+           with: :apply_has_safety_warning_filter,
+           description: 'Restrict to records with (true) or without (false) a recorded safety ' \
+                        'warning of any level.'
     option :has_pending_changes,
            type: Boolean,
            with: :apply_has_pending_changes_filter,
@@ -68,6 +77,20 @@ module Resolvers
     # arguments that were never supplied at all), so without the guard a
     # `hasPendingChanges: $v` query with `$v: null` would silently fall into
     # the false branch and exclude every draft-bearing record.
+    # Both safety filters treat an explicit null as "filter absent", for the
+    # same reason as has_pending_changes below.
+    def apply_safety_level_filter(scope, value)
+      return scope if value.nil?
+
+      scope.where(safety_level: value)
+    end
+
+    def apply_has_safety_warning_filter(scope, value)
+      return scope if value.nil?
+
+      value ? scope.where.not(safety_level: 'none') : scope.where(safety_level: 'none')
+    end
+
     def apply_has_pending_changes_filter(scope, value)
       return scope if value.nil?
 

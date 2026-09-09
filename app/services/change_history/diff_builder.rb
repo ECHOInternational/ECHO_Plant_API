@@ -26,7 +26,7 @@ module ChangeHistory
     # constantize an item_type to read an enum.
     VISIBILITY_NAMES = { 0 => 'PRIVATE', 1 => 'PUBLIC', 2 => 'DRAFT', 3 => 'DELETED' }.freeze
 
-    ENUM_COLUMNS = %w[early_growth_phase life_cycle].freeze
+    ENUM_COLUMNS = %w[early_growth_phase life_cycle safety_level].freeze
 
     # Ownership columns kept in diffs (see class comment) but stored as raw
     # uuids: resolve them to a human label instead of leaking the id.

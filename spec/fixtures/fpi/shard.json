@@ -1,0 +1,45 @@
+{
+  "attributes_version": 1,
+  "plants": {
+    "495A01C7-C950-4432-B603-EFA260631E03": {
+      "attribution": "Altschul, S.V.R., 1973, Drugs and Foods from Little-known Plants.",
+      "category_set": ["265c782d-c9e0-4c7a-8ab1-af672572508c"],
+      "common_name_set": [["EN", "Bush carrot", false], ["EN", "Musk mallow", true], ["UND", "Abelmosco", false], ["UND", "Adusa", false]],
+      "cultivation": "Plants can be grown from seeds.",
+      "description": "A herb which grows as a perennial.\nIt grows to about 1 m high.",
+      "edibility_uncertain": "false",
+      "family_id": "a30dbd67-7b44-4acd-b649-f85f89de486c",
+      "family_names": "Malvaceae",
+      "habitat": "A tropical plant.",
+      "harvesting_and_seed_production": "",
+      "notes": "There are about 15 Abelmoschus species.",
+      "planting_instructions": "",
+      "safety_level": "none",
+      "safety_note": "",
+      "scientific_name": "Abelmoschus moschatus",
+      "scientific_name_authority": "Medik.",
+      "source_updated_at": "2026-09-08T23:25:05Z",
+      "uses": "The root tuber is eaten roasted."
+    },
+    "54C3709C-942C-42E3-BC6E-F117D50516EB": {
+      "attribution": "",
+      "category_set": [],
+      "common_name_set": [],
+      "cultivation": "",
+      "description": "A shrub.",
+      "edibility_uncertain": "true",
+      "family_id": "",
+      "family_names": "Nostocaceae",
+      "habitat": "",
+      "harvesting_and_seed_production": "",
+      "notes": "",
+      "planting_instructions": "",
+      "safety_level": "poisonous",
+      "safety_note": "Seeds (POISONOUS)",
+      "scientific_name": "Abrus precatorius",
+      "scientific_name_authority": "L.",
+      "source_updated_at": "2026-09-08T23:25:05Z",
+      "uses": ""
+    }
+  }
+}

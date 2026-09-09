@@ -11,6 +11,17 @@ module Types
       field :description, String,
             description: 'A translated description of a plant',
             null: true
+      field :safety_note, String,
+            description: 'A translated note on the safety warning: which part, preparation or ' \
+                         'quantity is harmful',
+            null: true
+      field :habitat, String,
+            description: 'A translated description of the climate, soils and altitudes the plant ' \
+                         'grows in',
+            null: true
+      field :notes, String,
+            description: 'Translated free-form curator notes on the plant',
+            null: true
       field :info_sheet_description, String,
             description: 'A translated description suitable for an ECHO Plant information sheet',
             null: true

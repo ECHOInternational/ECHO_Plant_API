@@ -122,11 +122,46 @@ RSpec.describe 'ResolveSyncConflict Mutation', type: :graphql_mutation do
         expect(plant.sync_state).to eq 'locally_modified'
       end
 
-      it 'adopts local attrs as the new source_snapshot' do
+      # A recurring source re-sends the same upstream value on every run, so
+      # the kept local value only survives if the INCOMING payload becomes the
+      # base (fpi-connector decision 30): the next run then sees incoming
+      # unchanged and local changed, and leaves the record alone.
+      it 'adopts the incoming payload as the new source_snapshot and keeps the local value' do
         execute(content_conflict, 'KEEP_LOCAL', user)
 
         plant.reload
-        expect(plant.source_snapshot).to be_present
+        expect(plant.source_snapshot).to eq(content_conflict.incoming_payload)
+        expect(plant.source_digest).to eq(Digest::SHA256.hexdigest(JSON.generate(content_conflict.incoming_payload.sort.to_h)))
+        expect(plant.scientific_name).to eq('Local Name')
+      end
+
+      it 'survives the next run re-sending the same divergent upstream value' do
+        execute(content_conflict, 'KEEP_LOCAL', user)
+
+        report = SourceSynchronizer.new(
+          data_source: data_source, model: Plant,
+          source_attributes: %w[scientific_name family_names], run_id: SecureRandom.hex(4)
+        ).apply([{ source_record_id: plant.source_record_id, deleted: false,
+                   attributes: content_conflict.incoming_payload, source_updated_at: 1.hour.ago }])
+
+        expect(report.locally_modified).to eq(1)
+        expect(report.applied).to eq(0)
+        expect(report.conflicts_created).to eq(0)
+        expect(plant.reload.scientific_name).to eq('Local Name')
+      end
+
+      it 'raises a fresh conflict when upstream changes again after keep_local' do
+        execute(content_conflict, 'KEEP_LOCAL', user)
+
+        report = SourceSynchronizer.new(
+          data_source: data_source, model: Plant,
+          source_attributes: %w[scientific_name family_names], run_id: SecureRandom.hex(4)
+        ).apply([{ source_record_id: plant.source_record_id, deleted: false,
+                   attributes: { 'scientific_name' => 'Newer Upstream Name', 'family_names' => 'Moringaceae' },
+                   source_updated_at: 1.hour.ago }])
+
+        expect(report.conflicts_created).to eq(1)
+        expect(plant.reload.scientific_name).to eq('Local Name')
       end
 
       # Regression: apply_keep_local adopted local state with
@@ -152,19 +187,23 @@ RSpec.describe 'ResolveSyncConflict Mutation', type: :graphql_mutation do
         execute(translated_conflict, 'KEEP_LOCAL', user)
         plant.reload
 
-        expect(plant.source_snapshot['description']).to eq('Curator text'),
-                                                        'the adopted snapshot must carry the translated value, not omit it'
+        expect(plant.source_snapshot['description']).to eq('Divergent upstream'),
+                                                        'the base is the incoming value the reviewer declined'
+        expect(Mobility.with_locale(:en) { plant.description }).to eq('Curator text'), 'the kept local value stays'
         expect(plant.source_digest).to be_present, 'a stale digest reopens the conflict by another route'
 
         report = SourceSynchronizer.new(
           data_source: data_source, model: Plant,
           source_attributes: %w[description], run_id: SecureRandom.hex(4)
         ).apply([{ source_record_id: plant.source_record_id, deleted: false,
-                   attributes: { 'description' => 'Curator text' },
+                   attributes: { 'description' => 'Divergent upstream' },
                    source_updated_at: 1.hour.ago }])
 
         expect(report.conflicts_created).to eq(0),
                                             'a resolved keep_local must not immediately reopen on the next sync'
+        expect(report.locally_modified).to eq(1)
+        expect(Mobility.with_locale(:en) { plant.reload.description }).to eq('Curator text'),
+                                                                          'the recurring upstream value must not overwrite the kept edit'
       end
 
       it 'follow-up sync with same incoming creates NO new conflict after keep_local' do
