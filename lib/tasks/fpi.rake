@@ -6,6 +6,7 @@ require Rails.root.join('lib/fpi_sync_run')
 require Rails.root.join('lib/fpi_rebaseline')
 require Rails.root.join('lib/fpi_conflict_rulings')
 require Rails.root.join('lib/fpi_rollback')
+require Rails.root.join('lib/fpi_payload_store')
 
 # The Food Plants International import (fpi-connector plan, milestone M2).
 #
@@ -15,13 +16,26 @@ require Rails.root.join('lib/fpi_rollback')
 #   APPLY=true RUN_ID=<id> bin/rails fpi:sync_plants[path/to/payload]
 #   bin/rails fpi:rebaseline                        # dry run; APPLY=true to write, after bumping PLANT_ATTRIBUTES_VERSION
 #
-# One convention for the namespace: a path argument, dry run by default and
-# APPLY=true to write, RUN_ID supplied by the connector (never random on a
-# real run), non-zero exit on any errored or invalid row. Reporting lives in
-# top-level helpers so each task body stays within RuboCop's limits.
+# One convention for the namespace: a payload argument (a directory, or
+# s3://bucket/fpi/payloads/<run_id> as delivered by the connector, fetched
+# into a temporary directory), dry run by default and APPLY=true to write,
+# RUN_ID supplied by the connector (never random on a real run), non-zero
+# exit on any errored or invalid row. Reporting lives in top-level helpers so
+# each task body stays within RuboCop's limits.
 
 def fpi_data_source!
   FpiDataSource.existing or abort 'run fpi:bootstrap first'
+end
+
+def fpi_payload_dir(path)
+  dir, files = FpiPayloadStore.materialize(path)
+  puts "fetched #{files.size} file(s) from #{path}: #{files.join(', ')}" if files.any?
+  dir
+end
+
+def fpi_publish_outcomes(path, out_dir)
+  uri = FpiPayloadStore.publish_outcomes(path, out_dir)
+  puts "  outcomes published to #{uri}" if uri
 end
 
 def report_fpi_preflight(path, facts)
@@ -78,10 +92,10 @@ end
 namespace :fpi do
   desc 'Check everything a run needs without sending a row'
   task :preflight, [:path] => :environment do |_t, args|
-    path = args[:path] or abort 'usage: bin/rails fpi:preflight[path/to/payload-dir]'
-    facts = FpiSyncRun.new(data_source: fpi_data_source!, payload_dir: path, run_id: 'preflight').preflight!
+    path = args[:path] or abort 'usage: bin/rails fpi:preflight[path/to/payload-dir | s3://bucket/fpi/payloads/<run_id>]'
+    facts = FpiSyncRun.new(data_source: fpi_data_source!, payload_dir: fpi_payload_dir(path), run_id: 'preflight').preflight!
     report_fpi_preflight(path, facts)
-  rescue FpiSyncRun::PreflightFailed => e
+  rescue FpiSyncRun::PreflightFailed, FpiPayloadStore::NotFound => e
     abort "preflight FAILED: #{e.message}"
   end
 end
@@ -89,22 +103,25 @@ end
 namespace :fpi do
   desc 'Sync FPI plants from a payload directory (dry run unless APPLY=true)'
   task :sync_plants, [:path] => :environment do |_t, args|
-    path = args[:path] or abort 'usage: bin/rails fpi:sync_plants[path/to/payload-dir]'
+    path = args[:path] or abort 'usage: bin/rails fpi:sync_plants[path/to/payload-dir | s3://bucket/fpi/payloads/<run_id>]'
     data_source = fpi_data_source!
     apply = ENV['APPLY'] == 'true'
     run_id = ENV['RUN_ID'].presence || (apply ? abort('RUN_ID is required with APPLY=true; the connector supplies it') : "dry-#{SecureRandom.hex(4)}")
 
     puts "#{apply ? 'SYNCING' : 'DRY RUN'} #{path} as run #{run_id}  (data source #{data_source.name}, #{data_source.id})"
     cap = ENV['CONFLICT_CAP'].presence&.to_i || FpiSyncRun::DEFAULT_CONFLICT_CAP
-    totals = FpiSyncRun.new(data_source: data_source, payload_dir: path, run_id: run_id, apply: apply,
-                            out_dir: ENV['OUT_DIR'].presence, conflict_cap: cap).run
+    out_dir = ENV['OUT_DIR'].presence || Rails.root.join('tmp', 'fpi', run_id)
+    totals = FpiSyncRun.new(data_source: data_source, payload_dir: fpi_payload_dir(path), run_id: run_id, apply: apply,
+                            out_dir: out_dir, conflict_cap: cap).run
     puts "  shards / rows: #{totals.shards} / #{totals.rows}"
     report_fpi_prediction(totals.prediction, cap)
     next puts('  dry run: every row built, nothing sent') unless apply
 
     report_fpi_totals(totals, data_source)
+    fpi_publish_outcomes(path, out_dir)
     abort 'sync finished with errored or invalid rows' if FpiSyncRun.failed?(totals)
-  rescue FpiSyncRun::PreflightFailed, FpiSyncRun::CapExceeded, FpiPlantFeed::IncompleteRow, FpiPlantFeed::VersionMismatch => e
+  rescue FpiSyncRun::PreflightFailed, FpiSyncRun::CapExceeded, FpiPlantFeed::IncompleteRow, FpiPlantFeed::VersionMismatch,
+         FpiPayloadStore::NotFound => e
     abort "sync refused: #{e.message}"
   end
 end

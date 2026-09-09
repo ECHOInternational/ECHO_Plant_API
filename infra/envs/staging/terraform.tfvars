@@ -67,7 +67,7 @@ source_payloads_s3_bucket = "plant-api-staging-source-payloads"
 cors_origins = "https://plant-api-staging.echocommunity.org,https://plant-admin-staging.echocommunity.org,http://localhost:5173"
 
 # Observability
-log_retention_days = 30
+log_retention_days = 90
 
 # Route53 — staging record managed by Terraform
 route53_record_enabled = true
