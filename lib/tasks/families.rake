@@ -29,6 +29,17 @@ end
 
 # A second `namespace :families do` block (Rake merges same-named namespaces
 # across a file) rather than one long block, so families:seed and
+# The plants families:reconcile may write to (see SCOPE in its description).
+def families_reconcile_scope(value)
+  case value
+  when 'unsourced' then Plant.where(data_source_id: nil)
+  when 'all' then Plant.all
+  else
+    source = DataSource.find_by(source_system_key: value) or abort "no data source with source_system_key #{value.inspect}"
+    Plant.where(data_source_id: source.id)
+  end
+end
+
 # families:reconcile each stay under Metrics/BlockLength without an
 # exclusion.
 namespace :families do
@@ -38,12 +49,19 @@ namespace :families do
     ENV:
       DRY_RUN     '1' (default) reports only, '0' applies the confident matches
       MIN_CONFIDENCE  auto-apply floor for a GBIF spelling fix (default 80)
+      SCOPE       'unsourced' (default) plants with no data source; 'all'; or a
+                  data source's source_system_key. Synchronised plants are
+                  excluded by default because their family_id is managed by
+                  the source's connector through the sync engine: a direct
+                  write here would bypass the three-way merge and be reversed
+                  or conflicted on the next run (fpi-connector risk G4).
   DESC
   task reconcile: :environment do
     dry_run = ENV.fetch('DRY_RUN', '1') != '0'
     floor = ENV.fetch('MIN_CONFIDENCE', '80').to_i
+    scope = families_reconcile_scope(ENV.fetch('SCOPE', 'unsourced'))
 
-    report = FamilyReconciler.new(min_confidence: floor, dry_run: dry_run).run
+    report = FamilyReconciler.new(min_confidence: floor, dry_run: dry_run, scope: scope).run
     puts report
   end
 end
