@@ -58,6 +58,11 @@ db_secret_password_key = "password"
 # S3 — shared images bucket
 images_s3_bucket = "images-us-east-1.echocommunity.org"
 
+# Private bucket the FPI connector delivers sync payloads to (createSourceUpload)
+# and fpi:sync_plants reads from. Created by hand (see infra/README.md); the
+# module wires the env var and the task-role policy from this value.
+source_payloads_s3_bucket = "plant-api-staging-source-payloads"
+
 # CORS origins — include the admin SPA origins (update as needed)
 cors_origins = "https://plant-api-staging.echocommunity.org,https://plant-admin-staging.echocommunity.org,http://localhost:5173"
 
