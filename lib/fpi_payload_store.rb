@@ -33,11 +33,14 @@ class FpiPayloadStore
     new(path, client: client).download
   end
 
-  # Copies the run's outcome files next to an S3 payload; nil for a local one.
-  def self.publish_outcomes(payload_path, out_dir, client: nil)
+  # Copies the run's outcome files beside an S3 payload, under
+  # <root>/outcomes/<run_id>/; nil for a local payload. The run id names the
+  # target, not the payload prefix: a second pass over the same payload keeps
+  # its own outcomes.
+  def self.publish_outcomes(payload_path, out_dir, run_id:, client: nil)
     return nil unless s3?(payload_path)
 
-    new(payload_path, client: client).upload_outcomes(Pathname(out_dir))
+    new(payload_path, client: client).upload_outcomes(Pathname(out_dir), run_id)
   end
 
   def initialize(uri, client: nil)
@@ -56,13 +59,15 @@ class FpiPayloadStore
     [dir, keys.map { |key| File.basename(key) }]
   end
 
-  def outcomes_prefix
-    swapped = prefix.sub(%r{(\A|/)payloads/}, '\1outcomes/')
-    swapped == prefix ? "#{prefix}/outcomes" : swapped
+  # fpi/payloads/<anything> -> fpi/outcomes/<run_id>; a prefix without a
+  # payloads segment gets outcomes/<run_id> appended.
+  def outcomes_prefix(run_id)
+    match = prefix.match(%r{\A(?<root>(?:.*?/)?)payloads/})
+    match ? "#{match[:root]}outcomes/#{run_id}" : "#{prefix}/outcomes/#{run_id}"
   end
 
-  def upload_outcomes(out_dir)
-    target = outcomes_prefix
+  def upload_outcomes(out_dir, run_id)
+    target = outcomes_prefix(run_id)
     out_dir.children.select(&:file?).sort.each do |file|
       @client.put_object(bucket: bucket, key: "#{target}/#{file.basename}", body: file.read,
                          content_type: CONTENT_TYPES.fetch(file.extname, 'application/octet-stream'))

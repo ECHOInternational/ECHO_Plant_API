@@ -13,7 +13,13 @@ RSpec.describe FpiPayloadStore do
   end
 
   it 'publishes nothing for a local payload' do
-    expect(described_class.publish_outcomes('/tmp/payload', '/tmp/out', client: client)).to be_nil
+    expect(described_class.publish_outcomes('/tmp/payload', '/tmp/out', run_id: 'run-1', client: client)).to be_nil
+  end
+
+  it 'names the outcomes prefix after the run id, beside the payloads segment' do
+    expect(described_class.new('s3://b/fpi/payloads/run-1', client: client).outcomes_prefix('run-2')).to eq('fpi/outcomes/run-2')
+    expect(described_class.new('s3://b/payloads/run-1', client: client).outcomes_prefix('run-2')).to eq('outcomes/run-2')
+    expect(described_class.new('s3://b/some/dir', client: client).outcomes_prefix('run-2')).to eq('some/dir/outcomes/run-2')
   end
 
   describe 'an s3:// payload' do
@@ -43,7 +49,7 @@ RSpec.describe FpiPayloadStore do
       expect { described_class.materialize(uri, client: client) }.to raise_error(described_class::NotFound, /payload-manifest.json/)
     end
 
-    it 'publishes the outcome files next to the payload under outcomes/' do
+    it 'publishes the outcome files beside the payload under outcomes/<run_id>/' do
       out = Pathname(Dir.mktmpdir('fpi-out'))
       out.join('summary.json').write('{}')
       out.join('outcomes.jsonl').write("{}\n")
@@ -52,9 +58,9 @@ RSpec.describe FpiPayloadStore do
         puts << [context.params[:key], context.params[:content_type], context.params[:body]]
         {}
       })
-      expect(described_class.publish_outcomes(uri, out, client: client)).to eq('s3://payloads/fpi/outcomes/run-1/')
-      expect(puts).to eq([['fpi/outcomes/run-1/outcomes.jsonl', 'application/x-ndjson', "{}\n"],
-                          ['fpi/outcomes/run-1/summary.json', 'application/json', '{}']])
+      expect(described_class.publish_outcomes(uri, out, run_id: 'run-1-pass2', client: client)).to eq('s3://payloads/fpi/outcomes/run-1-pass2/')
+      expect(puts).to eq([['fpi/outcomes/run-1-pass2/outcomes.jsonl', 'application/x-ndjson', "{}\n"],
+                          ['fpi/outcomes/run-1-pass2/summary.json', 'application/json', '{}']])
     ensure
       FileUtils.rm_rf(out) if out
     end
