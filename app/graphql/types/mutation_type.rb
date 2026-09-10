@@ -78,6 +78,9 @@ module Types
     field :create_source_upload,
           mutation: Mutations::CreateSourceUpload,
           description: "Returns a presigned S3 PUT URL for a data-source payload shard or source image, for the source organization's operators"
+    field :create_source_download,
+          mutation: Mutations::CreateSourceDownload,
+          description: "Returns a presigned S3 GET URL for one of a data source's run outcome files, for the source organization's operators"
     field :create_image,
           mutation: Mutations::CreateImage,
           description: 'Creates an image for a given API object'
