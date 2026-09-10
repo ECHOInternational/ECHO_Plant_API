@@ -291,15 +291,26 @@ jobs:
           }}')"
 
           echo "Starting one-off ECS task on ${CLUSTER}/${TASKDEF} ..."
-          TASK_ARN="$(aws ecs run-task --region "$REGION" --cluster "$CLUSTER" \
-            --task-definition "$TASKDEF" --launch-type FARGATE \
-            --network-configuration "$NETWORK" \
-            --overrides "$OVERRIDES" \
-            --started-by "gha-ops-backfill" \
-            --query 'tasks[0].taskArn' --output text)"
+          # run-task can answer with an empty tasks list and a failures list (a
+          # transient Fargate capacity or throttling refusal). Print the
+          # failures and retry once before giving up.
+          TASK_ARN=""
+          for attempt in 1 2; do
+            RESP="$(aws ecs run-task --region "$REGION" --cluster "$CLUSTER" \
+              --task-definition "$TASKDEF" --launch-type FARGATE \
+              --network-configuration "$NETWORK" \
+              --overrides "$OVERRIDES" \
+              --started-by "gha-ops-backfill" \
+              --output json)"
+            TASK_ARN="$(echo "$RESP" | jq -r '.tasks[0].taskArn // empty' 2>/dev/null || true)"
+            [ -n "$TASK_ARN" ] && break
+            echo "run-task returned no task (attempt ${attempt}):"
+            echo "$RESP" | jq -r '.failures[]? | "  failure: \(.reason // "?") \(.detail // "") \(.arn // "")"' 2>/dev/null || echo "  (no parseable response)"
+            [ "$attempt" = "1" ] && { echo "  retrying in 30 s ..."; sleep 30; }
+          done
 
-          if [ -z "$TASK_ARN" ] || [ "$TASK_ARN" = "None" ]; then
-            echo "::error::run-task returned no task ARN. Check IAM or capacity."
+          if [ -z "$TASK_ARN" ]; then
+            echo "::error::run-task returned no task ARN after two attempts; see the failures above. A capacity or throttling refusal is transient; an IAM denial is not."
             exit 1
           fi
           echo "Task ARN: $TASK_ARN"
