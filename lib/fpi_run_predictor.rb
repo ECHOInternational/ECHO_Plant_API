@@ -40,7 +40,7 @@ class FpiRunPredictor
   def classify(row)
     record = Plant.find_by(data_source_id: @data_source.id, source_record_id: row[:source_record_id])
     return row[:deleted] ? :unknown_deleted : :create if record.nil?
-    return :tombstone_kept if record.deleted_at.present? && !row[:deleted]
+    return :tombstone_kept if record.deleted_at.present?
     return :source_deletion if row[:deleted]
 
     compare(record, row[:attributes].stringify_keys.slice(*@attributes))

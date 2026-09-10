@@ -190,6 +190,18 @@ RSpec.describe SourceSynchronizer, type: :service do
       plant.reload
       expect(plant.scientific_name).to eq 'Moringa oleifera'
     end
+
+    it 'also wins when upstream repeats the deletion: no new source_deletion conflict' do
+      plant = synced_plant(src_id: 'src-5b')
+      plant.update_columns(deleted_at: Time.current)
+
+      report = nil
+      expect { report = sync.apply([row(source_record_id: 'src-5b', deleted: true)]) }.not_to change(SyncConflict, :count)
+
+      expect(report.tombstone_kept).to eq 1
+      expect(report.source_deletion_conflicts).to eq 0
+      expect(plant.reload.deleted_at).to be_present
+    end
   end
 
   # ---------------------------------------------------------------------------
