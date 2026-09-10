@@ -1,0 +1,320 @@
+name: Ops - FPI Sync
+
+# ============================================================================
+# Operator workflow for the Food Plants International import (fpi-connector
+# plan M3/M4, backlog A38). Runs one fpi rake task as a one-off Fargate task
+# from the environment's *migrate* task definition (decision 53), with a
+# command override, then echoes the task's CloudWatch log into the step
+# summary. Same pattern as ops-ownership-backfill.yml.
+#
+# TASKS
+#   bootstrap          mirror the FPI organization and create its DataSource (idempotent)
+#   preflight          check a delivered payload (digests, version, categories, principal); reads only
+#   sync_plants        dry run by default: build every row, send nothing; apply=true writes
+#   resolve_conflicts  apply a reviewer's rulings file (dry run by default)
+#   rebaseline         re-stamp merge bases after a PLANT_ATTRIBUTES_VERSION bump (dry run by default)
+#   rollback           remove the plants a run created (dry run by default)
+#
+# INPUTS
+#   payload   s3://<bucket>/fpi/payloads/<run_id>  for preflight and sync_plants
+#             s3://<bucket>/<key>.json             the rulings file for resolve_conflicts
+#             The connector delivers both through createSourceUpload; the task role
+#             reads the environment's private payloads bucket and nothing else.
+#   run_id    the connector's run id (required with sync_plants apply=true; the run
+#             to remove for rollback)
+#
+# SAFETY GATE
+#   apply=true requires confirm_apply to be exactly RUN-FPI-APPLY. Production also
+#   sits behind the production environment's required reviewers.
+#
+# NEVER TRIGGERS ITSELF -- workflow_dispatch only.
+# ============================================================================
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      task:
+        description: "fpi task to run"
+        required: true
+        type: choice
+        options:
+          - preflight
+          - sync_plants
+          - resolve_conflicts
+          - rebaseline
+          - rollback
+          - bootstrap
+      payload:
+        description: "s3:// payload prefix (preflight, sync_plants) or rulings file (resolve_conflicts)"
+        required: false
+        type: string
+        default: ""
+      run_id:
+        description: "Connector run id (sync_plants apply) or the run to remove (rollback)"
+        required: false
+        type: string
+        default: ""
+      apply:
+        description: "APPLY=true -- write to the database. Default false: dry run."
+        required: true
+        type: boolean
+        default: false
+      confirm_apply:
+        description: "Type exactly RUN-FPI-APPLY to allow apply=true. Leave empty for dry runs."
+        required: false
+        type: string
+        default: ""
+      conflict_cap:
+        description: "CONFLICT_CAP for sync_plants (default 500). Raise only for a change you expect."
+        required: false
+        type: string
+        default: ""
+
+# One fpi task per environment at a time: two syncs on one database would race.
+concurrency:
+  group: ops-fpi-${{ inputs.environment }}
+  cancel-in-progress: false
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  safety-gate:
+    name: Safety gate check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if apply requested without confirmation
+        if: inputs.apply == true
+        run: |
+          if [ "${{ inputs.confirm_apply }}" != "RUN-FPI-APPLY" ]; then
+            echo "::error::SAFETY GATE: apply=true requires confirm_apply to equal exactly 'RUN-FPI-APPLY'."
+            echo "::error::  Got: '${{ inputs.confirm_apply }}'. Re-run the workflow and type RUN-FPI-APPLY in that field."
+            exit 1
+          fi
+          echo "Safety gate passed: confirm_apply is 'RUN-FPI-APPLY'."
+
+      - name: Validate inputs for the task
+        run: |
+          case "${{ inputs.task }}" in
+            preflight|sync_plants|resolve_conflicts)
+              if [ -z "${{ inputs.payload }}" ]; then
+                echo "::error::task=${{ inputs.task }} requires payload (an s3:// URI)."
+                exit 1
+              fi
+              case "${{ inputs.payload }}" in
+                s3://*) ;;
+                *) echo "::error::payload must be an s3:// URI in the environment's private payloads bucket."; exit 1 ;;
+              esac
+              ;;
+          esac
+          if [ "${{ inputs.task }}" = "sync_plants" ] && [ "${{ inputs.apply }}" = "true" ] && [ -z "${{ inputs.run_id }}" ]; then
+            echo "::error::sync_plants with apply=true requires run_id (the connector supplies it)."
+            exit 1
+          fi
+          if [ "${{ inputs.task }}" = "rollback" ] && [ -z "${{ inputs.run_id }}" ]; then
+            echo "::error::rollback requires run_id; removing every FPI plant is not offered here."
+            exit 1
+          fi
+          echo "Inputs valid."
+
+  run-task:
+    name: Run fpi:${{ inputs.task }} (${{ inputs.environment }})
+    needs: safety-gate
+    runs-on: ubuntu-latest
+
+    # Scope the OIDC role to the chosen environment. Required-reviewer gate for
+    # production is configured in repo Settings -> Environments.
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+        env:
+          DEPLOY_ROLE_ARN: arn:aws:iam::382724554857:role/gha-plant-api-deploy
+
+      - name: Set ECS names
+        id: ecs
+        run: |
+          ENV_NAME="${{ inputs.environment }}"
+          echo "cluster=plant-api-${ENV_NAME}"          >> "$GITHUB_OUTPUT"
+          echo "service=plant-api-${ENV_NAME}-web"      >> "$GITHUB_OUTPUT"
+          echo "taskdef=plant-api-${ENV_NAME}-migrate"  >> "$GITHUB_OUTPUT"
+          echo "container=migrate"                      >> "$GITHUB_OUTPUT"
+          echo "log_group=/ecs/plant-api-${ENV_NAME}"   >> "$GITHUB_OUTPUT"
+
+      # ------------------------------------------------------------------
+      # Build the container override: the rake command as an argv array (no
+      # shell, so the bracketed rake argument is one element) plus the
+      # environment the task reads (APPLY, RUN_ID, CONFLICT_CAP).
+      # ------------------------------------------------------------------
+      - name: Build container override
+        id: cmd
+        env:
+          TASK: ${{ inputs.task }}
+          PAYLOAD: ${{ inputs.payload }}
+          RUN_ID: ${{ inputs.run_id }}
+          APPLY: ${{ inputs.apply }}
+          CONFLICT_CAP: ${{ inputs.conflict_cap }}
+          CONTAINER: ${{ steps.ecs.outputs.container }}
+        run: |
+          case "$TASK" in
+            bootstrap)         RAKE="fpi:bootstrap" ;;
+            preflight)         RAKE="fpi:preflight[${PAYLOAD}]" ;;
+            sync_plants)       RAKE="fpi:sync_plants[${PAYLOAD}]" ;;
+            resolve_conflicts) RAKE="fpi:resolve_conflicts[${PAYLOAD}]" ;;
+            rebaseline)        RAKE="fpi:rebaseline" ;;
+            rollback)          RAKE="fpi:rollback[${RUN_ID}]" ;;
+            *) echo "::error::unknown task ${TASK}"; exit 1 ;;
+          esac
+          ENVJSON="$(jq -cn --arg apply "$APPLY" --arg run_id "$RUN_ID" --arg cap "$CONFLICT_CAP" \
+            '[{name:"APPLY", value:$apply}]
+             + (if $run_id != "" then [{name:"RUN_ID", value:$run_id}] else [] end)
+             + (if $cap != "" then [{name:"CONFLICT_CAP", value:$cap}] else [] end)')"
+          OVERRIDES="$(jq -cn --arg name "$CONTAINER" --arg rake "$RAKE" --argjson env "$ENVJSON" \
+            '{containerOverrides:[{name:$name, command:["bundle","exec","rails",$rake], environment:$env}]}')"
+          echo "rake=${RAKE}" >> "$GITHUB_OUTPUT"
+          echo "overrides=${OVERRIDES}" >> "$GITHUB_OUTPUT"
+          echo "Rake: bundle exec rails '${RAKE}'  (APPLY=${APPLY} RUN_ID=${RUN_ID} CONFLICT_CAP=${CONFLICT_CAP})"
+
+      - name: Run rake task via ECS one-off task
+        id: run_task
+        env:
+          OVERRIDES: ${{ steps.cmd.outputs.overrides }}
+        run: |
+          REGION="${{ env.AWS_REGION }}"
+          CLUSTER="${{ steps.ecs.outputs.cluster }}"
+          SERVICE="${{ steps.ecs.outputs.service }}"
+          TASKDEF="${{ steps.ecs.outputs.taskdef }}"
+          CONTAINER="${{ steps.ecs.outputs.container }}"
+
+          # Borrow the live service's awsvpc network config.
+          NETCFG="$(aws ecs describe-services --region "$REGION" --cluster "$CLUSTER" \
+            --services "$SERVICE" \
+            --query 'services[0].networkConfiguration.awsvpcConfiguration' --output json)"
+          NETWORK="$(echo "$NETCFG" | jq -c '{awsvpcConfiguration:{
+            subnets: .subnets,
+            securityGroups: .securityGroups,
+            assignPublicIp: (.assignPublicIp // "DISABLED")
+          }}')"
+
+          echo "Starting one-off ECS task on ${CLUSTER}/${TASKDEF} ..."
+          TASK_ARN="$(aws ecs run-task --region "$REGION" --cluster "$CLUSTER" \
+            --task-definition "$TASKDEF" --launch-type FARGATE \
+            --network-configuration "$NETWORK" \
+            --overrides "$OVERRIDES" \
+            --started-by "gha-ops-fpi" \
+            --query 'tasks[0].taskArn' --output text)"
+
+          if [ -z "$TASK_ARN" ] || [ "$TASK_ARN" = "None" ]; then
+            echo "::error::run-task returned no task ARN. Check IAM or capacity."
+            exit 1
+          fi
+          echo "Task ARN: $TASK_ARN"
+          echo "task_arn=${TASK_ARN}" >> "$GITHUB_OUTPUT"
+          TASK_ID="${TASK_ARN##*/}"
+          echo "task_id=${TASK_ID}" >> "$GITHUB_OUTPUT"
+
+          # A full applied run takes about 40 minutes on the migrate task; the
+          # waiter gives up after 10, so loop on it.
+          echo "Waiting for task to stop ..."
+          for i in $(seq 1 12); do
+            if aws ecs wait tasks-stopped --region "$REGION" --cluster "$CLUSTER" --tasks "$TASK_ARN" 2>/dev/null; then
+              break
+            fi
+            echo "  still running after $((i * 10)) minutes ..."
+          done
+
+          EXIT_CODE="$(aws ecs describe-tasks --region "$REGION" --cluster "$CLUSTER" \
+            --tasks "$TASK_ARN" \
+            --query "tasks[0].containers[?name=='${CONTAINER}'].exitCode | [0]" \
+            --output text)"
+          REASON="$(aws ecs describe-tasks --region "$REGION" --cluster "$CLUSTER" \
+            --tasks "$TASK_ARN" \
+            --query 'tasks[0].stoppedReason' --output text)"
+
+          echo "Container '${CONTAINER}' exitCode=${EXIT_CODE} stoppedReason=${REASON}"
+          echo "exit_code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
+
+          if [ -z "$EXIT_CODE" ] || [ "$EXIT_CODE" = "None" ]; then
+            echo "::error::No exit code -- the container likely never started or is still running."
+            echo "::error::Check CloudWatch log group ${{ steps.ecs.outputs.log_group }}"
+            exit 1
+          fi
+          exit "$EXIT_CODE"
+
+      - name: Fetch CloudWatch task logs
+        if: always() && steps.run_task.outputs.task_id != ''
+        run: |
+          REGION="${{ env.AWS_REGION }}"
+          LOG_GROUP="${{ steps.ecs.outputs.log_group }}"
+          CONTAINER="${{ steps.ecs.outputs.container }}"
+          TASK_ID="${{ steps.run_task.outputs.task_id }}"
+          LOG_STREAM="${CONTAINER}/${CONTAINER}/${TASK_ID}"
+
+          for i in $(seq 1 6); do
+            if aws logs describe-log-streams --region "$REGION" \
+              --log-group-name "$LOG_GROUP" \
+              --log-stream-name-prefix "$LOG_STREAM" \
+              --query 'logStreams[0].logStreamName' --output text 2>/dev/null | grep -q "${TASK_ID}"; then
+              break
+            fi
+            echo "  Log stream not yet available; waiting 5s (attempt ${i}/6) ..."
+            sleep 5
+          done
+
+          LOGS="$(aws logs get-log-events --region "$REGION" \
+            --log-group-name "$LOG_GROUP" \
+            --log-stream-name "$LOG_STREAM" \
+            --start-from-head \
+            --query 'events[*].message' \
+            --output text 2>/dev/null || echo '(log stream unavailable or empty)')"
+
+          echo "TASK_LOGS<<LOGS_EOF" >> "$GITHUB_ENV"
+          echo "$LOGS" >> "$GITHUB_ENV"
+          echo "LOGS_EOF" >> "$GITHUB_ENV"
+
+      - name: Write step summary
+        if: always()
+        run: |
+          {
+            echo "## FPI sync -- \`fpi:${{ inputs.task }}\` on \`${{ inputs.environment }}\`"
+            echo ""
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| Rake | \`${{ steps.cmd.outputs.rake }}\` |"
+            echo "| APPLY | \`${{ inputs.apply }}\` |"
+            echo "| RUN_ID | \`${{ inputs.run_id }}\` |"
+            echo "| CONFLICT_CAP | \`${{ inputs.conflict_cap }}\` |"
+            echo "| Task ARN | \`${{ steps.run_task.outputs.task_arn }}\` |"
+            echo "| Exit code | \`${{ steps.run_task.outputs.exit_code }}\` |"
+            echo ""
+            if [ "${{ steps.run_task.outputs.exit_code }}" = "0" ]; then
+              echo "**Status: SUCCEEDED**"
+            else
+              echo "**Status: FAILED** (exit code \`${{ steps.run_task.outputs.exit_code }}\`)"
+            fi
+            echo ""
+            echo "### Task output (CloudWatch logs)"
+            echo '```'
+            echo "$TASK_LOGS"
+            echo '```'
+            echo ""
+            echo "Full logs: \`aws logs tail ${{ steps.ecs.outputs.log_group }} --log-stream-names ${{ steps.ecs.outputs.container }}/${{ steps.ecs.outputs.container }}/${{ steps.run_task.outputs.task_id }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -129,7 +129,8 @@ end
 namespace :fpi do
   desc 'Apply a rulings file to open FPI conflicts (dry run unless APPLY=true)'
   task :resolve_conflicts, [:path] => :environment do |_t, args|
-    path = args[:path] or abort 'usage: bin/rails fpi:resolve_conflicts[path/to/rulings.json]'
+    path = args[:path] or abort 'usage: bin/rails fpi:resolve_conflicts[path/to/rulings.json | s3://bucket/key.json]'
+    path = FpiPayloadStore.fetch_file(path)
     abort "file not found: #{path}" unless File.exist?(path)
     payload = JSON.parse(File.read(path))
     decision = payload['decision'].presence or abort "no 'decision' in #{path}: every rulings file names its decision-log entry"
