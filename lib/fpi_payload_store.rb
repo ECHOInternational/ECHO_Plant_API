@@ -33,6 +33,18 @@ class FpiPayloadStore
     new(path, client: client).download
   end
 
+  # One file (a reviewer's rulings file, say) fetched into a temporary
+  # directory; a local path passes through untouched.
+  def self.fetch_file(path, client: nil)
+    return path.to_s unless s3?(path)
+
+    store = new(path, client: client)
+    dir = Pathname(Dir.mktmpdir('fpi-file'))
+    target = dir.join(File.basename(store.prefix)).to_s
+    store.download_object(store.prefix, target)
+    target
+  end
+
   # Copies the run's outcome files beside an S3 payload, under
   # <root>/outcomes/<run_id>/; nil for a local payload. The run id names the
   # target, not the payload prefix: a second pass over the same payload keeps
@@ -61,6 +73,12 @@ class FpiPayloadStore
 
   # fpi/payloads/<anything> -> fpi/outcomes/<run_id>; a prefix without a
   # payloads segment gets outcomes/<run_id> appended.
+  def download_object(key, target)
+    @client.get_object(bucket: bucket, key: key, response_target: target)
+  rescue Aws::S3::Errors::NoSuchKey
+    raise NotFound, "no object at s3://#{bucket}/#{key}"
+  end
+
   def outcomes_prefix(run_id)
     match = prefix.match(%r{\A(?<root>(?:.*?/)?)payloads/})
     match ? "#{match[:root]}outcomes/#{run_id}" : "#{prefix}/outcomes/#{run_id}"

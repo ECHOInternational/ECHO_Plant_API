@@ -65,6 +65,22 @@ RSpec.describe FpiPayloadStore do
       FileUtils.rm_rf(out) if out
     end
 
+    it 'fetches a single file, such as a rulings file, into a temporary directory' do
+      client.stub_responses(:get_object, ->(context) { { body: "rulings for #{context.params[:key]}" } })
+      path = described_class.fetch_file('s3://payloads/fpi/payloads/rulings/run-1.json', client: client)
+      expect(File.basename(path)).to eq('run-1.json')
+      expect(File.read(path)).to eq('rulings for fpi/payloads/rulings/run-1.json')
+      expect(described_class.fetch_file('/tmp/rulings.json', client: client)).to eq('/tmp/rulings.json')
+    ensure
+      FileUtils.rm_rf(File.dirname(path)) if path&.start_with?(Dir.tmpdir)
+    end
+
+    it 'reports a missing object plainly' do
+      client.stub_responses(:get_object, 'NoSuchKey')
+      expect { described_class.fetch_file('s3://payloads/fpi/payloads/rulings/none.json', client: client) }
+        .to raise_error(described_class::NotFound, %r{no object at s3://payloads/fpi/payloads/rulings/none.json})
+    end
+
     it 'rejects anything that is not bucket/prefix' do
       expect { described_class.new('s3://bucket-only') }.to raise_error(ArgumentError, %r{bucket/prefix})
     end
