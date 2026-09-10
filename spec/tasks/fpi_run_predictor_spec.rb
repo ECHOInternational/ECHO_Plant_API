@@ -45,4 +45,10 @@ RSpec.describe FpiRunPredictor do
     expect(predictor.classify(row('nobase', name: 'Same'))).to eq(:synced)
     expect(predictor.classify(row('nobase', name: 'Other'))).to eq(:conflict)
   end
+
+  it 'lets a local tombstone win even when upstream repeats the deletion' do
+    plant('tomb-again', base_name: 'A', deleted_at: Time.current)
+    expect(predictor.classify(row('tomb-again', deleted: true))).to eq(:tombstone_kept)
+    expect(predictor.classify(row('tomb-again', name: 'A'))).to eq(:tombstone_kept)
+  end
 end

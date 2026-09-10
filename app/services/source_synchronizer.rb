@@ -177,8 +177,11 @@ class SourceSynchronizer
       return
     end
 
-    # Tombstone wins: if locally deleted, do nothing regardless of upstream
-    if record.deleted_at.present? && !deleted
+    # Tombstone wins: if locally deleted, do nothing regardless of upstream --
+    # whether upstream still carries the record or lists it as deleted too. An
+    # accepted source deletion must not be raised again by a later run that
+    # repeats the deletion (found in the FPI staging rehearsal, 2026-09-10).
+    if record.deleted_at.present?
       report.tombstone_kept += 1
       return
     end
