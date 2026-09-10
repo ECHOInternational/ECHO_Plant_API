@@ -70,6 +70,12 @@ db_secret_password_key = "password"
 # S3 — shared images bucket
 images_s3_bucket = "images-us-east-1.echocommunity.org"
 
+# S3 — private bucket for data-source payloads and run outcomes (createSourceUpload /
+# createSourceDownload, the fpi sync tasks). Created by hand 2026-09-10 with
+# fpi-connector docs/ops/create-production-payloads-bucket.sh; the module wires the
+# env var and the task-role policy.
+source_payloads_s3_bucket = "plant-api-production-source-payloads"
+
 # CORS origins — production
 cors_origins = "echocommunity.org,http://development.echocommunity.org:3000,https://plant-admin.echocommunity.org"
 
