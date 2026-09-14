@@ -1,12 +1,18 @@
 version: '3'
 volumes:
-  pgdata:
-    external: true
+  # Dedicated to this project. The old shared external "pgdata" volume is also
+  # mounted by ECHOcommunity at postgres:16.8, and a data directory can only
+  # belong to one major version, so sharing it made the two projects exclusive.
+  plant_api_pgdata:
 services:
   db:
-    image: postgres:9.6
+    # Matches the production RDS instance (echocommunity-production, 16.13).
+    # Must be 12+ regardless: db/structure.sql is dumped by a modern pg_dump
+    # and contains "SET default_table_access_method".
+    # Keep in step with the service image in .github/workflows/ci.yml.
+    image: postgres:16.13
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - plant_api_pgdata:/var/lib/postgresql/data
     environment:
       - POSTGRES_HOST_AUTH_METHOD=trust
   pgadmin:
