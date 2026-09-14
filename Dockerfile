@@ -85,7 +85,19 @@ CMD ["bundle", "exec", "puma", "-C", "config/puma.rb"]
 # --------------------------------------------------------------------------- #
 FROM base AS development
 
+# postgresql-client comes from the PGDG repo, pinned to 16, because bookworm's
+# own package is 15 and pg_dump refuses a newer server. docker-compose.yml runs
+# postgres:16.13 (production RDS), so db:migrate could not rewrite
+# db/structure.sql with the bookworm client. Keep this major version in step
+# with the db image in docker-compose.yml.
 RUN apt-get update -qq \
+ && apt-get install -y --no-install-recommends ca-certificates curl gnupg \
+ && install -d /usr/share/postgresql-common/pgdg \
+ && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+      -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+ && echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" \
+      > /etc/apt/sources.list.d/pgdg.list \
+ && apt-get update -qq \
  && apt-get install -y --no-install-recommends \
       build-essential \
       libpq-dev \
@@ -94,7 +106,7 @@ RUN apt-get update -qq \
       # needs just libyaml-0.so.2, which the ruby-slim base already ships - do not
       # add libyaml here in a slimming pass, and do not remove it from base)
       git \
-      postgresql-client \
+      postgresql-client-16 \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /myapp
