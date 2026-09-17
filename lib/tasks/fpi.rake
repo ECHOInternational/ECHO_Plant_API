@@ -7,6 +7,7 @@ require Rails.root.join('lib/fpi_rebaseline')
 require Rails.root.join('lib/fpi_conflict_rulings')
 require Rails.root.join('lib/fpi_rollback')
 require Rails.root.join('lib/fpi_payload_store')
+require Rails.root.join('lib/fpi_image_importer')
 
 # The Food Plants International import (fpi-connector plan, milestone M2).
 #
@@ -170,5 +171,24 @@ namespace :fpi do
     report_fpi_rebaseline(FpiRebaseline.new(data_source: data_source, apply: apply).run, data_source, apply)
   rescue FpiRebaseline::Refused => e
     abort "rebaseline refused: #{e.message}"
+  end
+end
+
+namespace :fpi do
+  desc 'Write FPI image rows from an image manifest (dry run unless APPLY=true)'
+  task :import_images, [:path] => :environment do |_t, args|
+    path = args[:path] or abort 'usage: bin/rails fpi:import_images[path/to/images-manifest.json | s3://bucket/fpi/payloads/<run_id>/images-manifest.json]'
+    data_source = fpi_data_source!
+    apply = ENV['APPLY'] == 'true'
+    run_id = ENV['RUN_ID'].presence || (apply ? abort('RUN_ID is required with APPLY=true; the connector supplies it') : "dry-#{SecureRandom.hex(4)}")
+    manifest = JSON.parse(File.read(FpiPayloadStore.fetch_file(path)))
+
+    puts "#{apply ? 'IMPORTING' : 'DRY RUN'} #{manifest['images']&.size.to_i} image(s) from #{path} as run #{run_id}  (data source #{data_source.name})"
+    totals = FpiImageImporter.new(data_source: data_source, run_id: run_id, apply: apply).run(manifest)
+    totals.to_h.each { |label, count| puts format('  %-24<label>s %<count>d', label: label, count: count) }
+    totals.details.first(20).each { |d| puts "    #{d}" }
+    abort 'image import finished with invalid rows' if apply && totals.invalid.positive?
+  rescue FpiImageImporter::InvalidManifest, JSON::ParserError, FpiPayloadStore::NotFound => e
+    abort "image import refused: #{e.message}"
   end
 end

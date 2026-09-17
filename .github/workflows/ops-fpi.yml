@@ -14,10 +14,12 @@ name: Ops - FPI Sync
 #   resolve_conflicts  apply a reviewer's rulings file (dry run by default)
 #   rebaseline         re-stamp merge bases after a PLANT_ATTRIBUTES_VERSION bump (dry run by default)
 #   rollback           remove the plants a run created (dry run by default)
+#   import_images      write image rows from an image manifest (dry run by default)
 #
 # INPUTS
 #   payload   s3://<bucket>/fpi/payloads/<run_id>  for preflight and sync_plants
-#             s3://<bucket>/<key>.json             the rulings file for resolve_conflicts
+#             s3://<bucket>/<key>.json             the rulings file for resolve_conflicts,
+#                                                  or images-manifest.json for import_images
 #             The connector delivers both through createSourceUpload; the task role
 #             reads the environment's private payloads bucket and nothing else.
 #   run_id    the connector's run id (required with sync_plants apply=true; the run
@@ -51,6 +53,7 @@ on:
           - rebaseline
           - rollback
           - bootstrap
+          - import_images
       payload:
         description: "s3:// payload prefix (preflight, sync_plants) or rulings file (resolve_conflicts)"
         required: false
@@ -107,7 +110,7 @@ jobs:
       - name: Validate inputs for the task
         run: |
           case "${{ inputs.task }}" in
-            preflight|sync_plants|resolve_conflicts)
+            preflight|sync_plants|resolve_conflicts|import_images)
               if [ -z "${{ inputs.payload }}" ]; then
                 echo "::error::task=${{ inputs.task }} requires payload (an s3:// URI)."
                 exit 1
@@ -118,8 +121,8 @@ jobs:
               esac
               ;;
           esac
-          if [ "${{ inputs.task }}" = "sync_plants" ] && [ "${{ inputs.apply }}" = "true" ] && [ -z "${{ inputs.run_id }}" ]; then
-            echo "::error::sync_plants with apply=true requires run_id (the connector supplies it)."
+          if { [ "${{ inputs.task }}" = "sync_plants" ] || [ "${{ inputs.task }}" = "import_images" ]; } && [ "${{ inputs.apply }}" = "true" ] && [ -z "${{ inputs.run_id }}" ]; then
+            echo "::error::${{ inputs.task }} with apply=true requires run_id (the connector supplies it)."
             exit 1
           fi
           if [ "${{ inputs.task }}" = "rollback" ] && [ -z "${{ inputs.run_id }}" ]; then
@@ -181,6 +184,7 @@ jobs:
             resolve_conflicts) RAKE="fpi:resolve_conflicts[${PAYLOAD}]" ;;
             rebaseline)        RAKE="fpi:rebaseline" ;;
             rollback)          RAKE="fpi:rollback[${RUN_ID}]" ;;
+            import_images)     RAKE="fpi:import_images[${PAYLOAD}]" ;;
             *) echo "::error::unknown task ${TASK}"; exit 1 ;;
           esac
           ENVJSON="$(jq -cn --arg apply "$APPLY" --arg run_id "$RUN_ID" --arg cap "$CONFLICT_CAP" \

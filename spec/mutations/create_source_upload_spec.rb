@@ -76,9 +76,15 @@ RSpec.describe 'Create Source Upload Mutation', type: :graphql_mutation do
     expect(result.dig('data', 'createSourceUpload', 'sourceUpload', 'key')).to eq('fpi/payloads/run-1/shard-000.json')
   end
 
-  it 'puts images under the images bucket keyed by kind and source row' do
-    result = execute(org_user(role: 'steward'), kind: 'DRAWING', name: '6.jpg', contentType: 'image/jpeg')
-    expect(result.dig('data', 'createSourceUpload', 'sourceUpload')).to include('bucket' => Mutations::CreateSourceUpload.images_bucket, 'key' => 'fpi/drawings/6.jpg')
+  it 'puts images under the images bucket keyed by kind, source row and content hash, prefixed outside production' do
+    result = execute(org_user(role: 'steward'), kind: 'DRAWING', name: '6-0123456789ab.jpg', contentType: 'image/jpeg')
+    upload = result.dig('data', 'createSourceUpload', 'sourceUpload')
+    expect(upload).to include('bucket' => Mutations::CreateSourceUpload.images_bucket, 'key' => 'test/fpi/drawings/6-0123456789ab.jpg')
+  end
+
+  it 'writes production image keys without an environment prefix' do
+    allow(Rails.env).to receive(:production?).and_return(true)
+    expect(Mutations::CreateSourceUpload.image_key('fpi', 'photo', '12-0123456789ab.jpg')).to eq('fpi/photos/12-0123456789ab.jpg')
   end
 
   it 'refuses unsafe names in the payload' do
@@ -87,6 +93,8 @@ RSpec.describe 'Create Source Upload Mutation', type: :graphql_mutation do
     expect(result.dig('data', 'createSourceUpload', 'errors', 0)).to include('field' => 'name', 'code' => 422)
     result = execute(org_user(role: 'steward'), kind: 'PHOTO', name: 'not-a-rowid.jpg', contentType: 'image/jpeg')
     expect(result.dig('data', 'createSourceUpload', 'errors', 0, 'message')).to match(/ROWID/)
+    result = execute(org_user(role: 'steward'), kind: 'PHOTO', name: '12.jpg', contentType: 'image/jpeg')
+    expect(result.dig('data', 'createSourceUpload', 'errors', 0, 'message')).to match(/12 hex/)
   end
 
   it 'says so when the environment has no payloads bucket' do

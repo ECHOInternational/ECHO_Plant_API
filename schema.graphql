@@ -2252,7 +2252,7 @@ input CreateSourceUploadInput {
   kind: SourceUploadKind!
 
   """
-  Payload: a relative path such as "<run_id>/shard-000.json". Image: "<ROWID>.<ext>".
+  Payload: a relative path such as "<run_id>/shard-000.json". Image: "<ROWID>-<12 hex of the SHA-256>.<ext>".
   """
   name: String!
 

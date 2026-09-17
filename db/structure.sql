@@ -364,7 +364,10 @@ CREATE TABLE public.images (
     imageable_type character varying NOT NULL,
     imageable_id uuid NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    data_source_id uuid,
+    source_record_id character varying,
+    source_digest character varying
 );
 
 
@@ -528,7 +531,7 @@ CREATE TABLE public.plants (
     edibility_uncertain boolean DEFAULT false NOT NULL,
     safety_warning boolean GENERATED ALWAYS AS (((safety_level)::text <> 'none'::text)) STORED,
     scientific_name_authority character varying,
-    CONSTRAINT plants_safety_level_check CHECK (((safety_level)::text = ANY ((ARRAY['none'::character varying, 'caution'::character varying, 'poisonous'::character varying])::text[])))
+    CONSTRAINT plants_safety_level_check CHECK (((safety_level)::text = ANY (ARRAY[('none'::character varying)::text, ('caution'::character varying)::text, ('poisonous'::character varying)::text])))
 );
 
 
@@ -1223,6 +1226,13 @@ CREATE INDEX index_image_attributes_images_on_image_attribute_id ON public.image
 --
 
 CREATE INDEX index_image_attributes_images_on_image_id ON public.image_attributes_images USING btree (image_id);
+
+
+--
+-- Name: index_images_on_data_source_and_source_record; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_images_on_data_source_and_source_record ON public.images USING btree (data_source_id, source_record_id) WHERE (data_source_id IS NOT NULL);
 
 
 --
@@ -1930,6 +1940,14 @@ ALTER TABLE ONLY public.growth_habits_plants
 
 
 --
+-- Name: images fk_rails_c7eecc3c8a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.images
+    ADD CONSTRAINT fk_rails_c7eecc3c8a FOREIGN KEY (data_source_id) REFERENCES public.data_sources(id);
+
+
+--
 -- Name: categories_plants fk_rails_d29e534eae; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2088,6 +2106,7 @@ ALTER TABLE ONLY public.varieties
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260917000001'),
 ('20260909000002'),
 ('20260909000001'),
 ('20260825000001'),
