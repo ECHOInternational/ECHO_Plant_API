@@ -16,14 +16,17 @@ module Mutations
   # in the organization that owns the data source (stewards and org admins).
   class CreateSourceUpload < BaseMutation
     PAYLOAD_NAME = %r{\A[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*\z}
-    IMAGE_NAME = /\A[0-9]+\.(?:jpe?g|png|gif|webp)\z/
+    # <ROWID>-<first 12 hex of the SHA-256>.<ext>: changed bytes get a new key,
+    # so the CDN's long cache never serves a stale picture, and keys are not a
+    # bare counter (risk H1).
+    IMAGE_NAME = /\A[0-9]+-[0-9a-f]{12}\.(?:jpe?g|png|gif|webp)\z/
     EXPIRY = 15.minutes
 
     argument :source_system_key, String, required: true,
                                          description: 'The data source delivering the file, e.g. "fpi".'
     argument :kind, Types::SourceUploadKindEnum, required: true
     argument :name, String, required: true,
-                            description: 'Payload: a relative path such as "<run_id>/shard-000.json". Image: "<ROWID>.<ext>".'
+                            description: 'Payload: a relative path such as "<run_id>/shard-000.json". Image: "<ROWID>-<12 hex of the SHA-256>.<ext>".'
     argument :content_type, String, required: true,
                                     description: 'MIME type of the file, bound to the presigned URL.'
 
@@ -66,6 +69,14 @@ module Mutations
       ENV.fetch('IMAGES_S3_BUCKET', 'images-us-east-1.echocommunity.org')
     end
 
+    # Staging and production share the public images bucket (risk H2), so every
+    # environment but production writes under its own top-level prefix and a
+    # rehearsal can never overwrite or shadow a production object.
+    def self.image_key(source_system_key, kind, name)
+      prefix = Rails.env.production? ? '' : "#{Rails.env}/"
+      "#{prefix}#{source_system_key}/#{kind}s/#{name}"
+    end
+
     private
 
     def load_data_source!(source_system_key)
@@ -83,9 +94,9 @@ module Mutations
 
         [bucket, "#{prefix}/payloads/#{name}"]
       else
-        raise ArgumentError, 'image name must be <ROWID>.<jpg|jpeg|png|gif|webp>' unless IMAGE_NAME.match?(name)
+        raise ArgumentError, 'image name must be <ROWID>-<12 hex>.<jpg|jpeg|png|gif|webp>' unless IMAGE_NAME.match?(name)
 
-        [self.class.images_bucket, "#{prefix}/#{kind}s/#{name}"]
+        [self.class.images_bucket, self.class.image_key(prefix, kind, name)]
       end
     end
 
