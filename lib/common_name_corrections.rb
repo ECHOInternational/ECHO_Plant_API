@@ -48,9 +48,9 @@ class CommonNameCorrections
   Result = Struct.new(:deleted, :retagged, :already_gone, :missing_plants,
                       :would_collide, :via_synonym, :lines, :errors, keyword_init: true)
 
-  def initialize(apply: false)
+  def initialize(apply: false, finder: PlantFinder.new)
     @apply = apply
-    @finder = PlantFinder.new
+    @finder = finder
   end
 
   def run

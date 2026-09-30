@@ -23,6 +23,12 @@ class CommonNameCorrections
     UNKNOWN = 'not found here, and unknown to Catalogue of Life'
     LOOKUP_FAILED = 'Catalogue of Life lookup failed'
 
+    # The Catalogue of Life client is injectable so a spec can exercise every
+    # branch of the cascade without reaching the network.
+    def initialize(catalogue_of_life: nil)
+      @catalogue_of_life = catalogue_of_life
+    end
+
     def call(name)
       plant = exact(name) || insensitive(name)
       return Found.new(plant: plant) if plant
