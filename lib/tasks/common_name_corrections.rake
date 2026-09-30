@@ -22,9 +22,11 @@ namespace :plants do
     result.lines.each { |line| puts "  #{line}" }
 
     puts format("\n%<d>d deleted, %<r>d retagged, %<g>d already gone, " \
-                '%<c>d collided (deleted instead), %<m>d plants not found',
+                '%<c>d collided (deleted instead), %<v>d reached through a synonym, ' \
+                '%<m>d plants not found',
                 d: result.deleted, r: result.retagged, g: result.already_gone,
-                c: result.would_collide, m: result.missing_plants)
+                c: result.would_collide, v: result.via_synonym,
+                m: result.missing_plants)
 
     if result.errors.any?
       puts "\nerrors:"
