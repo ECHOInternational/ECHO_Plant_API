@@ -17,7 +17,17 @@
 #
 # Every correction names the plant by scientific name rather than by UUID: a
 # reviewer can check each line against the page it fixes without a lookup.
+#
+# Finding the plant is not a string equality: a name in this file may be the
+# one Catalogue of Life now treats as a synonym while the plant is stored under
+# the accepted name, or the reverse. A bare "not found" would report a fix as
+# impossible when the plant is sitting there under another name, so the lookup
+# falls back to COL rather than giving up. It never guesses: an ambiguous
+# synonym (COL's own status for a name with no single successor) is reported,
+# not resolved, and a name COL has never heard of stays not found.
 class CommonNameCorrections
+  require Rails.root.join('lib/catalogue_of_life')
+
   # A bare genus name tells a reader nothing, and the same string arrived on
   # three different species. Removing it leaves those plants with their other
   # names; inventing a wattle's common name would be worse than having none.
@@ -45,7 +55,7 @@ class CommonNameCorrections
   ].freeze
 
   Result = Struct.new(:deleted, :retagged, :already_gone, :missing_plants,
-                      :would_collide, :lines, :errors, keyword_init: true)
+                      :would_collide, :resolved_by_col, :lines, :errors, keyword_init: true)
 
   def initialize(apply: false)
     @apply = apply
@@ -53,7 +63,7 @@ class CommonNameCorrections
 
   def run
     result = Result.new(deleted: 0, retagged: 0, already_gone: 0, missing_plants: 0,
-                        would_collide: 0, lines: [], errors: [])
+                        would_collide: 0, resolved_by_col: 0, lines: [], errors: [])
     DELETIONS.each { |c| delete_one(c, result) }
     RETAGS.each    { |c| retag_one(c, result) }
     result
@@ -61,13 +71,62 @@ class CommonNameCorrections
 
   private
 
+  # Exact, then case-insensitive, then Catalogue of Life. Each step says how it
+  # found the plant, so a reviewer reading the dry run can see when a
+  # correction was applied to a plant filed under a different name.
   def plant_for(correction, result)
-    plant = Plant.unscoped.find_by(scientific_name: correction[:scientific_name])
-    if plant.nil?
-      result.missing_plants += 1
-      result.lines << "MISSING PLANT  #{correction[:scientific_name]}"
+    name = correction[:scientific_name]
+    plant = Plant.unscoped.find_by(scientific_name: name) ||
+            Plant.unscoped.where('lower(scientific_name) = ?', name.downcase).first
+    return plant if plant
+
+    plant_via_catalogue_of_life(name, result)
+  end
+
+  def plant_via_catalogue_of_life(name, result)
+    lookup = catalogue_of_life.synonym_lookup(name)
+    case lookup[:status]
+    when :synonym      then plant_under_accepted_name(name, lookup[:accepted_name], result)
+    when :accepted     then report_accepted_but_absent(name, result)
+    when :ambiguous_synonym
+      # COL has no single successor for this name. Picking one would be a
+      # guess about which taxon the page means, so report and stop.
+      note_missing(name, result,
+                   'Catalogue of Life calls it an ambiguous synonym; it has no single '                    'accepted successor, so no plant was chosen')
+    when :error        then note_missing(name, result, 'Catalogue of Life lookup failed')
+    else                    note_missing(name, result, 'not found here and unknown to Catalogue of Life')
     end
-    plant
+  end
+
+  def plant_under_accepted_name(name, accepted, result)
+    plant = accepted && (Plant.unscoped.find_by(scientific_name: accepted) ||
+                         Plant.unscoped.where('lower(scientific_name) = ?', accepted.downcase).first)
+    if plant
+      result.resolved_by_col += 1
+      result.lines << "resolved       #{name} is a synonym; matched the plant filed as #{accepted}"
+      return plant
+    end
+
+    note_missing(name, result,
+                 "Catalogue of Life gives the accepted name as #{accepted || 'unknown'}, "                  'and no plant is filed under either')
+  end
+
+  # The name we hold is the accepted one, so the plant is either absent or
+  # filed under a synonym. Finding the latter would mean a COL lookup per
+  # candidate plant; say what is known instead of doing that for six rows.
+  def report_accepted_but_absent(name, result)
+    note_missing(name, result,
+                 'Catalogue of Life accepts this name, so the plant is either absent or '                  'filed under a synonym of it')
+  end
+
+  def note_missing(name, result, reason)
+    result.missing_plants += 1
+    result.lines << "MISSING PLANT  #{name} — #{reason}"
+    nil
+  end
+
+  def catalogue_of_life
+    @catalogue_of_life ||= CatalogueOfLife.new
   end
 
   # Matched case-insensitively on (name, language), the same way the sync

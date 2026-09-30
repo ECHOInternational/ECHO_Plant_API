@@ -7,6 +7,11 @@ require Rails.root.join('lib/common_name_corrections')
 #
 #   bin/rails plants:correct_common_names              # dry run, changes nothing
 #   APPLY=true bin/rails plants:correct_common_names   # write
+#
+# A plant not found by name is looked up in Catalogue of Life before it is
+# reported missing, so a correction still lands when the plant is filed under a
+# synonym. That step reaches the network; the run works without it, reporting
+# the failed lookup rather than crashing.
 namespace :plants do
   desc 'Correct six mistagged/duplicate common names (dry run unless APPLY=true)'
   task correct_common_names: :environment do
