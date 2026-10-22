@@ -90,6 +90,9 @@ module Types
     field :delete_image,
           mutation: Mutations::DeleteImage,
           description: 'Deletes an image'
+    field :reorder_images,
+          mutation: Mutations::ReorderImages,
+          description: "Sets the display order of a record's images"
     field :add_image_attributes_to_image,
           mutation: Mutations::AddImageAttributesToImage,
           description: 'Adds image attributes to an image'
