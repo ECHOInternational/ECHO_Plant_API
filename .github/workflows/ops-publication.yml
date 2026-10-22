@@ -1,0 +1,354 @@
+name: Ops - Publication waves
+
+# ============================================================================
+# Operator workflow for FPI publication waves (FPI plan API-15). Runs one
+# publication:* rake task as a one-off Fargate task from the environment's
+# *migrate* task definition, with a command override, then echoes the task's
+# CloudWatch log into the step summary. Same pattern as ops-fpi.yml.
+# Operator guide: docs/fpi-publication.md.
+#
+# TASKS
+#   report          read-only: the quality bar and every wave
+#   set_rule        set the data source's publication_rule from `rule` (dry run by default)
+#   publish_wave    publish a wave (dry run by default: counts + digest)
+#   unpublish_wave  roll a wave back exactly (dry run by default)
+#
+# SAFETY GATE (.github/scripts/publication-gate.sh, tested by
+# spec/workflows/ops_publication_gate_spec.rb)
+#   apply=true requires confirm_apply to be exactly PUBLISH-WAVE-APPLY, and
+#   publish_wave with apply=true also requires expected_digest from the dry
+#   run. The run-task job runs only when the gate job reports allowed=true.
+#   Production also sits behind the production environment's required
+#   reviewers.
+#
+# MUTUAL EXCLUSION
+#   The concurrency group (shared with ops-fpi.yml) is only a second layer:
+#   GitHub keeps one pending run per group and silently cancels an older
+#   pending one, and the waiter below gives up after 2 hours while the ECS task
+#   keeps running. The real exclusion is the shared ops advisory lock
+#   (lib/ops_advisory_lock.rb) that every publication and fpi write task takes;
+#   a second task refuses to start while it is held.
+#
+# PUBLIC LOGS
+#   This repository is public, so these logs are world-readable. The tasks
+#   print counts, wave keys and digests only, never a name or an email.
+#   (Wave NOTES are a rake-only option; GitHub allows 10 dispatch inputs.)
+#
+# NEVER TRIGGERS ITSELF -- workflow_dispatch only.
+# ============================================================================
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      task:
+        description: "publication task to run"
+        required: true
+        type: choice
+        options:
+          - report
+          - publish_wave
+          - unpublish_wave
+          - set_rule
+      wave_key:
+        description: "Wave key, e.g. fpi-w1 (publish_wave, unpublish_wave)"
+        required: false
+        type: string
+        default: ""
+      selector:
+        description: "publish_wave selector"
+        required: false
+        type: choice
+        default: quality
+        options:
+          - quality
+          - remaining
+          - ids
+      ids:
+        description: "Comma-separated plant UUIDs (selector ids)"
+        required: false
+        type: string
+        default: ""
+      limit:
+        description: "Keep only the first N selected plants by id (a canary); empty for all"
+        required: false
+        type: string
+        default: ""
+      expected_digest:
+        description: "Digest printed by the publish_wave dry run (required to apply publish_wave)"
+        required: false
+        type: string
+        default: ""
+      rule:
+        description: "set_rule: the publication rule as JSON"
+        required: false
+        type: string
+        default: ""
+      apply:
+        description: "APPLY=true -- write to the database. Default false: dry run."
+        required: true
+        type: boolean
+        default: false
+      confirm_apply:
+        description: "Type exactly PUBLISH-WAVE-APPLY to allow apply=true. Leave empty for dry runs."
+        required: false
+        type: string
+        default: ""
+
+concurrency:
+  group: ops-fpi-${{ inputs.environment }}
+  cancel-in-progress: false
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  gate:
+    name: Safety gate check
+    runs-on: ubuntu-latest
+    outputs:
+      allowed: ${{ steps.gate.outputs.allowed }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check inputs
+        id: gate
+        env:
+          TASK: ${{ inputs.task }}
+          APPLY: ${{ inputs.apply }}
+          CONFIRM_APPLY: ${{ inputs.confirm_apply }}
+          EXPECTED_DIGEST: ${{ inputs.expected_digest }}
+          WAVE_KEY: ${{ inputs.wave_key }}
+          SELECTOR: ${{ inputs.selector }}
+          IDS: ${{ inputs.ids }}
+          LIMIT: ${{ inputs.limit }}
+          RULE: ${{ inputs.rule }}
+        run: bash .github/scripts/publication-gate.sh
+
+  run-task:
+    name: Run publication:${{ inputs.task }} (${{ inputs.environment }})
+    needs: gate
+    if: needs.gate.outputs.allowed == 'true'
+    runs-on: ubuntu-latest
+
+    # Scope the OIDC role to the chosen environment. Required-reviewer gate for
+    # production is configured in repo Settings -> Environments.
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+        env:
+          DEPLOY_ROLE_ARN: arn:aws:iam::382724554857:role/gha-plant-api-deploy
+
+      - name: Set ECS names
+        id: ecs
+        env:
+          ENV_NAME: ${{ inputs.environment }}
+        run: |
+          {
+            echo "cluster=plant-api-${ENV_NAME}"
+            echo "service=plant-api-${ENV_NAME}-web"
+            echo "taskdef=plant-api-${ENV_NAME}-migrate"
+            echo "container=migrate"
+            echo "log_group=/ecs/plant-api-${ENV_NAME}"
+          } >> "$GITHUB_OUTPUT"
+
+      # The rake command as an argv array (no shell, so the bracketed rake
+      # argument is one element) plus the environment the task reads.
+      - name: Build container override
+        id: cmd
+        env:
+          TASK: ${{ inputs.task }}
+          WAVE_KEY: ${{ inputs.wave_key }}
+          APPLY: ${{ inputs.apply }}
+          SELECTOR: ${{ inputs.selector }}
+          IDS: ${{ inputs.ids }}
+          LIMIT: ${{ inputs.limit }}
+          EXPECTED_DIGEST: ${{ inputs.expected_digest }}
+          RULE: ${{ inputs.rule }}
+          CONTAINER: ${{ steps.ecs.outputs.container }}
+        run: |
+          case "$TASK" in
+            report)         RAKE="publication:report" ;;
+            set_rule)       RAKE="publication:set_rule" ;;
+            publish_wave)   RAKE="publication:publish_wave[${WAVE_KEY}]" ;;
+            unpublish_wave) RAKE="publication:unpublish_wave[${WAVE_KEY}]" ;;
+            *) echo "::error::unknown task ${TASK}"; exit 1 ;;
+          esac
+          ENVJSON="$(jq -cn --arg apply "$APPLY" --arg selector "$SELECTOR" --arg ids "$IDS" --arg limit "$LIMIT" \
+            --arg digest "$EXPECTED_DIGEST" --arg rule "$RULE" \
+            '[{name:"APPLY", value:$apply}, {name:"SELECTOR", value:$selector}]
+             + (if $ids != "" then [{name:"IDS", value:$ids}] else [] end)
+             + (if $limit != "" then [{name:"LIMIT", value:$limit}] else [] end)
+             + (if $digest != "" then [{name:"EXPECTED_DIGEST", value:$digest}] else [] end)
+             + (if $rule != "" then [{name:"RULE", value:$rule}] else [] end)')"
+          OVERRIDES="$(jq -cn --arg name "$CONTAINER" --arg rake "$RAKE" --argjson env "$ENVJSON" \
+            '{containerOverrides:[{name:$name, command:["bundle","exec","rails",$rake], environment:$env}]}')"
+          {
+            echo "rake=${RAKE}"
+            echo "overrides=${OVERRIDES}"
+          } >> "$GITHUB_OUTPUT"
+          echo "Rake: bundle exec rails '${RAKE}'  (APPLY=${APPLY} SELECTOR=${SELECTOR} LIMIT=${LIMIT})"
+
+      - name: Run rake task via ECS one-off task
+        id: run_task
+        env:
+          OVERRIDES: ${{ steps.cmd.outputs.overrides }}
+          CLUSTER: ${{ steps.ecs.outputs.cluster }}
+          SERVICE: ${{ steps.ecs.outputs.service }}
+          TASKDEF: ${{ steps.ecs.outputs.taskdef }}
+          CONTAINER: ${{ steps.ecs.outputs.container }}
+          LOG_GROUP: ${{ steps.ecs.outputs.log_group }}
+        run: |
+          REGION="${AWS_REGION}"
+
+          # Borrow the live service's awsvpc network config.
+          NETCFG="$(aws ecs describe-services --region "$REGION" --cluster "$CLUSTER" \
+            --services "$SERVICE" \
+            --query 'services[0].networkConfiguration.awsvpcConfiguration' --output json)"
+          NETWORK="$(echo "$NETCFG" | jq -c '{awsvpcConfiguration:{
+            subnets: .subnets,
+            securityGroups: .securityGroups,
+            assignPublicIp: (.assignPublicIp // "DISABLED")
+          }}')"
+
+          echo "Starting one-off ECS task on ${CLUSTER}/${TASKDEF} ..."
+          # run-task can answer with an empty tasks list and a failures list (a
+          # transient capacity or throttling refusal). Retry once.
+          TASK_ARN=""
+          for attempt in 1 2; do
+            RESP="$(aws ecs run-task --region "$REGION" --cluster "$CLUSTER" \
+              --task-definition "$TASKDEF" --launch-type FARGATE \
+              --network-configuration "$NETWORK" \
+              --overrides "$OVERRIDES" \
+              --started-by "gha-ops-publication" \
+              --output json)"
+            TASK_ARN="$(echo "$RESP" | jq -r '.tasks[0].taskArn // empty' 2>/dev/null || true)"
+            [ -n "$TASK_ARN" ] && break
+            echo "run-task returned no task (attempt ${attempt}):"
+            echo "$RESP" | jq -r '.failures[]? | "  failure: \(.reason // "?") \(.detail // "") \(.arn // "")"' 2>/dev/null || echo "  (no parseable response)"
+            [ "$attempt" = "1" ] && { echo "  retrying in 30 s ..."; sleep 30; }
+          done
+
+          if [ -z "$TASK_ARN" ]; then
+            echo "::error::run-task returned no task ARN after two attempts; see the failures above."
+            exit 1
+          fi
+          TASK_ID="${TASK_ARN##*/}"
+          {
+            echo "task_arn=${TASK_ARN}"
+            echo "task_id=${TASK_ID}"
+          } >> "$GITHUB_OUTPUT"
+          echo "Task ARN: $TASK_ARN"
+
+          # The waiter gives up after 10 minutes, so loop on it (2 hours). If
+          # this job gives up, the ECS task keeps running and keeps the ops
+          # advisory lock until it finishes; do not start another write task.
+          echo "Waiting for task to stop ..."
+          for i in $(seq 1 12); do
+            if aws ecs wait tasks-stopped --region "$REGION" --cluster "$CLUSTER" --tasks "$TASK_ARN" 2>/dev/null; then
+              break
+            fi
+            echo "  still running after $((i * 10)) minutes ..."
+          done
+
+          EXIT_CODE="$(aws ecs describe-tasks --region "$REGION" --cluster "$CLUSTER" \
+            --tasks "$TASK_ARN" \
+            --query "tasks[0].containers[?name=='${CONTAINER}'].exitCode | [0]" \
+            --output text)"
+          REASON="$(aws ecs describe-tasks --region "$REGION" --cluster "$CLUSTER" \
+            --tasks "$TASK_ARN" \
+            --query 'tasks[0].stoppedReason' --output text)"
+
+          echo "Container '${CONTAINER}' exitCode=${EXIT_CODE} stoppedReason=${REASON}"
+          echo "exit_code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
+
+          if [ -z "$EXIT_CODE" ] || [ "$EXIT_CODE" = "None" ]; then
+            echo "::error::No exit code -- the container likely never started or is still running."
+            echo "::error::Check CloudWatch log group ${LOG_GROUP}"
+            exit 1
+          fi
+          exit "$EXIT_CODE"
+
+      - name: Fetch CloudWatch task logs
+        if: always() && steps.run_task.outputs.task_id != ''
+        env:
+          LOG_GROUP: ${{ steps.ecs.outputs.log_group }}
+          CONTAINER: ${{ steps.ecs.outputs.container }}
+          TASK_ID: ${{ steps.run_task.outputs.task_id }}
+        run: |
+          LOG_STREAM="${CONTAINER}/${CONTAINER}/${TASK_ID}"
+          for i in $(seq 1 6); do
+            if aws logs describe-log-streams --region "$AWS_REGION" \
+              --log-group-name "$LOG_GROUP" \
+              --log-stream-name-prefix "$LOG_STREAM" \
+              --query 'logStreams[0].logStreamName' --output text 2>/dev/null | grep -q "${TASK_ID}"; then
+              break
+            fi
+            echo "  Log stream not yet available; waiting 5s (attempt ${i}/6) ..."
+            sleep 5
+          done
+
+          LOGS="$(aws logs get-log-events --region "$AWS_REGION" \
+            --log-group-name "$LOG_GROUP" \
+            --log-stream-name "$LOG_STREAM" \
+            --start-from-head \
+            --query 'events[*].message' \
+            --output text 2>/dev/null || echo '(log stream unavailable or empty)')"
+
+          {
+            echo "TASK_LOGS<<LOGS_EOF"
+            echo "$LOGS"
+            echo "LOGS_EOF"
+          } >> "$GITHUB_ENV"
+
+      - name: Write step summary
+        if: always()
+        env:
+          TASK: ${{ inputs.task }}
+          TARGET: ${{ inputs.environment }}
+          RAKE: ${{ steps.cmd.outputs.rake }}
+          APPLY: ${{ inputs.apply }}
+          SELECTOR: ${{ inputs.selector }}
+          LIMIT: ${{ inputs.limit }}
+          TASK_ARN: ${{ steps.run_task.outputs.task_arn }}
+          EXIT_CODE: ${{ steps.run_task.outputs.exit_code }}
+        run: |
+          {
+            echo "## Publication -- \`publication:${TASK}\` on \`${TARGET}\`"
+            echo ""
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| Rake | \`${RAKE}\` |"
+            echo "| APPLY | \`${APPLY}\` |"
+            echo "| SELECTOR | \`${SELECTOR}\` |"
+            echo "| LIMIT | \`${LIMIT}\` |"
+            echo "| Task ARN | \`${TASK_ARN}\` |"
+            echo "| Exit code | \`${EXIT_CODE}\` |"
+            echo ""
+            if [ "$EXIT_CODE" = "0" ]; then
+              echo "**Status: SUCCEEDED**"
+            else
+              echo "**Status: FAILED** (exit code \`${EXIT_CODE}\`)"
+            fi
+            echo ""
+            echo "### Task output (CloudWatch logs)"
+            echo '```'
+            echo "${TASK_LOGS:-}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

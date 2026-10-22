@@ -8,7 +8,7 @@ require 'rake'
 # interleave. GitHub's concurrency group is only a second layer: it keeps a
 # single pending run per group and silently cancels an older one, so the lock
 # is what actually guarantees mutual exclusion.
-RSpec.describe 'ops advisory lock on FPI write tasks', type: :task do
+RSpec.describe 'ops advisory lock on FPI and publication write tasks', type: :task do
   # task name => arguments the task accepts. The lock is taken before any
   # argument or data-source checks, so none of these need real data.
   write_tasks = {
@@ -17,7 +17,10 @@ RSpec.describe 'ops advisory lock on FPI write tasks', type: :task do
     'fpi:resolve_conflicts' => ['tmp/no-such-rulings.json'],
     'fpi:rollback' => ['some-run'],
     'fpi:rebaseline' => [],
-    'fpi:import_images' => ['tmp/no-such-manifest.json']
+    'fpi:import_images' => ['tmp/no-such-manifest.json'],
+    'publication:set_rule' => [],
+    'publication:publish_wave' => ['fpi-w1'],
+    'publication:unpublish_wave' => ['fpi-w1']
   }.freeze
 
   before(:all) do
@@ -77,6 +80,14 @@ RSpec.describe 'ops advisory lock on FPI write tasks', type: :task do
       expect { run('fpi:preflight', ['tmp/no-such-payload']) }
         .to raise_error(SystemExit)
         .and output(/run fpi:bootstrap first|preflight FAILED/).to_stderr
+    end
+
+    it 'publication:report does not take the lock' do
+      hold_lock!
+
+      expect { run('publication:report', []) }
+        .to raise_error(SystemExit)
+        .and output(/no data source with source_system_key "fpi"/).to_stderr
     end
   end
 end
