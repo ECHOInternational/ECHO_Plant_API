@@ -17,6 +17,16 @@ RSpec.describe 'Mobile reads contract', type: :graphql_query do
 
   before { Mobility.locale = nil }
 
+  # The unpaginated plants() calls below (anyName, full download) return only
+  # plants of an allow-listed organization (MobileFullSyncGuard), so their
+  # fixtures belong to the default allow-listed one, as ECHO's plants do in
+  # production. spec/contracts/mobile_full_sync_guard_contract_spec.rb covers
+  # the guard itself.
+  let(:allow_listed_org) do
+    org_id = MobileFullSyncConfig::DEFAULT_OWNER_ORG_IDS.first
+    Organization.find_by(id: org_id) || create(:organization, :real, external_idp_id: org_id, name: 'ECHO')
+  end
+
   # -----------------------------------------------------------------
   # plants(anyName: "...") -- getPlantNameList
   # anyName matches scientific_name (iLIKE) OR common_names.name.
@@ -24,7 +34,9 @@ RSpec.describe 'Mobile reads contract', type: :graphql_query do
   # no Mobility required.
   # -----------------------------------------------------------------
   describe 'anyName search (Plants/action.js getPlantNameList)' do
-    let!(:plant) { create(:plant, :public, scientific_name: 'Solanum lycopersicum') }
+    let!(:plant) do
+      create(:plant, :public, scientific_name: 'Solanum lycopersicum', owner_organization_id: allow_listed_org.id)
+    end
 
     let(:query) do
       <<~GRAPHQL
@@ -69,7 +81,9 @@ RSpec.describe 'Mobile reads contract', type: :graphql_query do
   # createdBy createdAt } }
   # -----------------------------------------------------------------
   describe 'full plants download (Plants/action.js getAllPlants)' do
-    let!(:plant) { create(:plant, :public, scientific_name: 'Manihot esculenta') }
+    let!(:plant) do
+      create(:plant, :public, scientific_name: 'Manihot esculenta', owner_organization_id: allow_listed_org.id)
+    end
 
     let(:query) do
       <<~GRAPHQL

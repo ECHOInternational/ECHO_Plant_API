@@ -47,7 +47,7 @@ RSpec.describe 'plants safety fields and filters', type: :graphql_query do
     let(:query) do
       <<~GRAPHQL
         query($level: SafetyLevel, $warning: Boolean) {
-          plants(safetyLevel: $level, hasSafetyWarning: $warning, visibility: PUBLIC) {
+          plants(first: 100, safetyLevel: $level, hasSafetyWarning: $warning, visibility: PUBLIC) {
             nodes { scientificName }
           }
         }

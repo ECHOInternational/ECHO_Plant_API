@@ -10,7 +10,7 @@ RSpec.describe 'Plants Query', type: :graphql_query do
   it 'returns a list of plants' do
     query_string = <<-GRAPHQL
 		query{
-			plants{
+			plants(first: 100){
 				nodes {
 					id
 					scientificName
@@ -39,7 +39,7 @@ RSpec.describe 'Plants Query', type: :graphql_query do
   it 'does not load plants for which the user is not authorized' do
     query_string = <<-GRAPHQL
 		query{
-			plants{
+			plants(first: 100){
 				nodes{
 					id
 					scientificName
@@ -71,7 +71,7 @@ RSpec.describe 'Plants Query', type: :graphql_query do
 
       query_string = <<-GRAPHQL
 			query{
-				plants{
+				plants(first: 100){
 					nodes{
 						id
 						scientificName
@@ -109,7 +109,7 @@ RSpec.describe 'Plants Query', type: :graphql_query do
 
           @query_string = <<-GRAPHQL
 						query($visibility: Visibility){
-							plants(visibility: $visibility){
+							plants(first: 100, visibility: $visibility){
 								nodes{
 									id
 									scientificName
@@ -178,7 +178,7 @@ RSpec.describe 'Plants Query', type: :graphql_query do
 
           @query_string = <<-GRAPHQL
 						query($visibility: Visibility){
-							plants(visibility: $visibility){
+							plants(first: 100, visibility: $visibility){
 								nodes{
 									id
 									scientificName
@@ -214,7 +214,7 @@ RSpec.describe 'Plants Query', type: :graphql_query do
     before :each do
       @query_string = <<-GRAPHQL
 				query($sortDirection: SortDirection){
-					plants(sortDirection: $sortDirection){
+					plants(first: 100, sortDirection: $sortDirection){
 						nodes{
 							id
 							scientificName
@@ -255,7 +255,7 @@ RSpec.describe 'Plants Query', type: :graphql_query do
 
       @query_string = <<-GRAPHQL
 				query($ownedBy: String){
-					plants(ownedBy: $ownedBy, visibility: PRIVATE){
+					plants(first: 100, ownedBy: $ownedBy, visibility: PRIVATE){
 						nodes{
 							id
 							scientificName
@@ -301,7 +301,7 @@ RSpec.describe 'Plants Query', type: :graphql_query do
       @other = create(:organization, :real)
       @query_string = <<-GRAPHQL
         query($orgId: ID){
-          plants(ownedByOrganizationId: $orgId, visibility: PRIVATE){
+          plants(first: 100, ownedByOrganizationId: $orgId, visibility: PRIVATE){
             nodes{ id }
             totalCount
           }
@@ -343,7 +343,7 @@ RSpec.describe 'Plants Query', type: :graphql_query do
 
       @query_string = <<-GRAPHQL
 				query($scientificName: String){
-					plants(scientificName: $scientificName, visibility: PUBLIC){
+					plants(first: 100, scientificName: $scientificName, visibility: PUBLIC){
 						nodes{
 							id
 							scientificName
@@ -386,7 +386,7 @@ RSpec.describe 'Plants Query', type: :graphql_query do
 
       @query_string = <<-GRAPHQL
 				query($name: String){
-					plants(name: $name, visibility: PUBLIC){
+					plants(first: 100, name: $name, visibility: PUBLIC){
 						nodes{
 							id
               scientificName
@@ -458,7 +458,7 @@ RSpec.describe 'Plants Query', type: :graphql_query do
 
       @query_string = <<-GRAPHQL
 				query($anyName: String){
-					plants(anyName: $anyName, visibility: PUBLIC){
+					plants(first: 100, anyName: $anyName, visibility: PUBLIC){
 						nodes{
 							id
               scientificName
@@ -543,7 +543,7 @@ RSpec.describe 'Plants Query', type: :graphql_query do
     it 'counts all available records' do
       query_string = <<-GRAPHQL
 			query{
-				plants{
+				plants(first: 100){
 					totalCount
 				}
 			}
@@ -561,7 +561,7 @@ RSpec.describe 'Plants Query', type: :graphql_query do
     it 'does not count unavailable records' do
       query_string = <<-GRAPHQL
 			query{
-				plants{
+				plants(first: 100){
 					totalCount
 				}
 			}

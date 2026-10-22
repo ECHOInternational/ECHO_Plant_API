@@ -73,7 +73,8 @@ module Types
           description: 'The plants belonging to this family',
           null: false,
           connection: true,
-          max_page_size: 100
+          max_page_size: 100,
+          connection_extension: Extensions::PageSizeLimitedConnectionExtension
 
     def plants
       # Chained .order calls, not a single hash: .i18n rewrites a translated

@@ -39,7 +39,11 @@ module Types
     field :tolerances, resolver: Resolvers::TolerancesResolver, connection: true
     field :growth_habits, resolver: Resolvers::GrowthHabitsResolver, connection: true
     field :koppen_zones, resolver: Resolvers::KoppenZonesResolver, connection: true
-    field :plants, resolver: Resolvers::PlantsResolver, connection: true
+    # GuardedConnectionExtension: an unpaginated call (the frozen mobile app's
+    # full sync) returns only allow-listed owner organizations, and first:/
+    # last: above 500 is rejected. See MobileFullSyncGuard.
+    field :plants, resolver: Resolvers::PlantsResolver, connection: true,
+                   connection_extension: Extensions::GuardedConnectionExtension
     field :varieties, resolver: Resolvers::VarietiesResolver, connection: true
     field :specimens, resolver: Resolvers::SpecimensResolver, connection: true
     field :locations, resolver: Resolvers::LocationsResolver, connection: true

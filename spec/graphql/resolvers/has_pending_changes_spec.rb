@@ -11,7 +11,7 @@ RSpec.describe 'plants(hasPendingChanges:)' do
 
   def ids(value, current_user: user)
     result = PlantApiSchema.execute(
-      'query($v: Boolean) { plants(hasPendingChanges: $v) { edges { node { uuid } } } }',
+      'query($v: Boolean) { plants(first: 100, hasPendingChanges: $v) { edges { node { uuid } } } }',
       context: { current_user: current_user }, variables: { v: value }
     )
     result.dig('data', 'plants', 'edges').map { |e| e.dig('node', 'uuid') }
