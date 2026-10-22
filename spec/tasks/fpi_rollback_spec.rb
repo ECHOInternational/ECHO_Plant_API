@@ -68,4 +68,52 @@ RSpec.describe FpiRollback do
     expect(Plant.where(data_source_id: data_source.id).count).to eq(0)
     expect(Plant.exists?(echo_plant.id)).to be(true)
   end
+
+  describe 'the publication guard (API-16)' do
+    def publish_all(key = 'fpi-w1')
+      selection = PublicationWaves::Selector.new(data_source: data_source, selector: 'remaining').select
+      PublicationWaves::Publisher.new(data_source: data_source, key: key, selector: 'remaining', apply: true,
+                                      expected_digest: selection.digest).run.wave
+    end
+
+    it 'refuses to remove public plants and reports them in a dry run' do
+      import('run-1')
+      Plant.where(data_source_id: data_source.id).first.update!(visibility: :public)
+
+      plan = described_class.new(data_source: data_source, run_id: 'run-1').run
+      expect(plan).to have_attributes(public_plants: 1, wave_items: 0)
+      expect { described_class.new(data_source: data_source, run_id: 'run-1', apply: true).run }
+        .to raise_error(FpiRollback::Refused, /1 public plant.*FORCE_PUBLIC=true/)
+      expect(Plant.where(data_source_id: data_source.id).count).to eq(2)
+    end
+
+    it 'refuses to remove plants of an active wave, even ones an editor made private again' do
+      import('run-1')
+      publish_all
+      Plant.where(data_source_id: data_source.id).find_each { |p| p.update!(visibility: :private) }
+
+      expect { described_class.new(data_source: data_source, run_id: 'run-1', apply: true).run }
+        .to raise_error(FpiRollback::Refused, /in an active publication wave/)
+    end
+
+    it 'removes them with force_public, keeping the wave ledger so unpublish_wave counts them as missing' do
+      import('run-1')
+      wave = publish_all
+      plan = described_class.new(data_source: data_source, run_id: 'run-1', apply: true, force_public: true).run
+      expect(plan).to have_attributes(plants: 2, public_plants: 2, wave_items: 2)
+      expect(Plant.where(data_source_id: data_source.id).count).to eq(0)
+      expect(wave.items.count).to eq(2)
+
+      result = PublicationWaves::Unpublisher.new(data_source: data_source, key: wave.key, apply: true).run
+      expect(result.counts['items']).to eq('Plant publish missing' => 2)
+    end
+
+    it 'does not count plants of an unpublished wave' do
+      import('run-1')
+      wave = publish_all
+      PublicationWaves::Unpublisher.new(data_source: data_source, key: wave.key, apply: true).run
+      plan = described_class.new(data_source: data_source, run_id: 'run-1', apply: true).run
+      expect(plan).to have_attributes(plants: 2, public_plants: 0, wave_items: 0)
+    end
+  end
 end

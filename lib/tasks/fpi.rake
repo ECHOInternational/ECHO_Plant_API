@@ -16,6 +16,7 @@ require Rails.root.join('lib/fpi_image_importer')
 #   bin/rails fpi:sync_plants[path/to/payload]      # dry run: build every row, send nothing
 #   APPLY=true RUN_ID=<id> bin/rails fpi:sync_plants[path/to/payload]
 #   bin/rails fpi:rebaseline                        # dry run; APPLY=true to write, after bumping PLANT_ATTRIBUTES_VERSION
+#   bin/rails fpi:rollback[run_id]                  # dry run; APPLY=true removes; FORCE_PUBLIC=true to remove public or wave plants
 #
 # One convention for the namespace: a payload argument (a directory, or
 # s3://bucket/fpi/payloads/<run_id> as delivered by the connector, fetched
@@ -175,11 +176,14 @@ namespace :fpi do
     run_id = args[:run_id].presence
     abort 'usage: bin/rails fpi:rollback[run_id]  (or ALL=true to remove every FPI plant)' if run_id.nil? && ENV['ALL'] != 'true'
     apply = ENV['APPLY'] == 'true'
-    plan = FpiRollback.new(data_source: fpi_data_source!, run_id: run_id, apply: apply).run
+    plan = FpiRollback.new(data_source: fpi_data_source!, run_id: run_id, apply: apply, force_public: ENV['FORCE_PUBLIC'] == 'true').run
     puts "#{apply ? 'ROLLED BACK' : 'DRY RUN'} #{run_id ? "run #{run_id}" : 'every FPI plant'}"
-    { plants: plan.plants, record_drafts: plan.record_drafts, sync_conflicts: plan.sync_conflicts, images: plan.images, versions: plan.versions }
+    { plants: plan.plants, record_drafts: plan.record_drafts, sync_conflicts: plan.sync_conflicts, images: plan.images, versions: plan.versions,
+      public_plants: plan.public_plants, active_wave_items: plan.wave_items }
       .merge(plan.joins).each { |label, count| puts format('  %-24<label>s %<count>d', label: label, count: count) }
     puts '  S3 objects behind image rows are not removed here.' if plan.images.positive?
+  rescue FpiRollback::Refused => e
+    abort "rollback refused: #{e.message}"
   ensure
     ops_lock&.release
   end

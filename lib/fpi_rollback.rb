@@ -15,22 +15,35 @@ require Rails.root.join('lib/fpi_data_source')
 # new versions are written on the way out. S3 objects behind image rows are
 # not touched here; the image phase owns them.
 #
+# Publication guard (FPI plan API-16): once waves make FPI plants public,
+# removing one takes a page off the public site. An apply therefore refuses
+# while any target plant is public or belongs to an active publication wave,
+# unless force_public (FORCE_PUBLIC=true) is given. The dry run reports both
+# counts without refusing. Forced removal keeps the wave items: they are the
+# ledger, and unpublish_wave counts their rows as missing.
+#
 # Dry run by default: counts only. Rehearse on staging before any production
 # use.
 class FpiRollback
   JOIN_TABLES = %w[common_names categories_plants antinutrients_plants growth_habits_plants koppen_zones_plants tolerances_plants].freeze
 
-  Plan = Struct.new(:run_id, :plants, :record_drafts, :sync_conflicts, :images, :versions, :joins, :applied, keyword_init: true)
+  Plan = Struct.new(:run_id, :plants, :record_drafts, :sync_conflicts, :images, :versions, :joins, :public_plants,
+                    :wave_items, :applied, keyword_init: true)
 
-  def initialize(data_source:, run_id: nil, apply: false)
+  # Raised when an apply would remove public or wave plants without force_public.
+  class Refused < StandardError; end
+
+  def initialize(data_source:, run_id: nil, apply: false, force_public: false)
     @data_source = data_source
     @run_id = run_id
     @apply = apply
+    @force_public = force_public
   end
 
   def run
     ids = plant_ids
     plan = plan_for(ids)
+    guard!(plan) if @apply
     delete!(ids) if @apply && ids.any?
     plan
   end
@@ -44,8 +57,30 @@ class FpiRollback
       sync_conflicts: conflicts(ids).count,
       images: Image.where(imageable_type: 'Plant', imageable_id: ids).count,
       versions: versions(ids).count,
-      joins: JOIN_TABLES.to_h { |t| [t, ActiveRecord::Base.connection.select_value(count_sql(t, ids)).to_i] }
+      public_plants: public_plants(ids).count,
+      wave_items: active_wave_items(ids).count,
+      joins: join_counts(ids)
     )
+  end
+
+  def join_counts(ids)
+    JOIN_TABLES.to_h { |t| [t, ActiveRecord::Base.connection.select_value(count_sql(t, ids)).to_i] }
+  end
+
+  def guard!(plan)
+    return if @force_public || (plan.public_plants.zero? && plan.wave_items.zero?)
+
+    raise Refused, "#{plan.public_plants} public plant(s) and #{plan.wave_items} item(s) in an active publication wave " \
+                   'would be removed from public view. Unpublish the wave first, or set FORCE_PUBLIC=true.'
+  end
+
+  def public_plants(ids)
+    Plant.unscoped.where(id: ids, access_level: 'public').or(Plant.unscoped.where(id: ids, visibility: Plant.visibilities[:public]))
+  end
+
+  # Items of active waves on the target plants (the plant rows and their images).
+  def active_wave_items(ids)
+    PublicationWaveItem.joins(:publication_wave).merge(PublicationWave.active).where(plant_id: ids)
   end
 
   def plant_ids
