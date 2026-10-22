@@ -40,3 +40,4 @@ bundle exec rails graphql:schema:dump        # regenerate schema.graphql after G
 - `docs/authorization-trust-levels.md` — the trust-level ladder.
 - `docs/ownership-current-state.md` and `docs/ownership-redesign/{design,discovery,rollout}.md` — the accepted organizations/ownership redesign (IdP-authoritative orgs, membership via JWT claims).
 - `infra/README.md` — ECS/Terraform layout; shared ALB with ECHOcommunity, listener-rule warnings.
+- `docs/fpi-publication.md` - FPI publication waves (`publication:*` rake tasks, `ops-publication.yml`): what a wave selects and changes, the exact unpublish, the digest gate, and the counts-only rule for anything printed in public Actions logs.
