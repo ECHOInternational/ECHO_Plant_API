@@ -1,0 +1,13 @@
+query ProfilePlants($ownedBy: String) {
+    plants(first: 10, ownedBy: $ownedBy) {
+      totalCount
+      edges {
+        node {
+          id
+          primaryCommonName
+          scientificName
+          visibility
+        }
+      }
+    }
+  }

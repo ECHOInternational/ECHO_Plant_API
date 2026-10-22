@@ -1,0 +1,12 @@
+query OrgLocations($orgId: ID) {
+    locations(first: 10, ownedByOrganizationId: $orgId) {
+      totalCount
+      edges {
+        node {
+          id
+          name
+          visibility
+        }
+      }
+    }
+  }

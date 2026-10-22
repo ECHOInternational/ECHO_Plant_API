@@ -1,0 +1,17 @@
+mutation AddPruningEvent($input: AddPruningLifeCycleEventInput!) {
+    addPruningEventToSpecimen(input: $input) {
+      pruningEvent {
+        id
+        uuid
+        datetime
+        notes
+        deleted
+        __typename
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

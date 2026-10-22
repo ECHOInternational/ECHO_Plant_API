@@ -1,0 +1,13 @@
+mutation EvaluateSpecimen($input: EvaluateSpecimenInput!) {
+    evaluateSpecimen(input: $input) {
+      specimen {
+        id
+        evaluatedAt
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

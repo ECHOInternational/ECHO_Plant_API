@@ -1,0 +1,12 @@
+mutation RemoveImageAttributesFromImage($input: RemoveImageAttributesFromImageInput!) {
+    removeImageAttributesFromImage(input: $input) {
+      image {
+        id
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

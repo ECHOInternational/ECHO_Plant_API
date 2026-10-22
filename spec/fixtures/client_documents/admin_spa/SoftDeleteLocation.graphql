@@ -1,0 +1,13 @@
+mutation SoftDeleteLocation($input: SoftDeleteLocationInput!) {
+    softDeleteLocation(input: $input) {
+      location {
+        id
+        visibility
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

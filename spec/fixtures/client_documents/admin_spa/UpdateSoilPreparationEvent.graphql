@@ -1,0 +1,18 @@
+mutation UpdateSoilPreparationEvent($input: UpdateSoilPreparationLifeCycleEventInput!) {
+    updateSoilPreparationEvent(input: $input) {
+      soilPreparationEvent {
+        id
+        uuid
+        datetime
+        notes
+        deleted
+        soilPreparation
+        __typename
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

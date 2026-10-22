@@ -1,0 +1,12 @@
+query ProfileSpecimens($ownedBy: String) {
+    specimens(first: 10, ownedBy: $ownedBy) {
+      totalCount
+      edges {
+        node {
+          id
+          name
+          visibility
+        }
+      }
+    }
+  }

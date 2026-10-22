@@ -1,0 +1,12 @@
+query ProfileLocations($ownedBy: String) {
+    locations(first: 10, ownedBy: $ownedBy) {
+      totalCount
+      edges {
+        node {
+          id
+          name
+          visibility
+        }
+      }
+    }
+  }

@@ -1,0 +1,13 @@
+mutation SoftDeleteVariety($input: SoftDeleteVarietyInput!) {
+    softDeleteVariety(input: $input) {
+      variety {
+        id
+        visibility
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

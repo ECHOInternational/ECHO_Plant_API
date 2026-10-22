@@ -1,0 +1,13 @@
+query OrgPlants($orgId: ID) {
+    plants(first: 10, ownedByOrganizationId: $orgId) {
+      totalCount
+      edges {
+        node {
+          id
+          primaryCommonName
+          scientificName
+          visibility
+        }
+      }
+    }
+  }

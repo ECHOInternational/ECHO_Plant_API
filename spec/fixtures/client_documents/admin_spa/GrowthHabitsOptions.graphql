@@ -1,0 +1,10 @@
+query GrowthHabitsOptions($first: Int) {
+    growthHabits(first: $first) {
+      edges {
+        node {
+          id
+          name
+        }
+      }
+    }
+  }

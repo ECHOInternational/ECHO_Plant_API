@@ -62,11 +62,18 @@ module Types
     field :plants, Types::PlantType::PlantConnectionWithTotalCountType,
           description: 'The plants that belong to this category',
           null: true,
-          connection: true
+          connection: true,
+          connection_extension: Extensions::PageSizeLimitedConnectionExtension
     # field :versions, Types::CategoryType::CategoryVersionConnectionWithTotalCountType, null: false, connection: true
 
+    # The frozen mobile app's category browse (always anonymous) must not
+    # show safety-flagged plants of other organizations: it has no way to
+    # display the warning. See MobileFullSyncGuard.restrict_category_browse.
     def plants
-      Pundit.policy_scope(context[:current_user], @object.plants)
+      MobileFullSyncGuard.restrict_category_browse(
+        Pundit.policy_scope(context[:current_user], @object.plants),
+        context[:current_user]
+      )
     end
 
     def images

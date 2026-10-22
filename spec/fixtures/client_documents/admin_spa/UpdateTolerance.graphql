@@ -1,0 +1,14 @@
+mutation UpdateTolerance($input: UpdateToleranceInput!) {
+    updateTolerance(input: $input) {
+      tolerance {
+        id
+        uuid
+        name
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

@@ -1,0 +1,12 @@
+mutation CreateSpecimen($input: CreateSpecimenInput!) {
+    createSpecimen(input: $input) {
+      specimen {
+        id
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

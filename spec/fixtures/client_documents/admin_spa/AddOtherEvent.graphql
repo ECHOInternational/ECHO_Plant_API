@@ -1,0 +1,17 @@
+mutation AddOtherEvent($input: AddOtherLifeCycleEventInput!) {
+    addOtherEventToSpecimen(input: $input) {
+      otherEvent {
+        id
+        uuid
+        datetime
+        notes
+        deleted
+        __typename
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

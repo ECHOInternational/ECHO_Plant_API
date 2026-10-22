@@ -1,0 +1,14 @@
+mutation RestorePlant($input: RestorePlantInput!) {
+    restorePlant(input: $input) {
+      plant {
+        id
+        visibility
+        deletedAt
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

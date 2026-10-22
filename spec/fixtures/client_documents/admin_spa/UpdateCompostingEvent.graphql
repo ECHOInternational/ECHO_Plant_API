@@ -1,0 +1,17 @@
+mutation UpdateCompostingEvent($input: UpdateCompostingLifeCycleEventInput!) {
+    updateCompostingEvent(input: $input) {
+      compostingEvent {
+        id
+        uuid
+        datetime
+        notes
+        deleted
+        __typename
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

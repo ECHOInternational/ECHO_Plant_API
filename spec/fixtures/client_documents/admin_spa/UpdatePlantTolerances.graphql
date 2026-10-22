@@ -1,0 +1,12 @@
+mutation UpdatePlantTolerances($input: UpdatePlantTolerancesInput!) {
+    updatePlantTolerances(input: $input) {
+      plant {
+        id
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

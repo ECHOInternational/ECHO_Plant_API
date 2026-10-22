@@ -7,6 +7,18 @@ class PlantApiSchema < GraphQL::Schema
 
   orphan_types [Types::AcquireEventType]
 
+  # Query-cost limits (API-21), reachable without a token. Sized from the real
+  # documents of the frozen mobile app, the admin SPA and ECHOcommunity, plus
+  # the planned ECHOcommunity snapshot walk; the measurements and the reasons
+  # for each value are in spec/graphql/query_limits_spec.rb, which fails if
+  # any of those documents stops fitting. Introspection is not counted, so
+  # GraphiQL and the SPA's codegen keep working. Connections given no page
+  # size count as Types::BaseField::UNBOUNDED_CONNECTION_PAGE_SIZE rows.
+  # Plants connections also reject first:/last: above 500
+  # (Extensions::PageSizeLimitedConnectionExtension).
+  max_depth 12, count_introspection_fields: false
+  max_complexity 400_000, count_introspection_fields: false
+
   rescue_from(ActiveRecord::RecordNotFound) do |err, _obj, _args, _ctx, _field|
     # Raise a graphql-friendly error with a custom message
 

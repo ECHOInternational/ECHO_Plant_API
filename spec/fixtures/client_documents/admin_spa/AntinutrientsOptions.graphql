@@ -1,0 +1,10 @@
+query AntinutrientsOptions($first: Int) {
+    antinutrients(first: $first) {
+      edges {
+        node {
+          id
+          name
+        }
+      }
+    }
+  }

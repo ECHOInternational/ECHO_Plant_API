@@ -1,0 +1,14 @@
+mutation UpdateFamily($input: UpdateFamilyInput!) {
+    updateFamily(input: $input) {
+      family {
+        id
+        description
+        seedBankingNotes
+        storagePhysiology
+        seedLongevity
+        seedBankingRank
+        translations { locale description seedBankingNotes }
+      }
+      errors { field message code }
+    }
+  }

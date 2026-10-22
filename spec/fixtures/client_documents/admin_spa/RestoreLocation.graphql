@@ -1,0 +1,14 @@
+mutation RestoreLocation($input: RestoreLocationInput!) {
+    restoreLocation(input: $input) {
+      location {
+        id
+        visibility
+        deletedAt
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

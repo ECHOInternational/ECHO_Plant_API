@@ -1,0 +1,12 @@
+mutation UpdateVarietyTolerances($input: UpdateVarietyTolerancesInput!) {
+    updateVarietyTolerances(input: $input) {
+      variety {
+        id
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

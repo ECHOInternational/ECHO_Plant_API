@@ -1,0 +1,45 @@
+query($first: Int, $after: String) {
+  plants(first: $first, after: $after) {
+    pageInfo { hasNextPage endCursor }
+    edges {
+      node {
+        id
+        scientificName
+        family { name status }
+        translations {
+          locale
+          infoSheetDescription
+                  origin
+                  uses
+                  cultivation
+                  harvestingAndSeedProduction
+                  pestsAndDiseases
+                  cookingAndNutrition
+                  attribution
+                  asiaRegionalInfo
+                  seedingRate
+                  antinutrientNote
+                  toleranceNote
+                  usedForFodderNote
+                  edibleGreenLeavesNote
+                  edibleMatureFruitNote
+                  optimalTemperatureNote
+          edibleImmatureFruitNote
+                  plantingInstructions
+                  lifeCycleNote
+                  nAccumulationNote
+                  biomassProductionNote
+                  optimalRainfallNote
+                  seasonalityNote
+                  earlyGrowthPhaseNote
+                  altitudeNote
+                  phNote
+                  growthHabitsNote
+                  habitat
+                  notes
+                  safetyNote
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+query TolerancesOptions($first: Int) {
+    tolerances(first: $first) {
+      edges {
+        node {
+          id
+          name
+        }
+      }
+    }
+  }

@@ -1,0 +1,38 @@
+query FamiliesList(
+    $first: Int
+    $after: String
+    $last: Int
+    $before: String
+    $name: String
+    $kingdom: String
+    $plantType: String
+    $hasPendingChanges: Boolean
+  ) {
+    families(
+      first: $first
+      after: $after
+      last: $last
+      before: $before
+      name: $name
+      kingdom: $kingdom
+      plantType: $plantType
+      hasPendingChanges: $hasPendingChanges
+    ) {
+      totalCount
+      pageInfo { hasNextPage hasPreviousPage endCursor startCursor }
+      edges {
+        node {
+          id
+          uuid
+          name
+          kingdom
+          plantType
+          seedBankingRank
+          plants { totalCount }
+          draft {
+            updatedAt
+          }
+        }
+      }
+    }
+  }

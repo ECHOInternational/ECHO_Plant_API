@@ -1,0 +1,60 @@
+query PlantsList(
+    $first: Int
+    $after: String
+    $last: Int
+    $before: String
+    $anyName: String
+    $visibility: Visibility
+    $hasPendingChanges: Boolean
+    $safetyLevel: SafetyLevel
+    $hasSafetyWarning: Boolean
+    $ownedBy: String
+    $ownedByOrganizationId: ID
+    $sortDirection: SortDirection
+  ) {
+    plants(
+      first: $first
+      after: $after
+      last: $last
+      before: $before
+      anyName: $anyName
+      visibility: $visibility
+      hasPendingChanges: $hasPendingChanges
+      safetyLevel: $safetyLevel
+      hasSafetyWarning: $hasSafetyWarning
+      ownedBy: $ownedBy
+      ownedByOrganizationId: $ownedByOrganizationId
+      sortDirection: $sortDirection
+    ) {
+      totalCount
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        endCursor
+        startCursor
+      }
+      edges {
+        node {
+          id
+          uuid
+          primaryCommonName
+          scientificName
+          familyNames
+          visibility
+          safetyLevel
+          edibilityUncertain
+          ownedBy
+          canEdit
+          canDelete
+          ownerOrganization {
+            id
+            name
+            kind
+          }
+          draft {
+            updatedAt
+          }
+        }
+      }
+    }
+  }

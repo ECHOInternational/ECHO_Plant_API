@@ -1,0 +1,17 @@
+mutation UpdateOtherEvent($input: UpdateOtherLifeCycleEventInput!) {
+    updateOtherEvent(input: $input) {
+      otherEvent {
+        id
+        uuid
+        datetime
+        notes
+        deleted
+        __typename
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

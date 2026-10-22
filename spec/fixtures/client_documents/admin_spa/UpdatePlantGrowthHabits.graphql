@@ -1,0 +1,12 @@
+mutation UpdatePlantGrowthHabits($input: UpdatePlantGrowthHabitsInput!) {
+    updatePlantGrowthHabits(input: $input) {
+      plant {
+        id
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

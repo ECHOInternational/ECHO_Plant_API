@@ -1,0 +1,10 @@
+mutation DeleteTolerance($input: DeleteToleranceInput!) {
+    deleteTolerance(input: $input) {
+      toleranceId
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

@@ -1,0 +1,5 @@
+query FamilyOptions($name: String) {
+    families(first: 20, name: $name) {
+      edges { node { id name } }
+    }
+  }

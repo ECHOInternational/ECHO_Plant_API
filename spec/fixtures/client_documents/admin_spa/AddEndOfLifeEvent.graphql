@@ -1,0 +1,17 @@
+mutation AddEndOfLifeEvent($input: AddEndOfLifeLifeCycleEventInput!) {
+    addEndOfLifeEventToSpecimen(input: $input) {
+      endOfLifeEvent {
+        id
+        uuid
+        datetime
+        notes
+        deleted
+        __typename
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

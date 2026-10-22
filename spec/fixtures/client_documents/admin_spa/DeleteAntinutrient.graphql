@@ -1,0 +1,10 @@
+mutation DeleteAntinutrient($input: DeleteAntinutrientInput!) {
+    deleteAntinutrient(input: $input) {
+      antinutrientId
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

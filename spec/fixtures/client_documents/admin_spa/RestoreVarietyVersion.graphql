@@ -1,0 +1,12 @@
+mutation RestoreVarietyVersion($input: RestoreVarietyVersionInput!) {
+    restoreVarietyVersion(input: $input) {
+      variety {
+        id
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

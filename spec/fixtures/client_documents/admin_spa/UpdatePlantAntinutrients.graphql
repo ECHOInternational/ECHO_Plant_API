@@ -1,0 +1,12 @@
+mutation UpdatePlantAntinutrients($input: UpdatePlantAntinutrientsInput!) {
+    updatePlantAntinutrients(input: $input) {
+      plant {
+        id
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

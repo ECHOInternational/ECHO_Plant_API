@@ -1,0 +1,12 @@
+mutation CreateImage($input: CreateImageInput!) {
+    createImage(input: $input) {
+      image {
+        id
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

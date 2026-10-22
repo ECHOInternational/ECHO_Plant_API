@@ -1,0 +1,10 @@
+query CategoriesOptions($first: Int) {
+    categories(first: $first) {
+      edges {
+        node {
+          id
+          name
+        }
+      }
+    }
+  }

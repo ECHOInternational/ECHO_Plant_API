@@ -1,0 +1,12 @@
+mutation UpdateVarietyAntinutrients($input: UpdateVarietyAntinutrientsInput!) {
+    updateVarietyAntinutrients(input: $input) {
+      variety {
+        id
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

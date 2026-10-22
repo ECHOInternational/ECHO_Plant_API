@@ -1,0 +1,10 @@
+mutation DeleteCommonName($input: DeleteCommonNameInput!) {
+    deleteCommonName(input: $input) {
+      commonNameId
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

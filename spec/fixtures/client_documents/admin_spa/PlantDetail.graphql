@@ -1,0 +1,172 @@
+query PlantDetail($id: ID!, $perspective: Perspective) {
+    plant(id: $id, perspective: $perspective) {
+      id
+      uuid
+      publicationState
+      draft {
+        updatedAt
+        author
+        lastEditor
+        changedFields
+        isStale
+      }
+      scientificName
+      familyNames
+      family {
+        id
+        name
+      }
+      visibility
+      ownedBy
+      canEdit
+      canDelete
+      canRestore
+      deletedAt
+      ownerOrganization {
+        id
+        name
+        kind
+      }
+      createdByPrincipal {
+        id
+        displayName
+      }
+      primaryCommonName
+      lifeCycle
+      earlyGrowthPhase
+      safetyLevel
+      safetyWarning
+      edibilityUncertain
+      hasEdibleGreenLeaves
+      hasEdibleImmatureFruit
+      hasEdibleMatureFruit
+      canBeUsedForFodder
+      nAccumulationRange
+      biomassProductionRange
+      optimalTemperatureRange
+      optimalRainfallRange
+      seasonalityDaysRange
+      optimalAltitudeRange
+      phRange
+      translations {
+        locale
+        altitudeNote
+        antinutrientNote
+        asiaRegionalInfo
+        attribution
+        biomassProductionNote
+        cookingAndNutrition
+        cultivation
+        description
+        earlyGrowthPhaseNote
+        edibleGreenLeavesNote
+        edibleImmatureFruitNote
+        edibleMatureFruitNote
+        growthHabitsNote
+        harvestingAndSeedProduction
+        infoSheetDescription
+        lifeCycleNote
+        nAccumulationNote
+        optimalRainfallNote
+        optimalTemperatureNote
+        origin
+        pestsAndDiseases
+        phNote
+        plantingInstructions
+        safetyNote
+        seasonalityNote
+        seedingRate
+        toleranceNote
+        usedForFodderNote
+        uses
+      }
+      commonNames(first: 100) {
+        edges {
+          node {
+            id
+            uuid
+            name
+            language
+            location
+            primary
+          }
+        }
+      }
+      antinutrients(first: 100) {
+        edges {
+          node {
+            id
+            uuid
+            name
+          }
+        }
+      }
+      categories(first: 100) {
+        edges {
+          node {
+            id
+            uuid
+            name
+          }
+        }
+      }
+      growthHabits(first: 100) {
+        edges {
+          node {
+            id
+            uuid
+            name
+          }
+        }
+      }
+      tolerances(first: 100) {
+        edges {
+          node {
+            id
+            uuid
+            name
+          }
+        }
+      }
+      varieties(first: 50) {
+        edges {
+          node {
+            id
+            uuid
+            name
+            visibility
+            ownedBy
+            canEdit
+            ownerOrganization {
+              id
+              name
+              kind
+            }
+            draft {
+              updatedAt
+            }
+          }
+        }
+      }
+      images(first: 50) {
+        edges {
+          node {
+            id
+            uuid
+            name
+            baseUrl
+            visibility
+            canEdit
+            canDelete
+            ownedBy
+            description
+            attribution
+            imageAttributes {
+              id
+              name
+            }
+          }
+        }
+      }
+    }
+  }

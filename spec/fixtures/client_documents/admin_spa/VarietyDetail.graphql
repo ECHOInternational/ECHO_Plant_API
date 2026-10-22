@@ -1,0 +1,122 @@
+query VarietyDetail($id: ID!, $perspective: Perspective) {
+    variety(id: $id, perspective: $perspective) {
+      id
+      uuid
+      publicationState
+      draft {
+        updatedAt
+        author
+        lastEditor
+        changedFields
+        isStale
+      }
+      name
+      visibility
+      ownedBy
+      canEdit
+      canDelete
+      canRestore
+      deletedAt
+      ownerOrganization {
+        id
+        name
+        kind
+      }
+      hasEdibleGreenLeaves
+      hasEdibleImmatureFruit
+      hasEdibleMatureFruit
+      canBeUsedForFodder
+      nAccumulationRange
+      biomassProductionRange
+      optimalTemperatureRange
+      optimalRainfallRange
+      seasonalityDaysRange
+      optimalAltitudeRange
+      phRange
+      plant {
+        id
+        uuid
+        primaryCommonName
+        scientificName
+      }
+      translations {
+        locale
+        name
+        altitudeNote
+        antinutrientNote
+        asiaRegionalInfo
+        attribution
+        biomassProductionNote
+        cookingAndNutrition
+        cultivation
+        description
+        earlyGrowthPhaseNote
+        edibleGreenLeavesNote
+        edibleImmatureFruitNote
+        edibleMatureFruitNote
+        growthHabitsNote
+        harvestingAndSeedProduction
+        infoSheetDescription
+        lifeCycleNote
+        nAccumulationNote
+        optimalRainfallNote
+        optimalTemperatureNote
+        origin
+        pestsAndDiseases
+        phNote
+        plantingInstructions
+        seasonalityNote
+        seedingRate
+        toleranceNote
+        usedForFodderNote
+        uses
+      }
+      antinutrients(first: 100) {
+        edges {
+          node {
+            id
+            uuid
+            name
+          }
+        }
+      }
+      growthHabits(first: 100) {
+        edges {
+          node {
+            id
+            uuid
+            name
+          }
+        }
+      }
+      tolerances(first: 100) {
+        edges {
+          node {
+            id
+            uuid
+            name
+          }
+        }
+      }
+      images(first: 50) {
+        edges {
+          node {
+            id
+            uuid
+            name
+            baseUrl
+            visibility
+            canEdit
+            canDelete
+            ownedBy
+            description
+            attribution
+            imageAttributes {
+              id
+              name
+            }
+          }
+        }
+      }
+    }
+  }

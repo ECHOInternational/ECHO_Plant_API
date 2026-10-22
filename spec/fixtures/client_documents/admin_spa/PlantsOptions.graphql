@@ -1,0 +1,10 @@
+query PlantsOptions($first: Int) {
+    plants(first: $first) {
+      edges {
+        node {
+          id
+          primaryCommonName
+        }
+      }
+    }
+  }

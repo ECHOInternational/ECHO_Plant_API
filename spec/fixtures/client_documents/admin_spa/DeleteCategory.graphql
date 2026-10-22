@@ -1,0 +1,10 @@
+mutation DeleteCategory($input: DeleteCategoryInput!) {
+    deleteCategory(input: $input) {
+      categoryId
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

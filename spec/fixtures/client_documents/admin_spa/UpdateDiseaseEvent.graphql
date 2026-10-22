@@ -1,0 +1,17 @@
+mutation UpdateDiseaseEvent($input: UpdateDiseaseLifeCycleEventInput!) {
+    updateDiseaseEvent(input: $input) {
+      diseaseEvent {
+        id
+        uuid
+        datetime
+        notes
+        deleted
+        __typename
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

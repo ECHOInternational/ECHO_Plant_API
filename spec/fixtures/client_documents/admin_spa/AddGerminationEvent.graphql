@@ -1,0 +1,19 @@
+mutation AddGerminationEvent($input: AddGerminationLifeCycleEventInput!) {
+    addGerminationEventToSpecimen(input: $input) {
+      germinationEvent {
+        id
+        uuid
+        datetime
+        notes
+        deleted
+        percent
+        quality
+        __typename
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

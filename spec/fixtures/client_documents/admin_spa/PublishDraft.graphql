@@ -1,0 +1,7 @@
+mutation PublishDraft($input: PublishDraftInput!) {
+    publishDraft(input: $input) {
+      record { id }
+      conflictedFields
+      errors { field message code }
+    }
+  }

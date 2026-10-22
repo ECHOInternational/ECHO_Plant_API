@@ -82,7 +82,9 @@ RSpec.describe 'EC projection fields', type: :graphql_query do
 
   describe 'plants(updatedSince:)' do
     let(:since) { 1.hour.ago.change(usec: 0) }
-    let(:query) { 'query($since: ISO8601DateTime) { plants(updatedSince: $since) { totalCount nodes { uuid } } }' }
+    # Paged, as ECHOcommunity's projection pages: an unpaginated plants() is
+    # the frozen mobile app's full sync and is limited to the allow-list.
+    let(:query) { 'query($since: ISO8601DateTime) { plants(first: 100, updatedSince: $since) { totalCount nodes { uuid } } }' }
 
     def old_plant(**attrs)
       plant = create(:plant, :public, **attrs)

@@ -1,0 +1,15 @@
+query Me {
+    me {
+      email
+      displayName
+      principalId
+      organizations {
+        organization {
+          id
+          name
+          kind
+        }
+        role
+      }
+    }
+  }

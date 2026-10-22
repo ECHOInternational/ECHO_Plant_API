@@ -1,0 +1,13 @@
+mutation SoftDeletePlant($input: SoftDeletePlantInput!) {
+    softDeletePlant(input: $input) {
+      plant {
+        id
+        visibility
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

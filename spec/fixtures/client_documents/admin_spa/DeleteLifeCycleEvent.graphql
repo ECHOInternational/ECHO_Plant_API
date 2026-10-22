@@ -1,0 +1,9 @@
+mutation DeleteLifeCycleEvent($input: DeleteLifeCycleEventInput!) {
+    deleteLifeCycleEvent(input: $input) {
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

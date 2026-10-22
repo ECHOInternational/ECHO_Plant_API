@@ -1,0 +1,17 @@
+mutation UpdateTrellisingEvent($input: UpdateTrellisingLifeCycleEventInput!) {
+    updateTrellisingEvent(input: $input) {
+      trellisingEvent {
+        id
+        uuid
+        datetime
+        notes
+        deleted
+        __typename
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

@@ -1,0 +1,9 @@
+mutation DeleteSpecimen($input: DeleteSpecimenInput!) {
+    deleteSpecimen(input: $input) {
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

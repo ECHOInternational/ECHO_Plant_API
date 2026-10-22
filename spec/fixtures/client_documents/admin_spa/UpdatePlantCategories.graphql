@@ -1,0 +1,12 @@
+mutation UpdatePlantCategories($input: UpdatePlantCategoriesInput!) {
+    updatePlantCategories(input: $input) {
+      plant {
+        id
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

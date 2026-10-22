@@ -1,0 +1,21 @@
+query LocationDetail($id: ID!) {
+    location(id: $id) {
+      id
+      uuid
+      name
+      latitude
+      longitude
+      irrigated
+      averageTemperature
+      soilQuality
+      notes
+      visibility
+      ownedBy
+      canEdit
+      ownerOrganization {
+        id
+        name
+        kind
+      }
+    }
+  }

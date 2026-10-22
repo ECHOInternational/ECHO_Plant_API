@@ -1,0 +1,15 @@
+query($first: Int, $after: String) {
+  plants(first: $first, after: $after) {
+    pageInfo { hasNextPage endCursor }
+    edges {
+      node {
+        id
+        scientificName
+        categories(first: 50) {
+          totalCount
+          nodes { uuid name }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+mutation CreateImageAttribute($input: CreateImageAttributeInput!) {
+    createImageAttribute(input: $input) {
+      imageAttribute {
+        id
+        uuid
+        name
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

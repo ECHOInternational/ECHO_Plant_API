@@ -1,0 +1,17 @@
+mutation AddCommonName($input: AddCommonNameInput!) {
+    addCommonName(input: $input) {
+      commonName {
+        id
+        uuid
+        name
+        language
+        location
+        primary
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

@@ -1,0 +1,84 @@
+# PLANNED, not yet written: the ECHOcommunity snapshot walk (FPI plan ECD-5),
+# reconstructed from the plan's field list so API-21's limits are sized to
+# admit it. Fields that do not exist in the API yet are stood in for by an
+# existing field of the same cost (one leaf for one leaf):
+#   meetsQualityBar -> safetyWarning (API-10)
+#   ownerOrganization.uuid -> name (API-8)
+#   commonNames.totalCount -> pageInfo.endCursor (API-8)
+#   images.position -> visibility, images.isDrawing -> createdBy (API-5)
+# Re-measure from the real document when ECD-5 lands.
+query($first: Int, $after: String) {
+  plants(first: $first, after: $after) {
+    totalCount
+    pageInfo { hasNextPage endCursor }
+    edges {
+      node {
+        id
+        uuid
+        scientificName
+        scientificNameAuthority
+        familyNames
+        updatedAt
+        safetyLevel
+        edibilityUncertain
+        safetyWarning
+        ownerOrganization { id name }
+        sourceOrganization { id name }
+        family { name status }
+        translations {
+          locale
+          infoSheetDescription
+          origin
+          uses
+          cultivation
+          harvestingAndSeedProduction
+          pestsAndDiseases
+          cookingAndNutrition
+          attribution
+          asiaRegionalInfo
+          seedingRate
+          antinutrientNote
+          toleranceNote
+          usedForFodderNote
+          edibleGreenLeavesNote
+          edibleMatureFruitNote
+          optimalTemperatureNote
+          edibleImmatureFruitNote
+          plantingInstructions
+          lifeCycleNote
+          nAccumulationNote
+          biomassProductionNote
+          optimalRainfallNote
+          seasonalityNote
+          earlyGrowthPhaseNote
+          altitudeNote
+          phNote
+          growthHabitsNote
+          habitat
+          notes
+          safetyNote
+          description
+        }
+        commonNames(first: 300) {
+          pageInfo { hasNextPage endCursor }
+          nodes { name language location }
+        }
+        categories(first: 50) {
+          totalCount
+          nodes { uuid name }
+        }
+        images(first: 200) {
+          pageInfo { hasNextPage }
+          nodes {
+            uuid
+            baseUrl
+            attribution
+            visibility
+            createdBy
+            translations { locale name description }
+          }
+        }
+      }
+    }
+  }
+}

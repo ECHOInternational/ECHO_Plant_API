@@ -1,0 +1,24 @@
+mutation UpdatePlantingEvent($input: UpdatePlantingLifeCycleEventInput!) {
+    updatePlantingEvent(input: $input) {
+      plantingEvent {
+        id
+        uuid
+        datetime
+        notes
+        deleted
+        location {
+          id
+        }
+        quantity
+        unit
+        betweenRowSpacing
+        inRowSpacing
+        __typename
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

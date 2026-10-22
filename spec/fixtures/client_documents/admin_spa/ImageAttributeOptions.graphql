@@ -1,0 +1,10 @@
+query ImageAttributeOptions($first: Int) {
+    imageAttributes(first: $first) {
+      edges {
+        node {
+          id
+          name
+        }
+      }
+    }
+  }

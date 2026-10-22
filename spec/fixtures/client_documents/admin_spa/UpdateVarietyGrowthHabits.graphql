@@ -1,0 +1,12 @@
+mutation UpdateVarietyGrowthHabits($input: UpdateVarietyGrowthHabitsInput!) {
+    updateVarietyGrowthHabits(input: $input) {
+      variety {
+        id
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

@@ -1,0 +1,14 @@
+mutation RestoreVariety($input: RestoreVarietyInput!) {
+    restoreVariety(input: $input) {
+      variety {
+        id
+        visibility
+        deletedAt
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

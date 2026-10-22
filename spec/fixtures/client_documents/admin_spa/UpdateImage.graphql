@@ -1,0 +1,12 @@
+mutation UpdateImage($input: UpdateImageInput!) {
+    updateImage(input: $input) {
+      image {
+        id
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }
