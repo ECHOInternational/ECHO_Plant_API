@@ -38,6 +38,14 @@ class Image < ApplicationRecord
     super
   end
 
+  # One entry per stored locale. Both fields are nullable on the GraphQL side,
+  # so a locale holding only a name or only a description is returned as is.
+  def translations_array
+    translations.map do |language, attributes|
+      { locale: language, name: attributes['name'], description: attributes['description'] }
+    end
+  end
+
   private
 
   def build_urls

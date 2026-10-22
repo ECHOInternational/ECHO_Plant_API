@@ -3878,9 +3878,9 @@ type Image implements Node {
   ownedBy: String @deprecated(reason: "Use ownerOrganization on the imageable; email-based ownership is being retired.")
 
   """
-  Translations of translatable category fields
+  Translations of translatable image fields
   """
-  translations: [CategoryTranslation!]!
+  translations: [ImageTranslation!]!
 
   """
   The internal database ID for an image
@@ -3984,6 +3984,26 @@ type ImageEdge {
   The item at the end of the edge.
   """
   node: Image
+}
+
+"""
+Translated fields for an Image
+"""
+type ImageTranslation {
+  """
+  A translated description of an image
+  """
+  description: String
+
+  """
+  The locale for this translation
+  """
+  locale: String!
+
+  """
+  The translated name of an image
+  """
+  name: String
 }
 
 """
