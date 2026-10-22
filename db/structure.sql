@@ -368,7 +368,8 @@ CREATE TABLE public.images (
     updated_at timestamp(6) without time zone NOT NULL,
     data_source_id uuid,
     source_record_id character varying,
-    source_digest character varying
+    source_digest character varying,
+    "position" integer
 );
 
 
@@ -1234,6 +1235,13 @@ CREATE INDEX index_image_attributes_images_on_image_id ON public.image_attribute
 --
 
 CREATE UNIQUE INDEX index_images_on_data_source_and_source_record ON public.images USING btree (data_source_id, source_record_id) WHERE (data_source_id IS NOT NULL);
+
+
+--
+-- Name: index_images_on_imageable_and_position; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_images_on_imageable_and_position ON public.images USING btree (imageable_type, imageable_id, "position");
 
 
 --
@@ -2116,6 +2124,7 @@ SET search_path TO "$user", public;
 INSERT INTO "schema_migrations" (version) VALUES
 ('20261022000003'),
 ('20261022000002'),
+('20261022000001'),
 ('20260917000001'),
 ('20260909000002'),
 ('20260909000001'),

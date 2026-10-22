@@ -10,7 +10,7 @@ module Types
     description 'Actions taken when plant(s) stop producing - at least notation of such'
 
     def images
-      Pundit.policy_scope(context[:current_user], @object.images)
+      Pundit.policy_scope(context[:current_user], @object.images).display_ordered
     end
   end
 end

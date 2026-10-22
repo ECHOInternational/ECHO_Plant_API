@@ -106,4 +106,90 @@ RSpec.describe FpiImageImporter do
     expect { importer.run('images' => [entry.merge('sha256' => 'short')]) }.to raise_error(described_class::InvalidManifest, /64 hex/)
     expect { importer.run({}) }.to raise_error(described_class::InvalidManifest, /no images/)
   end
+  describe 'visibility and display order (FPI plan API-6)' do
+    def image_for(kind, rowid)
+      Image.find(described_class.image_id(kind, rowid))
+    end
+
+    def make_public(record)
+      record.update!(visibility: :public)
+      record.reload
+    end
+
+    it 'creates images on an already-public plant as public (N-3)' do
+      make_public(plant)
+      import(entry)
+      expect(image_for('photo', 7).visibility_public?).to be true
+    end
+
+    it 'creates images on a non-public plant as private' do
+      import(entry)
+      expect(image_for('photo', 7).visibility_private?).to be true
+    end
+
+    it 'imports the manifest in plant, photo-before-drawing, rowid order so positions follow the source' do
+      import(entry(kind: 'drawing', rowid: 2), entry(rowid: 10), entry(plant_id: 'PLANT-B', rowid: 1), entry(rowid: 9))
+      expect(Image.where(imageable: plant).order(:position).pluck(:source_record_id))
+        .to eq %w[photos:9 photos:10 drawings:2]
+      expect(image_for('photo', 1).position).to eq 1
+    end
+
+    it 'carries visibility and position across a replace on the same plant' do
+      import(entry(rowid: 6), entry)
+      image = image_for('photo', 7)
+      image.update!(visibility: :public)
+      image.update_columns(position: 1)
+      image_for('photo', 6).update_columns(position: 2)
+
+      import(entry(sha256: 'b' * 64))
+
+      replaced = image_for('photo', 7)
+      expect(replaced.s3_key).to end_with '7-bbbbbbbbbbbb.jpg'
+      expect(replaced.visibility_public?).to be true
+      expect(replaced.position).to eq 1
+    end
+
+    it 'takes visibility from the new plant and goes last when a replaced image also moved plant' do
+      make_public(other_plant)
+      import(entry(plant_id: 'PLANT-B', rowid: 3), entry)
+
+      import(entry(plant_id: 'PLANT-B', sha256: 'b' * 64))
+
+      moved = image_for('photo', 7)
+      expect(moved.imageable_id).to eq other_plant.id
+      expect(moved.visibility_public?).to be true
+      expect(moved.position).to eq 2
+    end
+
+    it 'makes a re-parented image private when it moves from a public plant to a private one' do
+      make_public(plant)
+      import(entry)
+      expect(image_for('photo', 7).visibility_public?).to be true
+
+      totals = import(entry(plant_id: 'PLANT-B'))
+
+      expect(totals.reparented).to eq 1
+      expect(image_for('photo', 7)).to have_attributes(imageable_id: other_plant.id, visibility: 'private')
+    end
+
+    it 'makes a re-parented image public when it moves from a private plant to a public one' do
+      make_public(other_plant)
+      import(entry(plant_id: 'PLANT-B', rowid: 3), entry)
+      expect(image_for('photo', 7).visibility_private?).to be true
+
+      import(entry(plant_id: 'PLANT-B', rowid: 3), entry(plant_id: 'PLANT-B'))
+
+      moved = image_for('photo', 7)
+      expect(moved).to have_attributes(imageable_id: other_plant.id, visibility: 'public')
+      expect(moved.position).to eq 2
+    end
+
+    it 'leaves visibility alone on an unchanged image' do
+      make_public(plant)
+      import(entry)
+      image_for('photo', 7).update!(visibility: :private)
+      import(entry)
+      expect(image_for('photo', 7).visibility_private?).to be true
+    end
+  end
 end
