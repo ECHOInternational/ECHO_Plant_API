@@ -26,7 +26,7 @@ class Plant < ApplicationRecord # rubocop:disable Metrics/ClassLength
   normalizes :scientific_name_authority, with: :presence.to_proc
   validates :owned_by, :created_by, :visibility, presence: true
   enum :visibility, { private: 0, public: 1, draft: 2, deleted: 3 }, prefix: :visibility
-  has_many :images, as: :imageable, dependent: :destroy
+  has_many :images, -> { order(Image::DISPLAY_ORDER) }, as: :imageable, dependent: :destroy, inverse_of: :imageable
 
   has_many :antinutrients_plants, dependent: :destroy
   has_many :antinutrients, through: :antinutrients_plants, dependent: :destroy
@@ -93,6 +93,18 @@ class Plant < ApplicationRecord # rubocop:disable Metrics/ClassLength
   # the column's, so it cannot take the predicate question mark.
   def safety_warning # rubocop:disable Naming/PredicateMethod
     !safety_none?
+  end
+
+  # FPI plan API-10 / section 3.2: whether the plant meets its data source's
+  # publication rule, the single quality setting. True when the plant has no
+  # data source or the source has no rule (ECHO), so ECHO pages are never
+  # below the bar. rules is an optional {data_source_id => PublicationRule}
+  # cache; GraphQL builds it once per request.
+  def meets_quality_bar?(rules = nil)
+    return true if data_source_id.nil?
+
+    rule = rules ? rules[data_source_id] : DataSource.find_by(id: data_source_id)&.quality_rule
+    rule.nil? || rule.met_by?(self)
   end
 
   def genus

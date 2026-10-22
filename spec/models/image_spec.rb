@@ -145,4 +145,45 @@ RSpec.describe Image, type: :model do
     expect(image.image_attributes).to include(attr_a)
     expect(image.image_attributes).to include(attr_b)
   end
+  describe 'position' do
+    let(:plant) { create(:plant) }
+
+    it 'appends each new image after the current last one of its parent' do
+      first = create(:image, imageable: plant)
+      second = create(:image, imageable: plant)
+      other = create(:image)
+
+      expect([first.position, second.position]).to eq [1, 2]
+      expect(other.position).to eq 1
+    end
+
+    it 'appends after the highest position even when there are gaps' do
+      create(:image, imageable: plant).update_columns(position: 7)
+      expect(create(:image, imageable: plant).position).to eq 8
+    end
+
+    it 'keeps an explicitly supplied position' do
+      expect(create(:image, imageable: plant, position: 4).position).to eq 4
+    end
+
+    it 'moves to the end of the new parent when re-parented' do
+      other = create(:plant)
+      create(:image, imageable: other)
+      image = create(:image, imageable: plant)
+      image.update!(imageable: other)
+      expect(image.reload.position).to eq 2
+    end
+
+    it 'orders the imageable association and the display_ordered scope by position, NULLs last, then created_at and id' do
+      late = create(:image, imageable: plant)
+      early = create(:image, imageable: plant)
+      unplaced = create(:image, imageable: plant)
+      late.update_columns(position: 2)
+      early.update_columns(position: 1)
+      unplaced.update_columns(position: nil)
+
+      expect(plant.reload.images.map(&:id)).to eq [early.id, late.id, unplaced.id]
+      expect(Image.where(imageable: plant).display_ordered.map(&:id)).to eq [early.id, late.id, unplaced.id]
+    end
+  end
 end

@@ -10,7 +10,7 @@ module Types
     description 'Actions taken concerning Lifecycle Events not in the list'
 
     def images
-      Pundit.policy_scope(context[:current_user], @object.images)
+      Pundit.policy_scope(context[:current_user], @object.images).display_ordered
     end
   end
 end

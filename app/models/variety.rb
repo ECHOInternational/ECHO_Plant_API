@@ -7,7 +7,7 @@ class Variety < ApplicationRecord
 
   validates :owned_by, :created_by, :visibility, :name, :plant, presence: true
   enum :visibility, { private: 0, public: 1, draft: 2, deleted: 3 }, prefix: :visibility
-  has_many :images, as: :imageable, dependent: :destroy
+  has_many :images, -> { order(Image::DISPLAY_ORDER) }, as: :imageable, dependent: :destroy, inverse_of: :imageable
 
   has_many :antinutrients_varieties, dependent: :destroy
   has_many :antinutrients, through: :antinutrients_varieties, dependent: :destroy

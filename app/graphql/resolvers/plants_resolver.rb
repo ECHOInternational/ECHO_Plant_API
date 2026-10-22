@@ -62,6 +62,13 @@ module Resolvers
            with: :apply_has_safety_warning_filter,
            description: 'Restrict to records with (true) or without (false) a recorded safety ' \
                         'warning of any level.'
+    option :updated_since,
+           type: GraphQL::Types::ISO8601DateTime,
+           with: :apply_updated_since_filter,
+           description: 'Restrict to plants changed at or after this time: the plant row itself, ' \
+                        'a versioned child (common name, relation link, image), or the publication ' \
+                        "rule of the plant's data source. Not detected: raw bulk writes and " \
+                        'removals from the visible set, so a periodic full read is still needed.'
     option :has_pending_changes,
            type: Boolean,
            with: :apply_has_pending_changes_filter,
@@ -101,6 +108,23 @@ module Resolvers
       return value ? scope.none : scope unless context[:current_user]&.can_write?
 
       scope.where("#{'NOT ' unless value}EXISTS (SELECT 1 FROM record_drafts WHERE draftable_type = 'Plant' AND draftable_id = plants.id)")
+    end
+
+    # FPI plan API-9. Children are found through versions: VersionedUnderRoot
+    # stamps root_type/root_id into every child version, and versions.created_at
+    # is indexed. Compared as text so a malformed root_id can never fail the
+    # query. A data source whose row changed (publication_rule) marks all of
+    # its plants, since their meetsQualityBar may have changed.
+    def apply_updated_since_filter(scope, value)
+      return scope if value.nil?
+
+      scope.where(<<~SQL.squish, since: value)
+        plants.updated_at >= :since
+        OR plants.id::text IN (
+          SELECT v.metadata->>'root_id' FROM versions v
+          WHERE v.created_at >= :since AND v.metadata->>'root_type' = 'Plant')
+        OR plants.data_source_id IN (SELECT ds.id FROM data_sources ds WHERE ds.updated_at >= :since)
+      SQL
     end
 
     def apply_owned_by_filter(scope, value)

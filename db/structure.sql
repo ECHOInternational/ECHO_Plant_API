@@ -257,7 +257,8 @@ CREATE TABLE public.data_sources (
     source_system_key character varying NOT NULL,
     notes text,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    publication_rule jsonb
 );
 
 
@@ -367,7 +368,8 @@ CREATE TABLE public.images (
     updated_at timestamp(6) without time zone NOT NULL,
     data_source_id uuid,
     source_record_id character varying,
-    source_digest character varying
+    source_digest character varying,
+    "position" integer
 );
 
 
@@ -1236,6 +1238,13 @@ CREATE UNIQUE INDEX index_images_on_data_source_and_source_record ON public.imag
 
 
 --
+-- Name: index_images_on_imageable_and_position; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_images_on_imageable_and_position ON public.images USING btree (imageable_type, imageable_id, "position");
+
+
+--
 -- Name: index_images_on_imageable_type_and_imageable_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1597,6 +1606,13 @@ CREATE INDEX index_varieties_on_plant_id ON public.varieties USING btree (plant_
 --
 
 CREATE INDEX index_varieties_on_visibility ON public.varieties USING btree (visibility);
+
+
+--
+-- Name: index_versions_on_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_versions_on_created_at ON public.versions USING btree (created_at);
 
 
 --
@@ -2106,6 +2122,9 @@ ALTER TABLE ONLY public.varieties
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261022000003'),
+('20261022000002'),
+('20261022000001'),
 ('20260917000001'),
 ('20260909000002'),
 ('20260909000001'),

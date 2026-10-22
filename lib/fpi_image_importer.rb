@@ -17,13 +17,22 @@ require Rails.root.join('lib/fpi_image_manifest_entry')
 #      "sha256": "<64 hex>", "bytes": 68533, "name": "<scientific name> (photo 1)"}, ...]}
 #
 # For each entry the importer finds the FPI plant by source record id and
-# writes the image as the source's service principal, private, with the source
-# provenance columns and a deterministic id. Re-running is idempotent:
+# writes the image as the source's service principal, with the source
+# provenance columns and a deterministic id. A new image takes its visibility
+# from its plant: public on a plant that is already public (FPI plan N-3, so
+# a wave-published plant shows new upstream pictures), private otherwise.
+# Entries are imported in (plant, photo before drawing, rowid) order, so the
+# appended images.position follows the FPI source order (API-5/API-6).
+# Re-running is idempotent:
 #
 #   * same source record, same digest   -> unchanged (a missing Drawing tag is re-added)
 #   * same source record, new digest    -> replaced: new key, curator-edited name,
-#                                          description, attribution and tags carried over
-#   * same source record, other plant   -> re-parented
+#                                          description, attribution, tags, visibility
+#                                          and position carried over (when it also
+#                                          moved plant: visibility from the new plant,
+#                                          position appended)
+#   * same source record, other plant   -> re-parented; visibility follows the new
+#                                          plant, position appended
 #   * no plant for the PLANT_ID         -> missing_plant, nothing written
 #   * object not in the bucket          -> not_uploaded, nothing written
 #   * an FPI image absent from the manifest -> counted, never deleted (decision 11)
@@ -81,13 +90,19 @@ class FpiImageImporter
     rows = manifest['images']
     raise InvalidManifest, 'manifest has no images list' unless rows.is_a?(Array)
 
-    rows.each_with_index.map do |row, index|
+    entries = rows.each_with_index.map do |row, index|
       entry = FpiImageManifestEntry.from(row)
       problem = entry.problem(@data_source.source_system_key)
       raise InvalidManifest, "images[#{index}]: #{problem}" if problem
 
       entry
     end
+    entries.sort_by { |entry| [entry.plant_id.to_s, entry.drawing? ? 1 : 0, entry.rowid] }
+  end
+
+  # N-3: a picture of an already-public plant is public; anything else private.
+  def visibility_for(plant)
+    plant.visibility_public? ? :public : :private
   end
 
   def import(entry, totals)
@@ -111,7 +126,7 @@ class FpiImageImporter
 
   def keep_image(existing, entry, plant, totals)
     if existing.imageable_id != plant.id
-      existing.update!(imageable: plant) if @apply
+      existing.update!(imageable: plant, visibility: visibility_for(plant)) if @apply
       return count(totals, :reparented, entry)
     end
     return count(totals, :unchanged, entry) unless entry.drawing? && !tagged?(existing)
@@ -128,22 +143,34 @@ class FpiImageImporter
 
   def image_attributes(entry, plant, carried)
     {
-      id: entry.image_id, imageable: plant, s3_bucket: @bucket, s3_key: entry.key, visibility: :private,
+      id: entry.image_id, imageable: plant, s3_bucket: @bucket, s3_key: entry.key, **placement(plant, carried),
       name: carried.fetch(:name, entry.name), description: carried[:description],
       attribution: carried.fetch(:attribution, ATTRIBUTION),
       created_by: @principal.email, owned_by: @principal.email,
       data_source_id: @data_source.id, source_record_id: entry.source_record_id, source_digest: entry.sha256,
-      image_attribute_ids: (carried[:attribute_ids] || []) | (entry.drawing? ? [drawing_attribute.id] : [])
+      image_attribute_ids: attribute_ids(entry, carried)
     }
   end
 
+  def attribute_ids(entry, carried)
+    (carried[:attribute_ids] || []) | (entry.drawing? ? [drawing_attribute.id] : [])
+  end
+
+  # Visibility and display position: carried across a same-plant replace,
+  # otherwise from the plant (N-3) and appended by Image#append_position.
+  def placement(plant, carried)
+    { visibility: carried.fetch(:visibility, visibility_for(plant)), position: carried[:position] }
+  end
+
   # s3_key is read-only once persisted, so new bytes mean a new row under the
-  # same id; what a curator may have edited travels across.
+  # same id; what a curator may have edited travels across, and so do the
+  # visibility and display position unless the image also moved plant.
   def replace_image(existing, entry, plant)
     return unless @apply
 
     carried = { name: existing.name, description: existing.description, attribution: existing.attribution,
                 attribute_ids: existing.image_attribute_ids }
+    carried.merge!(visibility: existing.visibility, position: existing.position) if existing.imageable_id == plant.id
     Image.transaction do
       existing.destroy!
       create_image(entry, plant, carried)

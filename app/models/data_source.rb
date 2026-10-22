@@ -9,6 +9,12 @@ class DataSource < ApplicationRecord
   validates :name,              presence: true
   validates :source_system_key, presence: true
   validates :organization,      presence: true
+  validate  :publication_rule_shape
+
+  # The single quality setting (FPI plan API-10); nil means no quality bar.
+  def quality_rule
+    publication_rule.nil? ? nil : PublicationRule.new(publication_rule)
+  end
 
   # Returns (or creates) the service principal used for PaperTrail attribution
   # when this data source runs a sync. The principal is identified by
@@ -24,5 +30,14 @@ class DataSource < ApplicationRecord
     end
   rescue ActiveRecord::RecordNotUnique
     Principal.find_by!(identity_issuer: 'sync', email: email)
+  end
+
+  private
+
+  def publication_rule_shape
+    return if publication_rule.nil?
+
+    rule = PublicationRule.new(publication_rule)
+    rule.errors.full_messages.each { |m| errors.add(:publication_rule, m) } unless rule.valid?
   end
 end
