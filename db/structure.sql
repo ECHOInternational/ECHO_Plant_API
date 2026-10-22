@@ -555,6 +555,47 @@ CREATE TABLE public.principals (
 
 
 --
+-- Name: publication_wave_items; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.publication_wave_items (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    publication_wave_id uuid NOT NULL,
+    item_type character varying NOT NULL,
+    item_id uuid NOT NULL,
+    plant_id uuid NOT NULL,
+    origin character varying NOT NULL,
+    state character varying NOT NULL,
+    prior jsonb,
+    applied jsonb,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: publication_waves; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.publication_waves (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    key character varying NOT NULL,
+    data_source_id uuid NOT NULL,
+    selector character varying NOT NULL,
+    selector_params jsonb DEFAULT '{}'::jsonb NOT NULL,
+    rule_snapshot jsonb,
+    selection_digest character varying NOT NULL,
+    state character varying NOT NULL,
+    counts jsonb DEFAULT '{}'::jsonb NOT NULL,
+    notes text,
+    published_at timestamp(6) without time zone,
+    unpublished_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
 -- Name: record_drafts; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -942,6 +983,22 @@ ALTER TABLE ONLY public.principals
 
 
 --
+-- Name: publication_wave_items publication_wave_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.publication_wave_items
+    ADD CONSTRAINT publication_wave_items_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: publication_waves publication_waves_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.publication_waves
+    ADD CONSTRAINT publication_waves_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: record_drafts record_drafts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1011,6 +1068,13 @@ ALTER TABLE ONLY public.varieties
 
 ALTER TABLE ONLY public.versions
     ADD CONSTRAINT versions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: idx_on_publication_wave_id_plant_id_94311a6009; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_on_publication_wave_id_plant_id_94311a6009 ON public.publication_wave_items USING btree (publication_wave_id, plant_id);
 
 
 --
@@ -1441,6 +1505,34 @@ CREATE UNIQUE INDEX index_principals_on_issuer_and_uid_partial ON public.princip
 
 
 --
+-- Name: index_publication_wave_items_on_item_type_and_item_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_publication_wave_items_on_item_type_and_item_id ON public.publication_wave_items USING btree (item_type, item_id);
+
+
+--
+-- Name: index_publication_wave_items_unique_item; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_publication_wave_items_unique_item ON public.publication_wave_items USING btree (publication_wave_id, item_type, item_id);
+
+
+--
+-- Name: index_publication_waves_on_data_source_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_publication_waves_on_data_source_id ON public.publication_waves USING btree (data_source_id);
+
+
+--
+-- Name: index_publication_waves_on_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_publication_waves_on_key ON public.publication_waves USING btree (key);
+
+
+--
 -- Name: index_record_drafts_on_draftable; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1796,6 +1888,14 @@ ALTER TABLE ONLY public.koppen_zones
 
 
 --
+-- Name: publication_wave_items fk_rails_12f7a2bd9e; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.publication_wave_items
+    ADD CONSTRAINT fk_rails_12f7a2bd9e FOREIGN KEY (publication_wave_id) REFERENCES public.publication_waves(id);
+
+
+--
 -- Name: varieties fk_rails_143fdc3592; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1953,6 +2053,14 @@ ALTER TABLE ONLY public.tolerances_plants
 
 ALTER TABLE ONLY public.growth_habits_plants
     ADD CONSTRAINT fk_rails_bc7bc6a045 FOREIGN KEY (growth_habit_id) REFERENCES public.growth_habits(id);
+
+
+--
+-- Name: publication_waves fk_rails_bfe20761d1; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.publication_waves
+    ADD CONSTRAINT fk_rails_bfe20761d1 FOREIGN KEY (data_source_id) REFERENCES public.data_sources(id);
 
 
 --
@@ -2122,6 +2230,7 @@ ALTER TABLE ONLY public.varieties
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261023000001'),
 ('20261022000003'),
 ('20261022000002'),
 ('20261022000001'),
