@@ -7,6 +7,7 @@ module Types
     implements GraphQL::Types::Relay::Node
 
     description 'A language-specific name for a plant which can also reference a location where that name is common.'
+    connection_type_class Types::CommonNameType::CommonNameConnectionType
 
     field :uuid, ID,
           description: 'The internal database ID for a common name',

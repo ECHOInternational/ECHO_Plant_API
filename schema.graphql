@@ -1538,6 +1538,11 @@ type CommonNameConnection {
   Information to aid in pagination.
   """
   pageInfo: PageInfo!
+
+  """
+  The number of names matching the arguments, across all pages.
+  """
+  totalCount: Int!
 }
 
 """
@@ -5840,6 +5845,12 @@ type Organization implements Node {
   Human-readable organization name.
   """
   name: String!
+
+  """
+  The internal database ID. For a real organization this is the IdP organization
+  UUID, so it matches the id ECHOcommunity stores.
+  """
+  uuid: ID!
 }
 
 """
@@ -6136,7 +6147,7 @@ type Plant implements Node {
   ): CategoryConnectionWithTotalCount
 
   """
-  Language specific names for a plant
+  Language specific names for a plant, primary names first, then by name and id.
   """
   commonNames(
     """
@@ -6153,6 +6164,11 @@ type Plant implements Node {
     Returns the first _n_ elements from the list.
     """
     first: Int
+
+    """
+    Only names stored under this language code, compared case-insensitively (e.g. "EN" or "UND").
+    """
+    language: String
 
     """
     Returns the last _n_ elements from the list.
@@ -6367,6 +6383,13 @@ type Plant implements Node {
   Translated full text description of the plant's life cycle
   """
   lifeCycleNote: String
+
+  """
+  True when the plant meets its data source's publication rule (the quality bar
+  for publishing waves and indexing). Always true for plants of a source without
+  a rule, such as ECHO.
+  """
+  meetsQualityBar: Boolean!
 
   """
   Translated full text description of the capacity for nitrogen accumulation for plant
@@ -7573,6 +7596,14 @@ type Query {
     Sorts by scientific name either ascending or descending
     """
     sortDirection: SortDirection = ASC
+
+    """
+    Restrict to plants changed at or after this time: the plant row itself, a
+    versioned child (common name, relation link, image), or the publication rule
+    of the plant's data source. Not detected: raw bulk writes and removals from
+    the visible set, so a periodic full read is still needed.
+    """
+    updatedSince: ISO8601DateTime
     visibility: Visibility = VISIBLE
   ): PlantConnectionWithTotalCount!
 

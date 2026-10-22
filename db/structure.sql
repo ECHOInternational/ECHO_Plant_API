@@ -257,7 +257,8 @@ CREATE TABLE public.data_sources (
     source_system_key character varying NOT NULL,
     notes text,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    publication_rule jsonb
 );
 
 
@@ -1600,6 +1601,13 @@ CREATE INDEX index_varieties_on_visibility ON public.varieties USING btree (visi
 
 
 --
+-- Name: index_versions_on_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_versions_on_created_at ON public.versions USING btree (created_at);
+
+
+--
 -- Name: index_versions_on_item_type_and_item_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2106,6 +2114,8 @@ ALTER TABLE ONLY public.varieties
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261022000003'),
+('20261022000002'),
 ('20260917000001'),
 ('20260909000002'),
 ('20260909000001'),

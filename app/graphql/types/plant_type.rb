@@ -16,8 +16,13 @@ module Types
           description: 'A common name for the plant in the current language requested (if available).',
           null: true
     field :common_names, Types::CommonNameType.connection_type,
-          description: 'Language specific names for a plant',
-          null: true
+          description: 'Language specific names for a plant, primary names first, then by name and id.',
+          null: true do
+      argument :language, String,
+               required: false,
+               description: 'Only names stored under this language code, compared case-insensitively ' \
+                            '(e.g. "EN" or "UND").'
+    end
     field :tolerances, Types::ToleranceType::ToleranceConnectionWithTotalCountType,
           description: 'A list of tolerances related to a plant',
           null: true,
@@ -66,6 +71,12 @@ module Types
           description: 'True when the source is unsure that this plant, or one of its parts, is ' \
                        'edible at all',
           null: false
+    field :meets_quality_bar, Boolean,
+          description: "True when the plant meets its data source's publication rule (the quality " \
+                       'bar for publishing waves and indexing). Always true for plants of a source ' \
+                       'without a rule, such as ECHO.',
+          null: false,
+          resolver_method: :meets_quality_bar?
     field :family_names, String,
           description: 'The family names for a plant',
           null: true
@@ -304,6 +315,24 @@ module Types
       return records if user.super_admin?
 
       records.select { |r| r.visibility_public? || user.reads_owned_record?(r) }
+    end
+
+    # A fixed order (FPI plan API-8) so pages are stable. Ordering or filtering
+    # in SQL bypasses the plants resolver's includes(:common_names) preload,
+    # so this is one query per plant (accepted in the plan, risk R-13/R-14).
+    # One stored row has a lower-case language, hence the upper() comparison.
+    def common_names(language: nil)
+      names = @object.common_names.reorder(primary: :desc, name: :asc, id: :asc)
+      return names if language.blank?
+
+      names.where('upper(common_names.language) = upper(?)', language)
+    end
+
+    # The data sources' rules are read once per GraphQL request.
+    def meets_quality_bar?
+      rules = context[:publication_rules] ||=
+        DataSource.where.not(publication_rule: nil).to_h { |source| [source.id, source.quality_rule] }
+      @object.meets_quality_bar?(rules)
     end
 
     # Resolvers for new ownership/provenance fields.
