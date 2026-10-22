@@ -1,0 +1,14 @@
+mutation UpdateAntinutrient($input: UpdateAntinutrientInput!) {
+    updateAntinutrient(input: $input) {
+      antinutrient {
+        id
+        uuid
+        name
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

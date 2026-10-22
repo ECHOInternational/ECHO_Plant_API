@@ -1,0 +1,14 @@
+mutation CreateGrowthHabit($input: CreateGrowthHabitInput!) {
+    createGrowthHabit(input: $input) {
+      growthHabit {
+        id
+        uuid
+        name
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

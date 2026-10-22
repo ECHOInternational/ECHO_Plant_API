@@ -1,0 +1,17 @@
+mutation AddTrellisingEvent($input: AddTrellisingLifeCycleEventInput!) {
+    addTrellisingEventToSpecimen(input: $input) {
+      trellisingEvent {
+        id
+        uuid
+        datetime
+        notes
+        deleted
+        __typename
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

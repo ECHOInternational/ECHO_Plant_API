@@ -1,0 +1,10 @@
+query LocationsOptions($first: Int) {
+    locations(first: $first) {
+      edges {
+        node {
+          id
+          name
+        }
+      }
+    }
+  }

@@ -1,0 +1,12 @@
+query ProfileVarieties($ownedBy: String) {
+    varieties(first: 10, ownedBy: $ownedBy) {
+      totalCount
+      edges {
+        node {
+          id
+          name
+          visibility
+        }
+      }
+    }
+  }

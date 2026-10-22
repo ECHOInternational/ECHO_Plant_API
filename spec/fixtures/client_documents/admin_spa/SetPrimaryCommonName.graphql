@@ -1,0 +1,17 @@
+mutation SetPrimaryCommonName($input: SetPrimaryCommonNameInput!) {
+    setPrimaryCommonName(input: $input) {
+      commonName {
+        id
+        uuid
+        name
+        language
+        location
+        primary
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

@@ -1,0 +1,20 @@
+mutation AddHarvestEvent($input: AddHarvestLifeCycleEventInput!) {
+    addHarvestEventToSpecimen(input: $input) {
+      harvestEvent {
+        id
+        uuid
+        datetime
+        notes
+        deleted
+        quantity
+        unit
+        quality
+        __typename
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

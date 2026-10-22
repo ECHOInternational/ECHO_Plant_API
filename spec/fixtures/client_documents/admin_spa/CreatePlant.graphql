@@ -1,0 +1,12 @@
+mutation CreatePlant($input: CreatePlantInput!) {
+    createPlant(input: $input) {
+      plant {
+        id
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

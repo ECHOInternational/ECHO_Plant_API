@@ -1,0 +1,12 @@
+mutation RestorePlantVersion($input: RestorePlantVersionInput!) {
+    restorePlantVersion(input: $input) {
+      plant {
+        id
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

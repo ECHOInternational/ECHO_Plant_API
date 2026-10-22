@@ -1,0 +1,12 @@
+query OrgSpecimens($orgId: ID) {
+    specimens(first: 10, ownedByOrganizationId: $orgId) {
+      totalCount
+      edges {
+        node {
+          id
+          name
+          visibility
+        }
+      }
+    }
+  }

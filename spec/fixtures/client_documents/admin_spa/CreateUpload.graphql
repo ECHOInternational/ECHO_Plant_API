@@ -1,0 +1,15 @@
+mutation CreateUpload($input: CreateUploadInput!) {
+    createUpload(input: $input) {
+      upload {
+        imageId
+        uploadUrl
+        bucket
+        key
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

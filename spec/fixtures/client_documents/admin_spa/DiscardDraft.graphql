@@ -1,0 +1,6 @@
+mutation DiscardDraft($input: DiscardDraftInput!) {
+    discardDraft(input: $input) {
+      record { id }
+      errors { field message code }
+    }
+  }

@@ -1,0 +1,19 @@
+mutation UpdateGerminationEvent($input: UpdateGerminationLifeCycleEventInput!) {
+    updateGerminationEvent(input: $input) {
+      germinationEvent {
+        id
+        uuid
+        datetime
+        notes
+        deleted
+        percent
+        quality
+        __typename
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

@@ -1,0 +1,12 @@
+query PlantVarieties($id: ID!) {
+    plant(id: $id) {
+      varieties(first: 50) {
+        edges {
+          node {
+            id
+            name
+          }
+        }
+      }
+    }
+  }

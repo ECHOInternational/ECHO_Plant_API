@@ -1,0 +1,40 @@
+query PlantRecordHistory($id: ID!, $first: Int!, $after: String) {
+    plant(id: $id) {
+      id
+      draft {
+        updatedAt
+        author
+        lastEditor
+        changedFields
+      }
+      recordHistory(first: $first, after: $after) {
+        totalCount
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        edges {
+          node {
+            id
+            createdAt
+            event
+            origin
+            actor {
+              id
+              displayName
+            }
+            actorLabel
+            subjectType
+            subjectLabel
+            changes {
+              field
+              locale
+              before
+              after
+            }
+            restorable
+          }
+        }
+      }
+    }
+  }

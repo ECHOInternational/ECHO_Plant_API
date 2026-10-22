@@ -1,0 +1,10 @@
+mutation DeleteGrowthHabit($input: DeleteGrowthHabitInput!) {
+    deleteGrowthHabit(input: $input) {
+      growthHabitId
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

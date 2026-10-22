@@ -1,0 +1,12 @@
+mutation UpdateSpecimen($input: UpdateSpecimenInput!) {
+    updateSpecimen(input: $input) {
+      specimen {
+        id
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

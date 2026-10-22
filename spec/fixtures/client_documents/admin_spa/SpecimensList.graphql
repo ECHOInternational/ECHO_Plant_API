@@ -1,0 +1,57 @@
+query SpecimensList(
+    $first: Int
+    $after: String
+    $last: Int
+    $before: String
+    $name: String
+    $visibility: Visibility
+    $ownedBy: String
+    $ownedByOrganizationId: ID
+    $sortDirection: SortDirection
+  ) {
+    specimens(
+      first: $first
+      after: $after
+      last: $last
+      before: $before
+      name: $name
+      visibility: $visibility
+      ownedBy: $ownedBy
+      ownedByOrganizationId: $ownedByOrganizationId
+      sortDirection: $sortDirection
+    ) {
+      totalCount
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        endCursor
+        startCursor
+      }
+      edges {
+        node {
+          id
+          uuid
+          name
+          createdAt
+          visibility
+          ownedBy
+          canEdit
+          canDelete
+          ownerOrganization {
+            id
+            name
+            kind
+          }
+          terminated
+          plant {
+            id
+            primaryCommonName
+          }
+          variety {
+            id
+            name
+          }
+        }
+      }
+    }
+  }

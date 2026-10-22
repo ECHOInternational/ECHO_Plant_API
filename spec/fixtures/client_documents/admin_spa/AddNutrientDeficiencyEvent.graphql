@@ -1,0 +1,17 @@
+mutation AddNutrientDeficiencyEvent($input: AddNutrientDeficiencyLifeCycleEventInput!) {
+    addNutrientDeficiencyEventToSpecimen(input: $input) {
+      nutrientDeficiencyEvent {
+        id
+        uuid
+        datetime
+        notes
+        deleted
+        __typename
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

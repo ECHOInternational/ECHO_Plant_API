@@ -1,0 +1,10 @@
+mutation DeleteImageAttribute($input: DeleteImageAttributeInput!) {
+    deleteImageAttribute(input: $input) {
+      imageAttributeId
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

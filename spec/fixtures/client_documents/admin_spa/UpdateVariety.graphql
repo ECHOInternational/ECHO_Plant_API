@@ -1,0 +1,12 @@
+mutation UpdateVariety($input: UpdateVarietyInput!) {
+    updateVariety(input: $input) {
+      variety {
+        id
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

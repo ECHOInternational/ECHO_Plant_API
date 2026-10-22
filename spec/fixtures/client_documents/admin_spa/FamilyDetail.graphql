@@ -1,0 +1,31 @@
+query FamilyDetail($id: ID!, $language: String, $perspective: Perspective) {
+    family(id: $id, language: $language, perspective: $perspective) {
+      id
+      uuid
+      draft {
+        updatedAt
+        author
+        lastEditor
+        changedFields
+        isStale
+      }
+      name
+      colId
+      kingdom
+      plantType
+      status
+      classificationVersion
+      snapshotDate
+      description
+      seedBankingNotes
+      storagePhysiology
+      seedLongevity
+      seedBankingRank
+      supersededBy { id name }
+      translations { locale description seedBankingNotes }
+      plants(first: 20) {
+        totalCount
+        edges { node { id scientificName primaryCommonName } }
+      }
+    }
+  }

@@ -1,0 +1,14 @@
+mutation UpdateImageAttribute($input: UpdateImageAttributeInput!) {
+    updateImageAttribute(input: $input) {
+      imageAttribute {
+        id
+        uuid
+        name
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

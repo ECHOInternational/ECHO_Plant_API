@@ -1,0 +1,24 @@
+mutation AddMovementEvent($input: AddMovementLifeCycleEventInput!) {
+    addMovementEventToSpecimen(input: $input) {
+      movementEvent {
+        id
+        uuid
+        datetime
+        notes
+        deleted
+        location {
+          id
+        }
+        quantity
+        unit
+        betweenRowSpacing
+        inRowSpacing
+        __typename
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

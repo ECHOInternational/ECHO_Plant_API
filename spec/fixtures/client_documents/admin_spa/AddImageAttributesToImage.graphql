@@ -1,0 +1,12 @@
+mutation AddImageAttributesToImage($input: AddImageAttributesToImageInput!) {
+    addImageAttributesToImage(input: $input) {
+      image {
+        id
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

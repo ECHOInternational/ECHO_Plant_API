@@ -1,0 +1,14 @@
+mutation CreateAntinutrient($input: CreateAntinutrientInput!) {
+    createAntinutrient(input: $input) {
+      antinutrient {
+        id
+        uuid
+        name
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

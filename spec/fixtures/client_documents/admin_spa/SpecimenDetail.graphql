@@ -1,0 +1,136 @@
+query SpecimenDetail($id: ID!, $eventsAfter: String) {
+    specimen(id: $id) {
+      id
+      uuid
+      name
+      visibility
+      ownedBy
+      createdBy
+      canEdit
+      canDelete
+      ownerOrganization {
+        id
+        name
+        kind
+      }
+      terminated
+      successful
+      recommended
+      savedSeed
+      willShareSeed
+      willPlantAgain
+      notes
+      evaluatedAt
+      plant {
+        id
+        uuid
+        primaryCommonName
+      }
+      variety {
+        id
+        uuid
+        name
+      }
+      images(first: 50) {
+        edges {
+          node {
+            id
+            uuid
+            name
+            baseUrl
+            visibility
+            canEdit
+            canDelete
+            ownedBy
+            description
+            attribution
+            imageAttributes {
+              id
+              name
+            }
+          }
+        }
+      }
+      lifeCycleEvents(first: 100, after: $eventsAfter) {
+        totalCount
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        edges {
+          node {
+            id
+            uuid
+            datetime
+            notes
+            deleted
+            canEdit
+            __typename
+            images(first: 10) {
+              edges {
+                node {
+                  id
+                  uuid
+                  name
+                  baseUrl
+                  visibility
+                  canEdit
+                  canDelete
+                  ownedBy
+                  description
+                  attribution
+                  imageAttributes {
+                    id
+                    name
+                  }
+                }
+              }
+            }
+            ... on HarvestEvent {
+              harvestQuantity: quantity
+              harvestUnit: unit
+              harvestQuality: quality
+            }
+            ... on AcquireEvent {
+              acquireCondition: condition
+              accession
+              source
+            }
+            ... on FloweringEvent {
+              floweringPercent: percent
+            }
+            ... on GerminationEvent {
+              germinationPercent: percent
+              germinationQuality: quality
+            }
+            ... on PlantingEvent {
+              plantingLocation: location {
+                id
+                name
+              }
+              plantingQuantity: quantity
+              plantingUnit: unit
+              betweenRowSpacing
+              inRowSpacing
+            }
+            ... on MovementEvent {
+              movementLocation: location {
+                id
+                name
+              }
+              movementQuantity: quantity
+              movementUnit: unit
+              movementBetweenRowSpacing: betweenRowSpacing
+              movementInRowSpacing: inRowSpacing
+            }
+            ... on SoilPreparationEvent {
+              soilPreparation
+            }
+            ... on WeatherEvent {
+              weatherCondition: condition
+            }
+          }
+        }
+      }
+    }
+  }

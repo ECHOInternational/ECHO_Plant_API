@@ -1,0 +1,13 @@
+mutation CreateVariety($input: CreateVarietyInput!) {
+    createVariety(input: $input) {
+      variety {
+        id
+        uuid
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

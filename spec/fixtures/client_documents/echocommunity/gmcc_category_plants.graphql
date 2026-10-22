@@ -1,0 +1,34 @@
+query GmccPlants($id: ID!, $first: Int, $after: String) {
+  category(id: $id) {
+    plants(first: $first, after: $after) {
+      pageInfo { hasNextPage endCursor }
+      edges { node { uuid
+scientificName
+description
+nAccumulationRange
+biomassProductionRange
+optimalTemperatureRange
+optimalRainfallRange
+seasonalityDaysRange
+optimalAltitudeRange
+phRange
+earlyGrowthPhase
+seedingRate
+hasEdibleGreenLeaves
+hasEdibleImmatureFruit
+hasEdibleMatureFruit
+canBeUsedForFodder
+edibleGreenLeavesNote
+edibleImmatureFruitNote
+edibleMatureFruitNote
+usedForFodderNote
+toleranceNote
+antinutrientNote
+antinutrients(first: 50) { nodes { name } }
+tolerances(first: 50) { nodes { name } }
+growthHabits(first: 50) { nodes { name } }
+koppenZones(first: 50) { nodes { code name } }
+ } }
+    }
+  }
+}

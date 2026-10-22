@@ -1,0 +1,20 @@
+mutation UpdateAcquireEvent($input: UpdateAcquireLifeCycleEventInput!) {
+    updateAcquireEvent(input: $input) {
+      acquireEvent {
+        id
+        uuid
+        datetime
+        notes
+        deleted
+        condition
+        accession
+        source
+        __typename
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

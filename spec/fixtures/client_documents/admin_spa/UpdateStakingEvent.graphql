@@ -1,0 +1,17 @@
+mutation UpdateStakingEvent($input: UpdateStakingLifeCycleEventInput!) {
+    updateStakingEvent(input: $input) {
+      stakingEvent {
+        id
+        uuid
+        datetime
+        notes
+        deleted
+        __typename
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

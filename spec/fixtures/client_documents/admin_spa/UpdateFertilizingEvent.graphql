@@ -1,0 +1,17 @@
+mutation UpdateFertilizingEvent($input: UpdateFertilizingLifeCycleEventInput!) {
+    updateFertilizingEvent(input: $input) {
+      fertilizingEvent {
+        id
+        uuid
+        datetime
+        notes
+        deleted
+        __typename
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

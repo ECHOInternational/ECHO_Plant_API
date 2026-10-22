@@ -1,0 +1,17 @@
+mutation UpdateMulchingEvent($input: UpdateMulchingLifeCycleEventInput!) {
+    updateMulchingEvent(input: $input) {
+      mulchingEvent {
+        id
+        uuid
+        datetime
+        notes
+        deleted
+        __typename
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

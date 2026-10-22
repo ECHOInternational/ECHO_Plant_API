@@ -1,0 +1,44 @@
+query CategoriesList(
+    $first: Int
+    $after: String
+    $name: String
+    $visibility: Visibility
+    $hasPendingChanges: Boolean
+  ) {
+    categories(
+      first: $first
+      after: $after
+      name: $name
+      visibility: $visibility
+      hasPendingChanges: $hasPendingChanges
+    ) {
+      totalCount
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        endCursor
+        startCursor
+      }
+      edges {
+        node {
+          id
+          uuid
+          name
+          description
+          visibility
+          ownedBy
+          createdBy
+          canEdit
+          canDelete
+          ownerOrganization {
+            id
+            name
+            kind
+          }
+          draft {
+            updatedAt
+          }
+        }
+      }
+    }
+  }

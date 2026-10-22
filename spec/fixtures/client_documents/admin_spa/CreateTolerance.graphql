@@ -1,0 +1,14 @@
+mutation CreateTolerance($input: CreateToleranceInput!) {
+    createTolerance(input: $input) {
+      tolerance {
+        id
+        uuid
+        name
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

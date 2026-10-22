@@ -1,0 +1,18 @@
+mutation AddWeatherEvent($input: AddWeatherLifeCycleEventInput!) {
+    addWeatherEventToSpecimen(input: $input) {
+      weatherEvent {
+        id
+        uuid
+        datetime
+        notes
+        deleted
+        condition
+        __typename
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

@@ -1,0 +1,17 @@
+mutation AddThinningEvent($input: AddThinningLifeCycleEventInput!) {
+    addThinningEventToSpecimen(input: $input) {
+      thinningEvent {
+        id
+        uuid
+        datetime
+        notes
+        deleted
+        __typename
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

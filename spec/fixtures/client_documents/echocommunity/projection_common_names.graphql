@@ -1,0 +1,14 @@
+query($first: Int, $after: String) {
+  plants(first: $first, after: $after) {
+    pageInfo { hasNextPage endCursor }
+    edges {
+      node {
+        id
+        scientificName
+        commonNames(first: 200) {
+          nodes { name language location }
+        }
+      }
+    }
+  }
+}

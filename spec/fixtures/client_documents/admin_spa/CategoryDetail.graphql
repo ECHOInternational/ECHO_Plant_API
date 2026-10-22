@@ -1,0 +1,41 @@
+query CategoryDetail($id: ID!, $language: String, $perspective: Perspective) {
+    category(id: $id, language: $language, perspective: $perspective) {
+      id
+      uuid
+      publicationState
+      deletedAt
+      draft {
+        updatedAt
+        author
+        lastEditor
+        changedFields
+        isStale
+      }
+      name
+      description
+      visibility
+      ownedBy
+      canEdit
+      canDelete
+      ownerOrganization {
+        id
+        name
+        kind
+      }
+      translations {
+        locale
+        name
+        description
+      }
+      plants(first: 20) {
+        totalCount
+        edges {
+          node {
+            id
+            scientificName
+            primaryCommonName
+          }
+        }
+      }
+    }
+  }

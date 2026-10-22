@@ -1,0 +1,18 @@
+mutation UpdateFloweringEvent($input: UpdateFloweringLifeCycleEventInput!) {
+    updateFloweringEvent(input: $input) {
+      floweringEvent {
+        id
+        uuid
+        datetime
+        notes
+        deleted
+        percent
+        __typename
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

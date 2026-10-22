@@ -1,0 +1,14 @@
+mutation UpdateGrowthHabit($input: UpdateGrowthHabitInput!) {
+    updateGrowthHabit(input: $input) {
+      growthHabit {
+        id
+        uuid
+        name
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

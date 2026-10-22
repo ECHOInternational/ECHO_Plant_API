@@ -1,0 +1,25 @@
+query ImageAttributesList($first: Int, $after: String, $last: Int, $before: String, $name: String) {
+    imageAttributes(first: $first, after: $after, last: $last, before: $before, name: $name) {
+      totalCount
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        endCursor
+        startCursor
+      }
+      edges {
+        node {
+          id
+          uuid
+          # translations MUST be selected before name: resolving name first under a
+          # non-English locale makes the API emit a null translation name and fail
+          # the whole list. See docs/conventions.md, "Adding a new simple lookup entity".
+          translations {
+            locale
+            name
+          }
+          name
+        }
+      }
+    }
+  }

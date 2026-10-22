@@ -1,0 +1,12 @@
+query OrgVarieties($orgId: ID) {
+    varieties(first: 10, ownedByOrganizationId: $orgId) {
+      totalCount
+      edges {
+        node {
+          id
+          name
+          visibility
+        }
+      }
+    }
+  }

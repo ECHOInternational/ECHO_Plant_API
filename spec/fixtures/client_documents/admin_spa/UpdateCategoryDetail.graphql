@@ -1,0 +1,20 @@
+mutation UpdateCategoryDetail($input: UpdateCategoryInput!) {
+    updateCategory(input: $input) {
+      category {
+        id
+        name
+        description
+        visibility
+        translations {
+          locale
+          name
+          description
+        }
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

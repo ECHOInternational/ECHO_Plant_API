@@ -1,0 +1,16 @@
+mutation UpdateLocation($input: UpdateLocationInput!) {
+    updateLocation(input: $input) {
+      location {
+        id
+        uuid
+        name
+        soilQuality
+        visibility
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

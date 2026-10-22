@@ -1,0 +1,17 @@
+mutation AddCultivatingEvent($input: AddCultivatingLifeCycleEventInput!) {
+    addCultivatingEventToSpecimen(input: $input) {
+      cultivatingEvent {
+        id
+        uuid
+        datetime
+        notes
+        deleted
+        __typename
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }

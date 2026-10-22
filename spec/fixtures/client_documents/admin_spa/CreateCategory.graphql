@@ -1,0 +1,14 @@
+mutation CreateCategory($input: CreateCategoryInput!) {
+    createCategory(input: $input) {
+      category {
+        id
+        uuid
+        name
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }
