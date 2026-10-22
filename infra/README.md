@@ -470,6 +470,16 @@ for at least 48 hours after cutover.
   sets `RAILS_ENV` correctly (production or staging) and omits `DATABASE_NAME` to avoid
   redundancy and potential misconfiguration.
 
+- **How environment variables reach a deploy**: `.github/scripts/deploy-ecs.sh`
+  re-registers the web and migrate task definitions from the family's LATEST revision
+  and replaces only the image. A variable added to `container_environment` therefore
+  reaches the running service only after a `terraform apply` (which registers a new
+  revision) followed by the next deploy. A setting that differs per environment but
+  must ship with the code is better keyed on `RAILS_ENV` in the app, with an env var
+  as an optional override: `MOBILE_FULL_SYNC_OWNER_ORG_IDS` works this way
+  (`lib/mobile_full_sync_config.rb`; staging defaults to the staging ECHO
+  organization, production to the production one).
+
 - **Application Auto Scaling service-linked role**: The ECS auto-scaling
   (`aws_appautoscaling_target`) requires the
   `AWSServiceRoleForApplicationAutoScaling_ECSService` service-linked role.  This

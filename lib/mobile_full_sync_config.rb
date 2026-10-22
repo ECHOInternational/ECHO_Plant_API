@@ -5,14 +5,18 @@
 # MobileFullSyncGuard). Required by config/initializers/mobile_full_sync.rb.
 #
 # The value is a comma-separated list of organization UUIDs. Unset or blank
-# means the default. Anything malformed also means the default: this list
-# narrows what an unpaginated call returns, so a typo must never widen it
-# (an empty list would hide everything; a half-parsed one could hide ECHO).
-# Failing closed to the production ECHO organization keeps the mobile app's
+# means the environment's default. Anything malformed also means the default:
+# this list narrows what an unpaginated call returns, so a typo must never
+# widen it (an empty list would hide everything; a half-parsed one could hide
+# ECHO). Failing closed to the ECHO organization keeps the mobile app's
 # behavior exactly what it is today.
 #
-# Staging and every non-production environment MUST set the variable: their
-# organization UUIDs differ from production's.
+# The default is per Rails environment, because organization UUIDs differ
+# between environments: staging has its own ECHO organization. Keying the
+# default on RAILS_ENV (which every task definition already sets) means a
+# deploy needs no new task-definition variable; the variable stays available
+# as an explicit override. Development and test use the production default,
+# because local databases are copies of production.
 module MobileFullSyncConfig
   ENV_NAME = 'MOBILE_FULL_SYNC_OWNER_ORG_IDS'
 
@@ -20,17 +24,27 @@ module MobileFullSyncConfig
   # primary key is the IdP UUID).
   DEFAULT_OWNER_ORG_IDS = ['99ee034e-6a85-44fc-a366-cb6dbc637783'].freeze
 
+  # The staging ECHO organization, "ECHO (staging rehearsal)".
+  STAGING_OWNER_ORG_IDS = ['aaaaaaaa-bbbb-4ccc-8ddd-eeeeffff0001'].freeze
+
+  DEFAULTS_BY_ENV = { 'staging' => STAGING_OWNER_ORG_IDS }.freeze
+
   UUID_FORMAT = /\A\h{8}-\h{4}-\h{4}-\h{4}-\h{12}\z/
 
   module_function
 
-  def parse(raw, logger: nil)
-    return DEFAULT_OWNER_ORG_IDS if raw.blank?
+  def default_for(env)
+    DEFAULTS_BY_ENV.fetch(env.to_s, DEFAULT_OWNER_ORG_IDS)
+  end
+
+  def parse(raw, env: nil, logger: nil)
+    default = default_for(env)
+    return default if raw.blank?
 
     ids = raw.split(',', -1).map { |entry| entry.strip.downcase }
     return ids.uniq.freeze if ids.all? { |id| UUID_FORMAT.match?(id) }
 
     logger&.warn("#{ENV_NAME} is malformed; falling back to the default allow-list")
-    DEFAULT_OWNER_ORG_IDS
+    default
   end
 end
