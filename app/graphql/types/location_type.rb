@@ -90,7 +90,7 @@ module Types
           null: false
 
     def images
-      Pundit.policy_scope(context[:current_user], @object.images)
+      Pundit.policy_scope(context[:current_user], @object.images).display_ordered
     end
 
     def visibility

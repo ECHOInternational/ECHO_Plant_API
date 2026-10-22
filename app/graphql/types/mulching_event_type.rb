@@ -10,7 +10,7 @@ module Types
     description 'Actions taken to apply a protective covering on the soil to preserve moisture/fertility '
 
     def images
-      Pundit.policy_scope(context[:current_user], @object.images)
+      Pundit.policy_scope(context[:current_user], @object.images).display_ordered
     end
   end
 end

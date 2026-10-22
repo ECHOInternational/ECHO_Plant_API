@@ -18,7 +18,7 @@ class LifeCycleEvent < ApplicationRecord
     other: 'other'
   }
 
-  has_many :images, as: :imageable, dependent: :destroy
+  has_many :images, -> { order(Image::DISPLAY_ORDER) }, as: :imageable, dependent: :destroy, inverse_of: :imageable
 
   belongs_to :specimen
   delegate :owned_by, to: :specimen

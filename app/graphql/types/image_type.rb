@@ -45,6 +45,19 @@ module Types
           description: 'Translations of translatable image fields',
           null: false,
           method: :translations_array
+    field :position, Integer,
+          description: 'Display position of the image within its parent record, 1-based; images connections are ordered by it. Null only for an image written during a deploy by an older release (it sorts last).',
+          null: true
+    field :is_drawing, Boolean,
+          description: "True when the image carries the 'Drawing' image attribute (matched by its English name, whatever the request language). Cheaper than imageAttributes: one lookup per request.",
+          null: false,
+          resolver_method: :drawing?
+
+    # One query per GraphQL request, however many images are resolved.
+    def drawing?
+      ids = context[:drawing_image_ids] ||= ImageAttribute.drawing_image_ids
+      ids.include?(@object.id)
+    end
 
     def visibility
       @object.visibility.to_sym
