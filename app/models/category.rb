@@ -14,8 +14,13 @@ class Category < ApplicationRecord
   has_many :categories_plants, dependent: :destroy
   has_many :plants, through: :categories_plants
 
+  # Locales without a name are skipped: CategoryTranslationType declares name
+  # non-null, and writing only `description` in a new locale creates a
+  # nameless entry (the field-order trap).
   def translations_array
-    translations.map do |language, attributes|
+    translations.filter_map do |language, attributes|
+      next if attributes['name'].blank?
+
       {
         locale: language,
         name: attributes['name'],

@@ -41,8 +41,8 @@ module Types
           description: 'The visibility of the image. Can be: PUBLIC, PRIVATE, DRAFT, DELETED',
           null: false,
           deprecation_reason: 'Use publicationState/accessLevel/deletedAt.'
-    field :translations, [Types::CategoryType::CategoryTranslationType],
-          description: 'Translations of translatable category fields',
+    field :translations, [Types::ImageType::ImageTranslationType],
+          description: 'Translations of translatable image fields',
           null: false,
           method: :translations_array
 

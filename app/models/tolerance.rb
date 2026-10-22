@@ -12,8 +12,12 @@ class Tolerance < ApplicationRecord
   has_many :tolerances_varieties, dependent: :destroy
   has_many :varieties, through: :tolerances_varieties
 
+  # Locales without a name are skipped: the GraphQL translation type declares
+  # name non-null, so one nameless entry would fail the whole field.
   def translations_array
-    translations.map do |language, attributes|
+    translations.filter_map do |language, attributes|
+      next if attributes['name'].blank?
+
       {
         locale: language,
         name: attributes['name']

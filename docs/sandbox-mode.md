@@ -52,3 +52,72 @@ curl -s -X POST http://localhost:3000/graphql \
   -H 'Content-Type: application/json' \
   -d '{"query":"{ me { organizations { role organization { name kind } } } }"}'
 ```
+
+## The sandbox trap: a sandbox server is never anonymous
+
+`require_token` (`application_controller.rb`, the `return if set_sandbox_user`
+line) returns before it ever looks at the `Authorization` header, and
+`set_sandbox_user` (further down the same file) then installs the fixed sandbox
+user on every request. Everything below follows from that one early return.
+
+- **No request is anonymous.** A request with no token, with a garbage token or
+  with an expired token is all the same sandbox user, with the configured trust
+  level (the local `.env` uses `10`, a super-admin) and any `SANDBOX_ORGS`
+  memberships. A bad token is never rejected with a 401.
+- **Anonymous behaviour cannot be observed there.** The public scopes (plants,
+  images, categories and so on) show a super-admin everything, including
+  private, draft and deleted rows. A check that "an anonymous client sees only
+  public data" passes or fails for the wrong reason against a sandbox server.
+  This is why an anonymous check script must fail against the compose `web`
+  service on port 3000 and pass only against a server started with `SANDBOX`
+  unset.
+- **The compose stack is a sandbox.** The `.env` file the `web` service reads
+  sets `SANDBOX=true`, and so does the CI workflow. Treat that container as the
+  tool for admin SPA work only.
+- **Reads can write.** `resolve_actor` runs for the sandbox user too, so the
+  first request upserts a principal, a personal organization and any
+  `SANDBOX_ORGS` mirror rows. Pointing a sandbox server at a copy of
+  production data adds those rows to the copy.
+- **It must never be set in staging or production.** The Terraform in `infra/`
+  does not set it. A task that did would make every internet request a signed-in
+  writer.
+
+### Proving a server is anonymous
+
+The `me` query is null exactly when the request is anonymous, so it is the
+cheapest probe. Run it with no token:
+
+```bash
+curl -s -X POST http://localhost:3000/graphql \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"{ me { displayName } }"}'
+```
+
+`{"data":{"me":null}}` means anonymous. A non-null `me` means the server is in
+sandbox mode, whatever its configuration is supposed to say. Scripts that make
+an anonymity claim should assert this first and refuse to continue otherwise.
+
+### Starting a genuinely anonymous local server
+
+Unsetting `SANDBOX` is necessary but not sufficient. Off sandbox,
+`require_token` builds the RSA verification key from `APPLICATION_JWT_SECRET`
+on every request, tokenless ones included, and the placeholder value in a dev
+`.env` is not a valid key, so every request fails with a 500
+(`OpenSSL::PKey::RSAError`). Supply a throwaway public key as the secret. It
+is only used to verify tokens, and the anonymous server will never be given
+one:
+
+```bash
+JWT_PUB="$(openssl genrsa 2048 2>/dev/null | openssl rsa -pubout 2>/dev/null | sed '1d;$d')"
+docker run --rm ... \
+  -e SANDBOX=false \
+  -e "APPLICATION_JWT_SECRET=${JWT_PUB}" \
+  ...
+```
+
+Pass these after any `--env-file` so they win, then confirm with the `me`
+probe above before trusting anything the server reports. In specs the same
+two steps apply: stub `ENV['SANDBOX']` to `nil` and stub
+`ENV['APPLICATION_JWT_SECRET']` to a generated key body (see
+`spec/requests/image_translations_spec.rb`), or execute the schema directly
+with `context: { current_user: nil }`.
