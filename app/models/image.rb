@@ -18,6 +18,16 @@ class Image < ApplicationRecord
   belongs_to :imageable, polymorphic: true, optional: false, touch: true
   enum :visibility, { private: 0, public: 1, draft: 2, deleted: 3 }, prefix: :visibility
 
+  # Display order inside one imageable (FPI plan API-5): images.position,
+  # 1-based. NULL only for a row written by an older release during a deploy;
+  # it sorts last, which is where an appended image belongs. created_at and id
+  # make the order total. Backfilled by lib/image_positions.rb.
+  DISPLAY_ORDER = Arel.sql('images.position ASC NULLS LAST, images.created_at ASC, images.id ASC')
+  scope :display_ordered, -> { reorder(DISPLAY_ORDER) }
+
+  before_create :append_position
+  before_update :append_position_on_reparent
+
   # Images hang off many parents; only plant and variety images belong in a
   # record history timeline. Read the columns rather than the association so
   # this still works in after_destroy.
@@ -47,6 +57,25 @@ class Image < ApplicationRecord
   end
 
   private
+
+  # A new image goes after the current last image of its parent.
+  def append_position
+    self.position ||= next_position
+  end
+
+  # Re-parented images go to the end of their new parent, unless the caller
+  # set a position in the same write.
+  def append_position_on_reparent
+    return unless (imageable_id_changed? || imageable_type_changed?) && !position_changed?
+
+    self.position = next_position
+  end
+
+  def next_position
+    return nil if imageable_type.blank? || imageable_id.blank?
+
+    (Image.where(imageable_type: imageable_type, imageable_id: imageable_id).maximum(:position) || 0) + 1
+  end
 
   def build_urls
     self.base_url = "https://images.echocommunity.org/#{s3_key}"

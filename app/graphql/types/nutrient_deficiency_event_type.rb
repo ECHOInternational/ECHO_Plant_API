@@ -10,7 +10,7 @@ module Types
     description 'Actions taken when nutrient deficiencies are observed'
 
     def images
-      Pundit.policy_scope(context[:current_user], @object.images)
+      Pundit.policy_scope(context[:current_user], @object.images).display_ordered
     end
   end
 end

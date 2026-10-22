@@ -3868,6 +3868,13 @@ type Image implements Node {
   imageAttributes: [ImageAttribute!]!
 
   """
+  True when the image carries the 'Drawing' image attribute (matched by its
+  English name, whatever the request language). Cheaper than imageAttributes:
+  one lookup per request.
+  """
+  isDrawing: Boolean!
+
+  """
   The translated name of an image
   """
   name: String
@@ -3876,6 +3883,13 @@ type Image implements Node {
   The user ID of an image's owner
   """
   ownedBy: String @deprecated(reason: "Use ownerOrganization on the imageable; email-based ownership is being retired.")
+
+  """
+  Display position of the image within its parent record, 1-based; images
+  connections are ordered by it. Null only for an image written during a deploy
+  by an older release (it sorts last).
+  """
+  position: Int
 
   """
   Translations of translatable image fields

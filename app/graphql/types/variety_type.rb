@@ -204,7 +204,7 @@ module Types
     # field :versions, Types::VarietyType::VarietyVersionConnectionWithTotalCountType, null: false, connection: true
 
     def images
-      Pundit.policy_scope(context[:current_user], @object.images)
+      Pundit.policy_scope(context[:current_user], @object.images).display_ordered
     end
 
     # Actor identity is sensitive, so history is gated by the same policy that

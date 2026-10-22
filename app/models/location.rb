@@ -8,7 +8,7 @@ class Location < ApplicationRecord
   enum :visibility, { private: 0, public: 1, draft: 2, deleted: 3 }, prefix: :visibility
   enum :soil_quality, { poor: 'poor', fair: 'fair', good: 'good' }, prefix: :soil_quality
 
-  has_many :images, as: :imageable, dependent: :destroy
+  has_many :images, -> { order(Image::DISPLAY_ORDER) }, as: :imageable, dependent: :destroy, inverse_of: :imageable
   has_many :life_cycle_events, dependent: :restrict_with_error
 
   def latitude=(latitude)
