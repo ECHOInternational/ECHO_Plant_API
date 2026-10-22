@@ -24,6 +24,16 @@ require Rails.root.join('lib/fpi_image_importer')
 # exit on any errored or invalid row. Reporting lives in top-level helpers so
 # each task body stays within RuboCop's limits.
 
+# Every write task takes the shared ops lock first (see OpsAdvisoryLock), dry
+# runs included: a dry run's prediction or digest is only meaningful while
+# nothing else is writing. Read-only tasks (fpi:preflight) skip it. The caller
+# releases it in an ensure clause.
+def fpi_ops_lock!(task)
+  OpsAdvisoryLock.acquire!(task)
+rescue OpsAdvisoryLock::Held => e
+  abort e.message
+end
+
 def fpi_data_source!
   FpiDataSource.existing or abort 'run fpi:bootstrap first'
 end
@@ -79,6 +89,7 @@ end
 namespace :fpi do
   desc 'Mirror the FPI organization from the IdP and create its DataSource (idempotent)'
   task bootstrap: :environment do
+    ops_lock = fpi_ops_lock!('fpi:bootstrap')
     org_id = ENV['FPI_ORG_ID'].presence || FpiDataSource::DEFAULT_ORGANIZATION_ID
     org = Organization.mirror_real!(external_id: org_id, name: FpiDataSource::NAME)
     ds = FpiDataSource.find_or_create!(organization: org)
@@ -87,6 +98,8 @@ namespace :fpi do
     puts "  organization: #{org.name} (#{org.id}, idp #{org.external_idp_id})"
     puts "  principal:    #{ds.service_principal!.email}"
     puts "  governs #{FpiDataSource::PLANT_ATTRIBUTES.size} plant attributes, version #{FpiDataSource::PLANT_ATTRIBUTES_VERSION}"
+  ensure
+    ops_lock&.release
   end
 end
 
@@ -104,6 +117,7 @@ end
 namespace :fpi do
   desc 'Sync FPI plants from a payload directory (dry run unless APPLY=true)'
   task :sync_plants, [:path] => :environment do |_t, args|
+    ops_lock = fpi_ops_lock!('fpi:sync_plants')
     path = args[:path] or abort 'usage: bin/rails fpi:sync_plants[path/to/payload-dir | s3://bucket/fpi/payloads/<run_id>]'
     data_source = fpi_data_source!
     apply = ENV['APPLY'] == 'true'
@@ -124,12 +138,15 @@ namespace :fpi do
   rescue FpiSyncRun::PreflightFailed, FpiSyncRun::CapExceeded, FpiPlantFeed::IncompleteRow, FpiPlantFeed::VersionMismatch,
          FpiPayloadStore::NotFound => e
     abort "sync refused: #{e.message}"
+  ensure
+    ops_lock&.release
   end
 end
 
 namespace :fpi do
   desc 'Apply a rulings file to open FPI conflicts (dry run unless APPLY=true)'
   task :resolve_conflicts, [:path] => :environment do |_t, args|
+    ops_lock = fpi_ops_lock!('fpi:resolve_conflicts')
     path = args[:path] or abort 'usage: bin/rails fpi:resolve_conflicts[path/to/rulings.json | s3://bucket/key.json]'
     path = FpiPayloadStore.fetch_file(path)
     abort "file not found: #{path}" unless File.exist?(path)
@@ -146,12 +163,15 @@ namespace :fpi do
       .each { |label, count| puts format('  %-34<label>s %<count>d', label: label, count: count) }
     result.errors.first(20).each { |e| puts "    #{e}" }
     abort 'rulings finished with failures' if result.failed.positive?
+  ensure
+    ops_lock&.release
   end
 end
 
 namespace :fpi do
   desc 'Remove the plants an FPI run created, across every table (dry run unless APPLY=true)'
   task :rollback, [:run_id] => :environment do |_t, args|
+    ops_lock = fpi_ops_lock!('fpi:rollback')
     run_id = args[:run_id].presence
     abort 'usage: bin/rails fpi:rollback[run_id]  (or ALL=true to remove every FPI plant)' if run_id.nil? && ENV['ALL'] != 'true'
     apply = ENV['APPLY'] == 'true'
@@ -160,23 +180,29 @@ namespace :fpi do
     { plants: plan.plants, record_drafts: plan.record_drafts, sync_conflicts: plan.sync_conflicts, images: plan.images, versions: plan.versions }
       .merge(plan.joins).each { |label, count| puts format('  %-24<label>s %<count>d', label: label, count: count) }
     puts '  S3 objects behind image rows are not removed here.' if plan.images.positive?
+  ensure
+    ops_lock&.release
   end
 end
 
 namespace :fpi do
   desc 'Re-stamp every FPI merge base for the current managed attribute set (dry run unless APPLY=true)'
   task rebaseline: :environment do
+    ops_lock = fpi_ops_lock!('fpi:rebaseline')
     data_source = fpi_data_source!
     apply = ENV['APPLY'] == 'true'
     report_fpi_rebaseline(FpiRebaseline.new(data_source: data_source, apply: apply).run, data_source, apply)
   rescue FpiRebaseline::Refused => e
     abort "rebaseline refused: #{e.message}"
+  ensure
+    ops_lock&.release
   end
 end
 
 namespace :fpi do
   desc 'Write FPI image rows from an image manifest (dry run unless APPLY=true)'
   task :import_images, [:path] => :environment do |_t, args|
+    ops_lock = fpi_ops_lock!('fpi:import_images')
     path = args[:path] or abort 'usage: bin/rails fpi:import_images[path/to/images-manifest.json | s3://bucket/fpi/payloads/<run_id>/images-manifest.json]'
     data_source = fpi_data_source!
     apply = ENV['APPLY'] == 'true'
@@ -190,5 +216,7 @@ namespace :fpi do
     abort 'image import finished with invalid rows' if apply && totals.invalid.positive?
   rescue FpiImageImporter::InvalidManifest, JSON::ParserError, FpiPayloadStore::NotFound => e
     abort "image import refused: #{e.message}"
+  ensure
+    ops_lock&.release
   end
 end
