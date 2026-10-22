@@ -63,6 +63,19 @@ jobs:
       - name: Run RuboCop
         run: bundle exec rubocop
 
+  actionlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Lints every workflow, including the shell in run: blocks (shellcheck
+      # ships in the image). SC2129 (group redirects) is a style note the
+      # existing ops workflows predate.
+      - name: actionlint
+        uses: docker://rhysd/actionlint:1.7.7
+        with:
+          args: -color -ignore SC2129
+
   docker-build:
     runs-on: ubuntu-latest
 
