@@ -44,7 +44,7 @@ RSpec.describe MobileFullSyncConfig do
     end
 
     context 'with a per-environment default' do
-      let(:staging_echo) { 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeffff0001' }
+      let(:staging_echo) { '149f6971-b63a-45e7-be7f-e67fc7d7b3d6' }
 
       it 'defaults to the staging ECHO organization on staging' do
         expect(described_class.parse(nil, env: 'staging')).to eq([staging_echo])

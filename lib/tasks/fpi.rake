@@ -91,7 +91,7 @@ namespace :fpi do
   desc 'Mirror the FPI organization from the IdP and create its DataSource (idempotent)'
   task bootstrap: :environment do
     ops_lock = fpi_ops_lock!('fpi:bootstrap')
-    org_id = ENV['FPI_ORG_ID'].presence || FpiDataSource::DEFAULT_ORGANIZATION_ID
+    org_id = FpiDataSource.organization_id
     org = Organization.mirror_real!(external_id: org_id, name: FpiDataSource::NAME)
     ds = FpiDataSource.find_or_create!(organization: org)
     puts "DataSource #{ds.persisted? ? 'ready' : 'FAILED'}: #{ds.name} (#{ds.source_system_key})"

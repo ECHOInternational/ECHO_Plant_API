@@ -24,8 +24,10 @@ module MobileFullSyncConfig
   # primary key is the IdP UUID).
   DEFAULT_OWNER_ORG_IDS = ['99ee034e-6a85-44fc-a366-cb6dbc637783'].freeze
 
-  # The staging ECHO organization, "ECHO (staging rehearsal)".
-  STAGING_OWNER_ORG_IDS = ['aaaaaaaa-bbbb-4ccc-8ddd-eeeeffff0001'].freeze
+  # The staging ECHO organization: ECHOcommunity staging's "echo". Staging
+  # adopted the IdP ids on 2026-10-23 (orgs:repoint_staging), replacing the
+  # S7 rehearsal placeholder aaaaaaaa-bbbb-4ccc-8ddd-eeeeffff0001.
+  STAGING_OWNER_ORG_IDS = ['149f6971-b63a-45e7-be7f-e67fc7d7b3d6'].freeze
 
   DEFAULTS_BY_ENV = { 'staging' => STAGING_OWNER_ORG_IDS }.freeze
 

@@ -30,7 +30,10 @@ module StagingRehearsalMapping
   # Kept out of `users` on purpose so the backfill routes it down its
   # shared-email path to a service principal, exactly as it did in production.
   SHARED_EMAILS = ['echo@echonet.org'].freeze
-  ECHO_ORG_ID = 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeffff0001'
+  # ECHOcommunity staging's "echo" organization, so a rehearsal lands on the
+  # same id the IdP puts in staging tokens (was the placeholder
+  # aaaaaaaa-bbbb-4ccc-8ddd-eeeeffff0001 until orgs:repoint_staging).
+  ECHO_ORG_ID = '149f6971-b63a-45e7-be7f-e67fc7d7b3d6'
   PATH = '/tmp/staging_rehearsal_mapping.json'
   OWNED_TABLES = %w[plants varieties specimens locations categories].freeze
 
