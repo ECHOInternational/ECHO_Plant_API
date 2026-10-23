@@ -19,6 +19,10 @@ module Extensions
         value = arguments[name]
         next if value.nil? || value <= MAX_PAGE_SIZE
 
+        Api21RefusalLogger.log(
+          kind: 'page_size', context: context, requested: value, limit: MAX_PAGE_SIZE,
+          path: refused_path(context), argument: name.to_s
+        )
         raise GraphQL::ExecutionError.new(
           "#{name}: #{value} exceeds the maximum page size of #{MAX_PAGE_SIZE} on " \
           "#{field.graphql_name}. Page through the connection with after:/before: instead.",
@@ -27,6 +31,14 @@ module Extensions
       end
 
       super
+    end
+
+    private
+
+    # Response path without list indices, e.g. "category.plants".
+    def refused_path(context)
+      path = Array(context[:current_path]).grep(String)
+      path.empty? ? field.graphql_name : path.join('.')
     end
   end
 end
