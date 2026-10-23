@@ -100,11 +100,13 @@ class Plant < ApplicationRecord # rubocop:disable Metrics/ClassLength
   # data source or the source has no rule (ECHO), so ECHO pages are never
   # below the bar. rules is an optional {data_source_id => PublicationRule}
   # cache; GraphQL builds it once per request.
-  def meets_quality_bar?(rules = nil)
+  # has_image: whether the plant has a non-deleted image, when the caller has
+  # already read it (GraphQL reads it for a whole page of plants at once).
+  def meets_quality_bar?(rules = nil, has_image: nil)
     return true if data_source_id.nil?
 
     rule = rules ? rules[data_source_id] : DataSource.find_by(id: data_source_id)&.quality_rule
-    rule.nil? || rule.met_by?(self)
+    rule.nil? || rule.met_by?(self, has_image: has_image)
   end
 
   def genus
