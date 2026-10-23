@@ -42,8 +42,9 @@ class PublicationRule
   def min_text_chars = rule['min_text_chars']
   def image_suffices? = rule['image_suffices'] == true
 
-  def met_by?(plant)
-    return true if image_suffices? && plant.images.where.not(visibility: DELETED_VISIBILITY).exists?
+  # has_image: a precomputed answer to "has a non-deleted image" (nil = query it).
+  def met_by?(plant, has_image: nil)
+    return true if image_suffices? && image?(plant, has_image)
 
     text_chars(plant) >= min_text_chars
   end
@@ -67,6 +68,12 @@ class PublicationRule
   end
 
   private
+
+  def image?(plant, has_image)
+    return has_image unless has_image.nil?
+
+    plant.images.where.not(visibility: DELETED_VISIBILITY).exists?
+  end
 
   def shape
     shape_problems.each { |attribute, message| errors.add(attribute, message) }
