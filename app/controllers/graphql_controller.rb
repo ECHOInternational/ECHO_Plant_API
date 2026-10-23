@@ -11,11 +11,9 @@ class GraphqlController < ApplicationController
     variables = ensure_hash(params[:variables])
     query = params[:query]
     operation_name = params[:operationName]
-    context = {
-      # Query context goes here, for example:
-      current_user: current_user
-    }
+    context = graphql_context(operation_name)
     result = PlantApiSchema.execute(query, variables: variables, context: context, operation_name: operation_name)
+    Api21RefusalLogger.log_analysis_errors(result, context: context)
     render json: result
   rescue => e # rubocop:disable Style/RescueStandardError
     raise e unless Rails.env.development?
@@ -24,6 +22,16 @@ class GraphqlController < ApplicationController
   end
 
   private
+
+  def graphql_context(operation_name)
+    {
+      # Query context goes here, for example:
+      current_user: current_user,
+      # Used only by Api21RefusalLogger.
+      operation_name: operation_name,
+      request_id: request.request_id
+    }
+  end
 
   # Handle form data, JSON body, or a blank value
   def ensure_hash(ambiguous_param)
