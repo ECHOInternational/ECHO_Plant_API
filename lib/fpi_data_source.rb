@@ -21,7 +21,11 @@ module FpiDataSource
   NAME = 'Food Plants International'
   SOURCE_SYSTEM_KEY = 'fpi'
   # The ECHOcommunity IdP organization that owns FPI's records (decision 41).
+  # Production's id; development and test databases are production copies.
   DEFAULT_ORGANIZATION_ID = 'b7ab3117-e610-4b7d-b097-a51ebe911d79'
+  # Staging has its own IdP organizations: ECHOcommunity staging's
+  # "food-plants-international" (adopted 2026-10-23 by orgs:repoint_staging).
+  ORGANIZATION_IDS_BY_ENV = { 'staging' => 'ad8f2875-2bd5-46fb-b514-9f6becf47ad4' }.freeze
 
   PLANT_ATTRIBUTES_VERSION = 1
   PLANT_ATTRIBUTES = %w[
@@ -44,6 +48,11 @@ module FpiDataSource
   }.freeze
 
   class << self
+    # FPI_ORG_ID overrides; otherwise the id for this Rails environment.
+    def organization_id(env: Rails.env, override: ENV.fetch('FPI_ORG_ID', nil))
+      override.presence || ORGANIZATION_IDS_BY_ENV.fetch(env.to_s, DEFAULT_ORGANIZATION_ID)
+    end
+
     def empty_value(attribute)
       EMPTY_VALUES.fetch(attribute, '')
     end
