@@ -270,8 +270,15 @@ module Types
           max_page_size: 50
     # field :versions, Types::PlantType::PlantVersionConnectionWithTotalCountType, null: false, connection: true
 
+    # Children are loaded for a whole page of plants at once (Loaders::Batch):
+    # the same SQL as the per-plant association, with plant_id IN (...), then
+    # split by plant in the order the query returned.
     def images
-      Pundit.policy_scope(context[:current_user], @object.images).display_ordered
+      user = context[:current_user]
+      Loaders::Batch.for(context, :plant_images, default: []) do |ids|
+        Pundit.policy_scope(user, Image.where(imageable_type: 'Plant', imageable_id: ids))
+              .display_ordered.to_a.group_by(&:imageable_id)
+      end.load(@object.id)
     end
 
     # Actor identity is sensitive, so history is gated by the same policy that
@@ -287,8 +294,15 @@ module Types
       @object.visibility.to_sym
     end
 
+    # No ORDER BY, as before: one plant's rows come back in the order the
+    # per-plant join returned them.
     def categories
-      Pundit.policy_scope(context[:current_user], @object.categories)
+      user = context[:current_user]
+      Loaders::Batch.for(context, :plant_categories, default: []) do |ids|
+        relation = Category.joins(:categories_plants).where(categories_plants: { plant_id: ids })
+                           .select('categories.*, categories_plants.plant_id AS batch_plant_id')
+        Pundit.policy_scope(user, relation).to_a.group_by { |category| category['batch_plant_id'] }
+      end.load(@object.id)
     end
 
     def varieties
@@ -317,35 +331,38 @@ module Types
       records.select { |r| r.visibility_public? || user.reads_owned_record?(r) }
     end
 
-    # A fixed order (FPI plan API-8) so pages are stable. Ordering or filtering
-    # in SQL bypasses the plants resolver's includes(:common_names) preload,
-    # so this is one query per plant (accepted in the plan, risk R-13/R-14).
+    # A fixed order (FPI plan API-8) so pages are stable. Ordered in SQL (the
+    # collation decides name order), so it does not use the plants resolver's
+    # includes(:common_names) preload; one query per page of plants instead.
     # One stored row has a lower-case language, hence the upper() comparison.
     def common_names(language: nil)
-      names = @object.common_names.reorder(primary: :desc, name: :asc, id: :asc)
-      return names if language.blank?
-
-      names.where('upper(common_names.language) = upper(?)', language)
+      key = [:plant_common_names, language.presence&.upcase]
+      Loaders::Batch.for(context, key, default: []) do |ids|
+        names = CommonName.where(plant_id: ids).reorder(primary: :desc, name: :asc, id: :asc)
+        names = names.where('upper(common_names.language) = upper(?)', language) if language.present?
+        names.to_a.group_by(&:plant_id)
+      end.load(@object.id)
     end
 
     # The data sources' rules are read once per GraphQL request.
+    # Whether a plant has a non-deleted image is read for the whole page at once.
     def meets_quality_bar?
-      rules = context[:publication_rules] ||=
-        DataSource.where.not(publication_rule: nil).to_h { |source| [source.id, source.quality_rule] }
-      @object.meets_quality_bar?(rules)
+      rules = publication_rules
+      rule = rules[@object.data_source_id] if @object.data_source_id
+      return @object.meets_quality_bar?(rules) unless rule&.image_suffices?
+
+      quality_image_loader.load(@object.id).then do |has_image|
+        @object.meets_quality_bar?(rules, has_image: has_image)
+      end
     end
 
     # Resolvers for new ownership/provenance fields.
     def owner_organization
-      return nil unless @object.owner_organization_id
-
-      Organization.find_by(id: @object.owner_organization_id)
+      organization(@object.owner_organization_id)
     end
 
     def source_organization
-      return nil unless @object.source_organization_id
-
-      Organization.find_by(id: @object.source_organization_id)
+      organization(@object.source_organization_id)
     end
 
     def created_by_principal
@@ -366,5 +383,29 @@ module Types
     # def versions
     # @object.translation.versions.where(event: "update").reorder('created_at DESC')
     # end
+
+    private
+
+    def publication_rules
+      context[:publication_rules] ||=
+        DataSource.where.not(publication_rule: nil).to_h { |source| [source.id, source.quality_rule] }
+    end
+
+    def quality_image_loader
+      Loaders::Batch.for(context, :plant_has_quality_image, default: false) do |ids|
+        Image.where(imageable_type: 'Plant', imageable_id: ids)
+             .where.not(visibility: PublicationRule::DELETED_VISIBILITY)
+             .distinct.pluck(:imageable_id).index_with(true)
+      end
+    end
+
+    # Owner and source organizations of a page of plants, in one query.
+    def organization(id)
+      return nil unless id
+
+      Loaders::Batch.for(context, :organizations) do |ids|
+        Organization.where(id: ids).index_by(&:id)
+      end.load(id)
+    end
   end
 end
