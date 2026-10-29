@@ -25,7 +25,7 @@ RSpec.describe FpiSyncRun do
     File.write(File.join(payload_dir, 'shard-000.json'), shard_text)
     File.write(File.join(payload_dir, 'deletions.json'), deletions_text)
     File.write(File.join(payload_dir, 'payload-manifest.json'), JSON.generate(
-                                                                  snapshot_id: '3c8a266f0bf557e1', environment: 'test', attributes_version: 1,
+                                                                  snapshot_id: '3c8a266f0bf557e1', environment: 'test', attributes_version: 2,
                                                                   shards: [{ file: 'shard-000.json', sha256: Digest::SHA256.hexdigest(shard_text) }],
                                                                   deletions: { file: 'deletions.json', sha256: Digest::SHA256.hexdigest(deletions_text) }
                                                                 ))
@@ -39,7 +39,7 @@ RSpec.describe FpiSyncRun do
     it 'passes on a complete payload and reports what it checked' do
       facts = run.preflight!
       expect(facts[:pending_migrations]).to eq([])
-      expect(facts[:attributes_version]).to eq(1)
+      expect(facts[:attributes_version]).to eq(2)
       expect(facts[:shards].size).to eq(1)
       expect(facts[:deletions][:file]).to eq('deletions.json')
       expect(facts[:principal]).to eq('sync+fpi@plant-api.echocommunity.org')
@@ -57,8 +57,8 @@ RSpec.describe FpiSyncRun do
 
     it 'refuses another attributes version' do
       manifest = JSON.parse(File.read(File.join(payload_dir, 'payload-manifest.json')))
-      File.write(File.join(payload_dir, 'payload-manifest.json'), JSON.generate(manifest.merge('attributes_version' => 2)))
-      expect { run.preflight! }.to raise_error(FpiSyncRun::PreflightFailed, /attributes_version 2/)
+      File.write(File.join(payload_dir, 'payload-manifest.json'), JSON.generate(manifest.merge('attributes_version' => 1)))
+      expect { run.preflight! }.to raise_error(FpiSyncRun::PreflightFailed, /attributes_version 1 but this API expects 2/)
     end
   end
 

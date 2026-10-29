@@ -43,6 +43,17 @@ RSpec.describe 'plants safety fields and filters', type: :graphql_query do
     )
   end
 
+  it 'exposes ediblePartsText on the plant and its translations' do
+    plant = create(:plant, :public, scientific_name: 'Napoleonaea imperialis', edible_parts_text_en: 'Nuts, Fruit')
+    query = <<~GRAPHQL
+      query($id: ID!) { plant(id: $id) { ediblePartsText translations { locale ediblePartsText } } }
+    GRAPHQL
+    result = execute(query, id: PlantApiSchema.id_from_object(plant, Plant, {}))
+    expect(result['errors']).to be_nil
+    expect(result.dig('data', 'plant', 'ediblePartsText')).to eq('Nuts, Fruit')
+    expect(result.dig('data', 'plant', 'translations')).to include('locale' => 'en', 'ediblePartsText' => 'Nuts, Fruit')
+  end
+
   describe 'filters' do
     let(:query) do
       <<~GRAPHQL

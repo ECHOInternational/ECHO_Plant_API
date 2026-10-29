@@ -133,6 +133,10 @@ module Types
           description: 'A translated note on the safety warning: which part, preparation or ' \
                        'quantity is harmful',
           null: true
+    field :edible_parts_text, String,
+          description: 'A translated, comma-separated list of the edible parts of a plant, ' \
+                       'e.g. "Nuts, Fruit"',
+          null: true
     field :habitat, String,
           description: 'A translated description of the climate, soils and altitudes the plant ' \
                        'grows in',

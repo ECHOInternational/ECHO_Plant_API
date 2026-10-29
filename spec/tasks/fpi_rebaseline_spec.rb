@@ -58,6 +58,34 @@ RSpec.describe FpiRebaseline do
     expect(plant.source_snapshot['scientific_name']).to eq('') # the base was never re-read from local
   end
 
+  describe 'the version 1 -> 2 step (edible_parts_text)' do
+    let(:old_keys) { FpiDataSource::PLANT_ATTRIBUTES - %w[edible_parts_text] }
+
+    it "stamps edible_parts_text with '' and touches nothing else" do
+      plant = fpi_plant('p1', { 'uses' => 'Eaten roasted.' })
+      result = described_class.new(data_source: data_source, apply: true).run
+      expect([result.added, result.removed, result.changed]).to eq([['edible_parts_text'], [], 1])
+      plant.reload
+      expect(plant.source_snapshot.keys).to match_array(FpiDataSource::PLANT_ATTRIBUTES)
+      expect(plant.source_snapshot).to include('edible_parts_text' => '', 'uses' => 'Eaten roasted.')
+      expect(plant.source_digest).to eq(SourceSynchronizer.canonical_digest(plant.source_snapshot))
+    end
+
+    it "conflicts on a curator's edible parts rather than overwrite them with FPI's" do
+      plant = fpi_plant('p1')
+      Mobility.with_locale(:en) { plant.update!(edible_parts_text: 'Leaves') }
+      described_class.new(data_source: data_source, apply: true).run
+      row = { source_record_id: 'p1', deleted: false, source_updated_at: 1.hour.ago,
+              attributes: FpiDataSource::PLANT_ATTRIBUTES.index_with { |k| FpiDataSource.empty_value(k) }
+                                                         .merge('edible_parts_text' => 'Nuts, Fruit') }
+      report = Mobility.with_locale(:en) do
+        SourceSynchronizer.new(data_source: data_source, model: Plant, source_attributes: FpiDataSource::PLANT_ATTRIBUTES, run_id: 'r').apply([row])
+      end
+      expect(report.conflicts_created).to eq(1)
+      expect(Mobility.with_locale(:en) { plant.reload.edible_parts_text }).to eq('Leaves')
+    end
+  end
+
   it 'refuses to run while a conflict is open' do
     plant = fpi_plant('p1')
     create(:sync_conflict, syncable: plant, data_source: data_source, conflict_type: 'content', status: 'open',

@@ -2022,6 +2022,11 @@ input CreatePlantInput {
   edibleMatureFruitNote: String
 
   """
+  The translatable edible parts text of the plant
+  """
+  ediblePartsText: String
+
+  """
   The botanical family this plant belongs to
   """
   familyId: ID
@@ -6271,6 +6276,11 @@ type Plant implements Node {
   edibleMatureFruitNote: String
 
   """
+  A translated, comma-separated list of the edible parts of a plant, e.g. "Nuts, Fruit"
+  """
+  ediblePartsText: String
+
+  """
   The botanical family this plant belongs to
   """
   family: Family
@@ -6752,6 +6762,11 @@ type PlantTranslation {
   Translated full text description of whether or not a plant has edible mature fruit
   """
   edibleMatureFruitNote: String
+
+  """
+  A translated, comma-separated list of the edible parts of a plant, e.g. "Nuts, Fruit"
+  """
+  ediblePartsText: String
 
   """
   Translated full text description of the growth habits for a plant
@@ -10211,6 +10226,11 @@ input UpdatePlantInput {
   The translatable edible mature fruit note of the plant
   """
   edibleMatureFruitNote: String
+
+  """
+  The translatable edible parts text of the plant
+  """
+  ediblePartsText: String
 
   """
   The botanical family this plant belongs to
