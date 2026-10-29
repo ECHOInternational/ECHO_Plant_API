@@ -75,9 +75,19 @@ RSpec.describe FpiPlantFeed do
       expect(row[:attributes]['edibility_uncertain']).to eq('true')
     end
 
-    it 'refuses a payload built for another attributes version' do
-      shard['attributes_version'] = 2
-      expect { feed.build(shard) }.to raise_error(FpiPlantFeed::VersionMismatch, /expects 1/)
+    it 'refuses a payload built for another attributes version, including a version 1 shard' do
+      shard['attributes_version'] = 1
+      expect { feed.build(shard) }.to raise_error(FpiPlantFeed::VersionMismatch, /attributes_version 1 but this API expects 2/)
+    end
+
+    it 'carries edible_parts_text as a managed String, empty when FPI has no edible parts' do
+      rows = feed.build(shard)
+      expect(rows.map { |r| r[:attributes]['edible_parts_text'] }).to eq(['Root tuber', ''])
+    end
+
+    it 'refuses a version 2 row without edible_parts_text' do
+      first_row.delete('edible_parts_text')
+      expect { feed.build(shard) }.to raise_error(FpiPlantFeed::IncompleteRow, /missing managed keys: edible_parts_text/)
     end
 
     it 'turns the deletions file into deleted rows with no attributes' do
@@ -99,6 +109,7 @@ RSpec.describe FpiPlantFeed do
       expect(plant.common_names.where(language: 'EN', primary: true).pluck(:name)).to eq(['Musk mallow'])
       expect(plant.categories.pluck(:id)).to eq(['265c782d-c9e0-4c7a-8ab1-af672572508c'])
       expect(Mobility.with_locale(:en) { plant.habitat }).to eq('A tropical plant.')
+      expect(Mobility.with_locale(:en) { plant.edible_parts_text }).to eq('Root tuber')
       poisonous = Plant.find_by(data_source_id: data_source.id, source_record_id: '54C3709C-942C-42E3-BC6E-F117D50516EB')
       expect([poisonous.safety_level, poisonous.safety_warning, poisonous.edibility_uncertain, poisonous.family_id]).to eq(['poisonous', true, true, nil])
       expect(Mobility.with_locale(:en) { poisonous.safety_note }).to eq('Seeds (POISONOUS)')

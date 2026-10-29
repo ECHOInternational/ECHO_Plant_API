@@ -5,9 +5,9 @@ require Rails.root.join('lib/fpi_data_source')
 # Turns an fpi-connector payload shard into the row shape SourceSynchronizer#apply
 # expects, and runs it (fpi-connector schema-delta item 1).
 #
-# A shard is {"attributes_version": 1, "plants": {"<PLANT_ID>": {...}}} where
+# A shard is {"attributes_version": 2, "plants": {"<PLANT_ID>": {...}}} where
 # every row carries exactly the managed keys plus source_updated_at; the
-# deletions file is {"attributes_version": 1, "deleted": {"<PLANT_ID>": {...}}}.
+# deletions file is {"attributes_version": 2, "deleted": {"<PLANT_ID>": {...}}}.
 #
 # The contract is stricter than EcPlantFeed's, because this feed recurs:
 #   * a row missing a managed key, or carrying an extra one, is refused

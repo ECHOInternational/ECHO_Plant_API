@@ -13,7 +13,7 @@ module Mutations
         asia_regional_info life_cycle_note n_accumulation_note biomass_production_note
         optimal_temperature_note optimal_rainfall_note seasonality_note
         early_growth_phase_note altitude_note ph_note growth_habits_note
-        safety_note habitat notes
+        safety_note habitat notes edible_parts_text
       ].freeze
 
       BOOLEAN_FIELDS = %i[

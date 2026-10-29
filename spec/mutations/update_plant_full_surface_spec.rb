@@ -35,6 +35,14 @@ RSpec.describe 'Update Plant full field surface', type: :graphql_mutation do
     Mobility.with_locale(:es) { expect(plant.uses).to eq 'Cobertura' }
   end
 
+  it 'writes ediblePartsText per language' do
+    result = execute(ediblePartsText: 'Nuts, Fruit', language: 'en')
+    expect(result['data']['updatePlant']['errors']).to be_empty
+    execute(ediblePartsText: 'Nueces, Fruta', language: 'es')
+    expect(Mobility.with_locale(:en) { plant.reload.edible_parts_text }).to eq 'Nuts, Fruit'
+    Mobility.with_locale(:es) { expect(plant.edible_parts_text).to eq 'Nueces, Fruta' }
+  end
+
   it 'updates enum and boolean scalars' do
     result = execute(lifeCycle: 'PERENNIAL', earlyGrowthPhase: 'FAST', hasEdibleGreenLeaves: true)
     plant_result = result['data']['updatePlant']['plant']

@@ -1,5 +1,5 @@
 {
-  "attributes_version": 1,
+  "attributes_version": 2,
   "plants": {
     "495A01C7-C950-4432-B603-EFA260631E03": {
       "attribution": "Altschul, S.V.R., 1973, Drugs and Foods from Little-known Plants.",
@@ -8,6 +8,7 @@
       "cultivation": "Plants can be grown from seeds.",
       "description": "A herb which grows as a perennial.\nIt grows to about 1 m high.",
       "edibility_uncertain": "false",
+      "edible_parts_text": "Root tuber",
       "family_id": "a30dbd67-7b44-4acd-b649-f85f89de486c",
       "family_names": "Malvaceae",
       "habitat": "A tropical plant.",
@@ -28,6 +29,7 @@
       "cultivation": "",
       "description": "A shrub.",
       "edibility_uncertain": "true",
+      "edible_parts_text": "",
       "family_id": "",
       "family_names": "Nostocaceae",
       "habitat": "",

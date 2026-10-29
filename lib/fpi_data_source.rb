@@ -27,10 +27,11 @@ module FpiDataSource
   # "food-plants-international" (adopted 2026-10-23 by orgs:repoint_staging).
   ORGANIZATION_IDS_BY_ENV = { 'staging' => 'ad8f2875-2bd5-46fb-b514-9f6becf47ad4' }.freeze
 
-  PLANT_ATTRIBUTES_VERSION = 1
+  # 2: edible_parts_text (interim plain-text edible parts, 2026-10-29).
+  PLANT_ATTRIBUTES_VERSION = 2
   PLANT_ATTRIBUTES = %w[
     scientific_name family_names family_id scientific_name_authority
-    description uses cultivation attribution
+    description uses edible_parts_text cultivation attribution
     harvesting_and_seed_production planting_instructions habitat notes
     safety_level safety_note edibility_uncertain
     common_name_set category_set

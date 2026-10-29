@@ -60,6 +60,7 @@ class Plant < ApplicationRecord # rubocop:disable Metrics/ClassLength
              :info_sheet_description,
              :origin,
              :uses,
+             :edible_parts_text,
              :cultivation,
              :harvesting_and_seed_production,
              :pests_and_diseases,
@@ -183,6 +184,7 @@ class Plant < ApplicationRecord # rubocop:disable Metrics/ClassLength
         ph_note: attributes['ph_note'],
         growth_habits_note: attributes['growth_habits_note'],
         safety_note: attributes['safety_note'],
+        edible_parts_text: attributes['edible_parts_text'],
         habitat: attributes['habitat'],
         notes: attributes['notes']
       }

@@ -81,6 +81,18 @@ RSpec.describe Plant, type: :model do
     end
   end
 
+  describe 'edible_parts_text' do
+    it 'is translated per locale and listed in translations_array' do
+      plant = create(:plant, edible_parts_text_en: 'Nuts, Fruit')
+      plant.update!(edible_parts_text_es: 'Nueces, Fruta')
+      plant.reload
+      expect(Mobility.with_locale(:en) { plant.edible_parts_text }).to eq('Nuts, Fruit')
+      expect(Mobility.with_locale(:es) { plant.edible_parts_text }).to eq('Nueces, Fruta')
+      en = plant.translations_array.find { |t| t[:locale] == 'en' }
+      expect(en).to include(edible_parts_text: 'Nuts, Fruit')
+    end
+  end
+
   describe 'draftable and history registries' do
     it 'lists the new columns as draftable' do
       expect(DraftableAttributes::PLANT).to include('scientific_name_authority', 'safety_level', 'edibility_uncertain')
